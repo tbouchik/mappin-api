@@ -10,6 +10,7 @@ const register = {
       .required()
       .custom(password),
     name: Joi.string().required(),
+    company: Joi.string().required(),
   }),
 };
 

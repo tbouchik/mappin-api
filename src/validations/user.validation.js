@@ -10,6 +10,7 @@ const createUser = {
       .required()
       .custom(password),
     name: Joi.string().required(),
+    company: Joi.string(),
     role: Joi.string()
       .required()
       .valid('user', 'admin'),
@@ -20,6 +21,7 @@ const getUsers = {
   query: Joi.object().keys({
     name: Joi.string(),
     role: Joi.string(),
+    company: Joi.string(),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),

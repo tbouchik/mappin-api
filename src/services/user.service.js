@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
-const { User } = require('../models');
+const { User, Company } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeUserId) => {
@@ -11,14 +11,24 @@ const checkDuplicateEmail = async (email, excludeUserId) => {
   }
 };
 
+const checkCompanyExists = async (companyName) => {
+  const company = await Company.findOne({name: companyName});
+  if (!company) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Company does not exist');
+  }
+  return company;
+};
+
 const createUser = async userBody => {
   await checkDuplicateEmail(userBody.email);
+  company =  await checkCompanyExists(userBody.company);
+  userBody.company = company._id;
   const user = await User.create(userBody);
   return user;
 };
 
 const getUsers = async query => {
-  const filter = pick(query, ['name', 'role']);
+  const filter = pick(query, ['name', 'role', 'company']);
   const options = getQueryOptions(query);
   const users = await User.find(filter, null, options);
   return users;

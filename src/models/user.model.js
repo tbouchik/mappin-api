@@ -10,6 +10,8 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      min:2,
+      max:50
     },
     email: {
       type: String,
@@ -17,6 +19,8 @@ const userSchema = mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
+      min:6,
+      max:255,
       validate(value) {
         if (!validator.isEmail(value)) {
           throw new Error('Invalid email');
@@ -28,11 +32,17 @@ const userSchema = mongoose.Schema(
       required: true,
       trim: true,
       minlength: 8,
+      max:1024,
       validate(value) {
         if (!value.match(/\d/) || !value.match(/[a-zA-Z]/)) {
           throw new Error('Password must contain at least one letter and one number');
         }
       },
+    },
+    company: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Company',
+      required: true,
     },
     role: {
       type: String,
