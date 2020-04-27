@@ -8,7 +8,7 @@ const Token = require('../models/token.model');
 const AppError = require('../utils/AppError');
 
 const generateAuthTokens = async userId => {
-  const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
+  const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'days');
   const accessToken = tokenService.generateToken(userId, accessTokenExpires);
 
   const refreshTokenExpires = moment().add(config.jwt.refreshExpirationDays, 'days');
