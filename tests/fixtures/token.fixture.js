@@ -3,7 +3,7 @@ const config = require('../../src/config/config');
 const tokenService = require('../../src/services/token.service');
 const { userOne, admin } = require('./user.fixture');
 
-const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'minutes');
+const accessTokenExpires = moment().add(config.jwt.accessExpirationMinutes, 'days');
 const userOneAccessToken = tokenService.generateToken(userOne._id, accessTokenExpires);
 const adminAccessToken = tokenService.generateToken(admin._id, accessTokenExpires);
 
