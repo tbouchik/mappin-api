@@ -5,6 +5,7 @@ const fs = require("fs");
 const csv = require("csvtojson");
 const AppError = require('../utils/AppError');
 const httpStatus = require('http-status');
+const {createDocument} = require('../services/document.service');
 
 AWS.config.update({ region: "us-east-1" });
 
@@ -37,6 +38,16 @@ const scanDocument = async (req, res) => {
                             const jsonArray = await csv().fromFile(path.join(directoryPath, files[i]));
                             finalJson[`page_${pageNumber}`] = jsonArray;
                         }
+                    }
+                    try{
+                        documentBody = {
+                            link: `${process.env.AWS_BUCKET}/${body.filename}`,
+                            name: body.filename,
+                            metadata: finalJson
+                        }
+                        await createDocument(req.user,documentBody)
+                    }catch(err){
+                        throw new AppError(httpStatus.SERVICE_UNAVAILABLE, err);
                     }
                     res.send(finalJson);
 
