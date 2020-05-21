@@ -13,8 +13,12 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const AppError = require('./utils/AppError');
+const s3Proxy = require('s3-proxy');
+
+
 
 const app = express();
+
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
@@ -52,6 +56,19 @@ if (config.env === 'production') {
 
 // v1 api routes
 app.use('/v1', routes);
+
+//s3-proxy
+app.get('/media/*',function(req, res, next) {
+  req.originalUrl = req.originalUrl.replace('/media', '')
+  next()
+  } , s3Proxy({
+  bucket: 'bucket413',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  overrideCacheControl: 'max-age=100000',
+  defaultKey: 'index.html'
+}));
+
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {

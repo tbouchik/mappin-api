@@ -27,7 +27,7 @@ const documentSchema = mongoose.Schema(
 
 documentSchema.methods.transform = function() {
   const user = this;
-  return pick(user.toJSON(), ['id', 'name', 'metadata']);
+  return pick(user.toJSON(), ['id', 'name', 'metadata', 'createdAt']);
 };
 
 const Document = mongoose.model('Document', documentSchema);

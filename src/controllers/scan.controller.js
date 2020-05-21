@@ -12,8 +12,7 @@ AWS.config.update({ region: "us-east-1" });
 const scanDocument = async (req, res) => {
     try {
         const { body } = req;
-        const textractorScriptPath = path.join(__dirname, process.env.TEXTRACTOR_PATH);
-        let command = `python3.7 ${textractorScriptPath} --documents ${process.env.AWS_BUCKET}/${body.filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
+        let command = `python3.7 ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${body.filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
         await exec(command, {
         timeout:200000
         });
@@ -45,11 +44,18 @@ const scanDocument = async (req, res) => {
                             name: body.filename,
                             metadata: finalJson
                         }
-                        await createDocument(req.user,documentBody)
+                        createDocument(req.user,documentBody).then(result => {
+                            res.send({
+                                id: result._id,
+                                name: body.filename,
+                                metadata: finalJson
+                            });
+                        })
+                        
                     }catch(err){
                         throw new AppError(httpStatus.SERVICE_UNAVAILABLE, err);
                     }
-                    res.send(finalJson);
+                    
 
                 });
         } else {
