@@ -5,11 +5,11 @@ const fs = require("fs");
 const csv = require("csvtojson");
 const AppError = require('../utils/AppError');
 const httpStatus = require('http-status');
-const {createDocument} = require('../services/document.service');
+const { createDocument } = require('../services/document.service');
 
 AWS.config.update({ region: "us-east-1" });
 
-const scanDocument = async (req, res) => {
+const singleSmelt = async (req, res) => {
     try {
         const { body } = req;
         let command = `python3.7 ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${body.filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
@@ -67,4 +67,11 @@ const scanDocument = async (req, res) => {
     }
 };
 
-module.exports = {scanDocument};
+const bulkSmelt = (req, res) => {
+
+};
+
+module.exports = {
+    singleSmelt,
+    bulkSmelt,
+};

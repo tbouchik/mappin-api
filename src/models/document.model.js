@@ -15,6 +15,7 @@ const documentSchema = mongoose.Schema(
     },
     mimeType: {
       type: String,
+      enum: ['image/png', 'image/jpeg', 'application/pdf'],
       required: true,
     },
     alias: {
@@ -27,11 +28,13 @@ const documentSchema = mongoose.Schema(
     },
     extractionType: {
       type: String,
+      enum: ['FORMS', 'TABLES', 'TEXT'],
       required: true,
     },
     status: {
       type: String,
-      required: true,
+      enum: ['pending', 'smelted', 'validated'],
+      default: 'Pending',
     },
     name:{
       type: String,
