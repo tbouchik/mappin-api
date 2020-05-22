@@ -5,8 +5,13 @@ const createDocument = {
   body: Joi.object().keys({
     link: Joi.string() // TODO Validat link is a URL
       .required(),
-    name: Joi.string(),
-    metadata: Joi.object(),
+    name: Joi.string().required(),
+    metadata: Joi.object().required(),
+    mimeType: Joi.string().required(),
+    alias: Joi.string().required(),
+    businessPurpose: Joi.string().required(),
+    extractionType: Joi.string().required(),
+    status: Joi.string().required(),
   }),
 };
 

@@ -13,6 +13,26 @@ const documentSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    mimeType: {
+      type: String,
+      required: true,
+    },
+    alias: {
+      type: String,
+      required: true,
+    },
+    businessPurpose: {
+      type: String,
+      required: true,
+    },
+    extractionType: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      required: true,
+    },
     name:{
       type: String,
     },
@@ -27,7 +47,7 @@ const documentSchema = mongoose.Schema(
 
 documentSchema.methods.transform = function() {
   const user = this;
-  return pick(user.toJSON(), ['id', 'name', 'metadata', 'createdAt']);
+  return pick(user.toJSON(), ['id', 'name', 'metadata', 'mimeType', 'businessPurpose', 'extractionType', 'status','createdAt','updatedAt']);
 };
 
 const Document = mongoose.model('Document', documentSchema);
