@@ -8,5 +8,8 @@ router
   .route('/')
   .post(auth('manageDocuments'), smelterController.singleSmelt);
 
+  router
+  .route('/bulk')
+  .post(auth('manageDocuments'), smelterController.bulkSmelt);
 
 module.exports = router;

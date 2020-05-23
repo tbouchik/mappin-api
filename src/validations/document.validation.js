@@ -10,7 +10,7 @@ const createDocument = {
     mimeType: Joi.string().required().valid('image/png', 'image/jpeg', 'application/pdf'),
     alias: Joi.string().required(),
     businessPurpose: Joi.string(),
-    extractionType: Joi.string().required().valid('FORMS', 'TABLES', 'TEXT'),
+    extractionType: Joi.string().valid('FORMS', 'TABLES', 'TEXT'),
     status: Joi.string().valid('pending', 'smelted', 'validated'),
   }),
 };

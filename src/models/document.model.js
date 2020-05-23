@@ -24,17 +24,17 @@ const documentSchema = mongoose.Schema(
     },
     businessPurpose: {
       type: String,
-      required: true,
+      default: 'Invoice',
     },
     extractionType: {
       type: String,
       enum: ['FORMS', 'TABLES', 'TEXT'],
-      required: true,
+      default:'FORMS',
     },
     status: {
       type: String,
       enum: ['pending', 'smelted', 'validated'],
-      default: 'Pending',
+      default: 'pending',
     },
     name:{
       type: String,
