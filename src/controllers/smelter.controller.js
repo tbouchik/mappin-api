@@ -13,7 +13,7 @@ AWS.config.update({ region: 'us-east-1' });
 const singleSmelt = async (req, res) => {
   try {
     const { body, user } = req;
-    let command = `python3.7 ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${body.filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
+    let command = `python3.7 ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET_PATH}/${body.filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
     await exec(command, {
       timeout: 200000,
     });
@@ -41,7 +41,7 @@ const singleSmelt = async (req, res) => {
         }
         try {
           documentBody = {
-            link: `${process.env.AWS_BUCKET}/${body.filename}`,
+            link: `${process.env.AWS_BUCKET_PATH}/${body.filename}`,
             name: body.filename,
             metadata: finalJson,
           };
@@ -71,7 +71,7 @@ const bulkSmelt = (req, res) => {
     let queue = new Queue(async (payload, cb) => {
       let finalJson = {};
       let filename = payload.documentBody.alias
-      const command = `python3.7 ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
+      const command = `python3.7 ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET_PATH}/${filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
       await exec(command, {
         timeout: 200000,
       });
@@ -103,7 +103,7 @@ const bulkSmelt = (req, res) => {
     files = body.files;
     for (let file of files) {
       let documentBody = {
-        link: `${process.env.AWS_BUCKET}/${file.alias}`,
+        link: `${process.env.AWS_BUCKET_PATH}/${file.alias}`,
         name: file.name,
         metadata: {},
         mimeType: file.mimeType,
@@ -120,8 +120,9 @@ const bulkSmelt = (req, res) => {
       });
     }
     queue.on('task_finish', (taskId, result) => {
+      console.log('smelt result: \n', result)
       updateDocument(user, taskId, {
-        metadata: { result },
+        metadata: { ...result },
         status: 'smelted',
       }).then();
     });

@@ -14,6 +14,7 @@ const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const AppError = require('./utils/AppError');
 const s3Proxy = require('s3-proxy');
+var companion = require('@uppy/companion')
 
 
 
@@ -57,7 +58,7 @@ if (config.env === 'production') {
 // v1 api routes
 app.use('/v1', routes);
 
-//s3-proxy
+// s3-proxy
 app.get('/media/*',function(req, res, next) {
   req.originalUrl = req.originalUrl.replace('/media', '')
   next()
@@ -69,6 +70,26 @@ app.get('/media/*',function(req, res, next) {
   defaultKey: 'index.html'
 }));
 
+// uppy
+const options = {
+  providerOptions: {
+    s3: {
+      getKey: (req, filename, metadata) => filename,
+      key: process.env.AWS_ACCESS_KEY_ID,
+      secret: process.env.AWS_SECRET_ACCESS_KEY,
+      bucket: process.env.AWS_BUCKET_NAME,
+      region: "us-east-1",
+      useAccelerateEndpoint: false, // default: false,
+      expires: 3600, // default: 300 (5 minutes)
+      acl: "private" // default: public-read
+    }
+  },
+  server: {
+    host: "localhost:3000", // or yourdomain.com
+    protocol: "http"
+  },
+}
+app.use(companion.app(options))
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
