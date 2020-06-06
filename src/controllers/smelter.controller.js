@@ -112,6 +112,7 @@ const bulkSmelt = (req, res) => {
         extractionType: file.extractionType,
         status: 'pending',
       };
+
       createDocument(user, documentBody).then(res => {
         queue.push({
           id: res._id,
@@ -120,6 +121,15 @@ const bulkSmelt = (req, res) => {
       });
     }
     queue.on('task_finish', (taskId, result) => {
+      for (page of Object.keys(result)) {
+	
+      result[page] =result[page].sort((a,b) => {
+          if (a.Top === b.Top) {
+            return a.Left - b.Left
+          }
+          return a.Top - b.Top
+        })
+      }      
       console.log('smelt result: \n', result)
       updateDocument(user, taskId, {
         metadata: { ...result },
