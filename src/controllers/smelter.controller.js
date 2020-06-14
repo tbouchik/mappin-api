@@ -16,7 +16,7 @@ let queue = new Queue(async (payload, cb) => {
   const fileName = filename.split('.')[0];
   const fileExtension = filename.split('.')[1];
   const outputDirName = fileName + '-' + fileExtension;
-  const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET_PATH}/${filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
+  const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
   console.log(command)
   await exec(command, {
     timeout: 200000,
@@ -127,10 +127,10 @@ const bulkSmelt = (req, res) => {
       for (page of Object.keys(result)) {
 
       result[page] =result[page].sort((a,b) => {
-          if (a.Top === b.Top) {
+          if (a.KeyTop === b.KeyTop) {
             return a.Left - b.Left
           }
-          return a.Top - b.Top
+          return a.KeyTop - b.KeyTop
         })
       }
       console.log('smelt result: \n', result)

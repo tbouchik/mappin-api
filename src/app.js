@@ -88,7 +88,7 @@ const options = {
     host: "localhost:3000", // or yourdomain.com
     protocol: "http"
   },
-  filePath:"/home/bam/Desktop/smeltor/mappin",
+  filePath: process.env.FILEPATH,
   secret : process.env.AWS_SECRET_ACCESS_KEY
 }
 app.use(companion.app(options))
