@@ -40,6 +40,7 @@ const documentSchema = mongoose.Schema(
       type: String,
     },
     metadata: {},
+    stdFilter: [],
   },
   {
     timestamps: true,
@@ -50,7 +51,7 @@ const documentSchema = mongoose.Schema(
 
 documentSchema.methods.transform = function() {
   const user = this;
-  return pick(user.toJSON(), ['id', 'name', 'metadata', 'mimeType', 'businessPurpose', 'extractionType', 'status','createdAt','updatedAt', 'alias']);
+  return pick(user.toJSON(), ['id', 'name', 'metadata', 'mimeType', 'businessPurpose', 'extractionType', 'status','createdAt','updatedAt', 'alias', 'stdFilter']);
 };
 
 const Document = mongoose.model('Document', documentSchema);
