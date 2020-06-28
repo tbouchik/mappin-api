@@ -16,13 +16,13 @@ let queue = new Queue(async (payload, cb) => {
   const fileName = filename.split('.')[0];
   const fileExtension = filename.split('.')[1];
   const outputDirName = fileName + '-' + fileExtension;
-  const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
+  const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${filename} --text --output ${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
   console.log(command)
   await exec(command, {
     timeout: 200000,
   });
   console.log("Python Done")
-  if (fs.existsSync(`${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}/${outputDirName}-page-1-forms.csv`)) {
+  if (fs.existsSync(`${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}/${outputDirName}-page-1-text-inreadingorder.csv`)) {
     //joining path of directory
     const directoryPath = `${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
     //passing directoryPath and callback function
@@ -34,7 +34,7 @@ let queue = new Queue(async (payload, cb) => {
       let pageNumber = 0;
       //listing all files using forEach
       for (let i = 0; i < files.length; i++) {
-        if (files[i].split('.')[1] === 'csv' && files[i].includes('forms')) {
+        if (files[i].split('.')[1] === 'csv' && files[i].includes('inreadingorder')) {
           pageNumber += 1;
           const jsonArray = await csv().fromFile(path.join(directoryPath, files[i]));
           finalJson[`page_${pageNumber}`] = jsonArray;
@@ -44,6 +44,8 @@ let queue = new Queue(async (payload, cb) => {
     });
   }
 });
+
+
 
 const singleSmelt = async (req, res) => {
   try {
@@ -124,15 +126,7 @@ const bulkSmelt = (req, res) => {
       });
     }
     queue.on('task_finish', (taskId, result) => {
-      for (page of Object.keys(result)) {
-
-      result[page] =result[page].sort((a,b) => {
-          if (a.KeyTop === b.KeyTop) {
-            return a.Left - b.Left
-          }
-          return a.KeyTop - b.KeyTop
-        })
-      }
+      
       console.log('smelt result: \n', result)
       updateDocument(user, taskId, {
         metadata: { ...result },
