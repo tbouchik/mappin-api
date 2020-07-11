@@ -4,6 +4,7 @@ const userRoute = require('./user.route');
 const companyRoute = require('./company.route');
 const documentRoute = require('./document.route');
 const smelterRoute = require('./smelter.route');
+const clientRoute = require('./client.route');
 
 const router = express.Router();
 
@@ -12,5 +13,6 @@ router.use('/users', userRoute);
 router.use('/companies', companyRoute);
 router.use('/documents', documentRoute);
 router.use('/smelt', smelterRoute);
+router.use('/clients', clientRoute);
 
 module.exports = router;

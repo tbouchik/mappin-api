@@ -5,10 +5,19 @@ const { User, Company } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeUserId) => {
+  const client = await Client.findOne({ email });
   const user = await User.findOne({ email, _id: { $ne: excludeUserId } });
-  if (user) {
+  if (user || client) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
+};
+
+const checkUserExists = async (email) => { // Created for auth.controller.login 
+  const user = await User.findOne({ email });
+  if (user) {
+    return true;
+  }
+  return false;
 };
 
 const checkCompanyExists = async (companyName) => {
@@ -73,4 +82,5 @@ module.exports = {
   getUserByEmail,
   updateUser,
   deleteUser,
+  checkUserExists,
 };

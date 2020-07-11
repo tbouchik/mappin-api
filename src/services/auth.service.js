@@ -4,6 +4,7 @@ const httpStatus = require('http-status');
 const config = require('../config/config');
 const tokenService = require('./token.service');
 const userService = require('./user.service');
+const clientService = require('./client.service');
 const Token = require('../models/token.model');
 const AppError = require('../utils/AppError');
 
@@ -44,6 +45,16 @@ const loginUser = async (email, password) => {
   }
 };
 
+const loginClient = async (email, password) => {
+  try {
+    const client = await clientService.getClientByEmail(email);
+    await checkPassword(password, client.password);
+    return client;
+  } catch (error) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+  }
+};
+
 const refreshAuthTokens = async refreshToken => {
   try {
     const refreshTokenDoc = await tokenService.verifyToken(refreshToken, 'refresh');
@@ -79,6 +90,7 @@ const resetPassword = async (resetPasswordToken, newPassword) => {
 module.exports = {
   generateAuthTokens,
   loginUser,
+  loginClient,
   refreshAuthTokens,
   generateResetPasswordToken,
   resetPassword,
