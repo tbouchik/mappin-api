@@ -10,8 +10,8 @@ const register = catchAsync(async (req, res) => {
 });
 
 const login = catchAsync(async (req, res) => {
-  const userExists = await userService.checkUserExists(req.body.email)
-  const response = {}
+  const userExists = await userService.checkUserExists(req.body.email);
+  let response = {}
   if (userExists){
     const user = await authService.loginUser(req.body.email, req.body.password);
     const tokens = await authService.generateAuthTokens(user.id);

@@ -46,7 +46,16 @@ const clientSchema = mongoose.Schema(
     },
     company: {
       type: String,
-      default: 'Trading Company'
+      default: 'Trading Company',
+    },
+    isClient:{
+      type: Boolean,
+      default: true,
+    },
+    role: {
+      type: String,
+      enum: roles,
+      default: 'user',
     },
   },
   {
@@ -63,7 +72,7 @@ clientSchema.methods.toJSON = function() {
 
 clientSchema.methods.transform = function() {
   const client = this;
-  return pick(client.toJSON(), ['id', 'email', 'name',, 'company']);
+  return pick(client.toJSON(), ['id', 'email', 'name', 'isClient', 'company']);
 };
 
 clientSchema.pre('save', async function(next) {

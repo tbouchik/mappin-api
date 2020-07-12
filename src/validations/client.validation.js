@@ -11,7 +11,7 @@ const createClient = {
       .custom(password),
     name: Joi.string().required(),
     company: Joi.string(),
-    user: Joi.string().required(),
+    user: Joi.string(),
   }),
 };
 
