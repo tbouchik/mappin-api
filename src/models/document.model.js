@@ -13,6 +13,11 @@ const documentSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    client: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Client',
+      required: true,
+    },
     mimeType: {
       type: String,
       enum: ['image/png', 'image/jpeg', 'application/pdf'],
@@ -39,6 +44,16 @@ const documentSchema = mongoose.Schema(
     name:{
       type: String,
     },
+    uploadedBy:{
+      type: String,
+      required: true,
+      default: '',
+    },
+    validatedBy:{
+      type: String,
+      required: true,
+      default: '',
+    },
     metadata: {},
     stdFilter: [],
   },
@@ -51,7 +66,7 @@ const documentSchema = mongoose.Schema(
 
 documentSchema.methods.transform = function() {
   const user = this;
-  return pick(user.toJSON(), ['id', 'name', 'metadata', 'mimeType', 'businessPurpose', 'extractionType', 'status','createdAt','updatedAt', 'alias', 'stdFilter']);
+  return pick(user.toJSON(), ['id', 'name', 'metadata', 'uploadedBy', 'validatedBy', 'client', 'mimeType', 'businessPurpose', 'extractionType', 'status','createdAt','updatedAt', 'alias', 'stdFilter']);
 };
 
 const Document = mongoose.model('Document', documentSchema);

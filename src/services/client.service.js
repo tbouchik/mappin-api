@@ -5,10 +5,12 @@ const { Client, User } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeClientId) => {
-  const user = await User.findOne({ email });
-  const client = await Client.findOne({ email, _id: { $ne: excludeClientId } });
-  if (client || user) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Email already taken');
+  if (email !== process.env.GENERIC_EMAIL){
+    const user = await User.findOne({ email });
+    const client = await Client.findOne({ email, _id: { $ne: excludeClientId } });
+    if (client || user) {
+      throw new AppError(httpStatus.BAD_REQUEST, 'Email already taken');
+    }
   }
 };
 

@@ -1,10 +1,18 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { authService, userService, clientService, emailService } = require('../services');
+const uuidv4 = require('uuid/v4') 
 
 const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
   const tokens = await authService.generateAuthTokens(user.id);
+  const genericClientBody = {
+    email: process.env.GENERIC_EMAIL,
+    password: uuidv4(),
+    name: 'Generic Client',
+    company: req.body.company,
+  };
+  clientService.createClient(user,genericClientBody);
   const response = { user: user.transform(), tokens };
   res.status(httpStatus.CREATED).send(response);
 });

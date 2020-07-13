@@ -12,7 +12,7 @@ AWS.config.update({ region: 'us-east-1' });
 
 let queue = new Queue(async (payload, cb) => {
   let finalJson = {};
-  let filename = payload.documentBody.alias
+  let filename = payload.documentBody.alias;
   const fileName = filename.split('.')[0];
   const fileExtension = filename.split('.')[1];
   const outputDirName = fileName + '-' + fileExtension;

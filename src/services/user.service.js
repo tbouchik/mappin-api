@@ -1,13 +1,14 @@
 const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
-const { User, Company } = require('../models');
+const { User, Company, Client } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeUserId) => {
+  const usedForbiddenEmail  = (email === process.env.GENERIC_EMAIL);
   const client = await Client.findOne({ email });
   const user = await User.findOne({ email, _id: { $ne: excludeUserId } });
-  if (user || client) {
+  if (user || client || usedForbiddenEmail) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
 };

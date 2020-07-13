@@ -45,6 +45,9 @@ const updateDocument = {
       businessPurpose: Joi.string(),
       extractionType: Joi.string().valid('FORMS', 'TABLES', 'TEXT'),
       status: Joi.string().valid('pending', 'smelted', 'validated'),
+      client: Joi.string(),
+      validatedBy: Joi.string(),
+      uploadedBy: Joi.string(),
     })
     .min(1),
 };
