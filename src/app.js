@@ -6,6 +6,8 @@ const compression = require('compression');
 const cors = require('cors');
 const passport = require('passport');
 const httpStatus = require('http-status');
+const s3Proxy = require('s3-proxy');
+const companion = require('@uppy/companion');
 const config = require('./config/config');
 const morgan = require('./config/morgan');
 const { jwtStrategy } = require('./config/passport');
@@ -13,13 +15,8 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const AppError = require('./utils/AppError');
-const s3Proxy = require('s3-proxy');
-var companion = require('@uppy/companion')
-
-
 
 const app = express();
-
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
@@ -59,16 +56,20 @@ if (config.env === 'production') {
 app.use('/v1', routes);
 
 // s3-proxy
-app.get('/media/*',function(req, res, next) {
-  req.originalUrl = req.originalUrl.replace('/media', '')
-  next()
-  } , s3Proxy({
-  bucket: 'bucket413',
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  overrideCacheControl: 'max-age=100000',
-  defaultKey: 'index.html'
-}));
+app.get(
+  '/media/*',
+  function(req, res, next) {
+    req.originalUrl = req.originalUrl.replace('/media', '');
+    next();
+  },
+  s3Proxy({
+    bucket: 'bucket413',
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    overrideCacheControl: 'max-age=100000',
+    defaultKey: 'index.html',
+  })
+);
 
 // uppy
 const options = {
@@ -78,20 +79,20 @@ const options = {
       key: process.env.AWS_ACCESS_KEY_ID,
       secret: process.env.AWS_SECRET_ACCESS_KEY,
       bucket: process.env.AWS_BUCKET_NAME,
-      region: "us-east-1",
+      region: 'us-east-1',
       useAccelerateEndpoint: false, // default: false,
       expires: 3600, // default: 300 (5 minutes)
-      acl: "private" // default: public-read
-    }
+      acl: 'private', // default: public-read
+    },
   },
   server: {
-    host: "localhost:3000", // or yourdomain.com
-    protocol: "http"
+    host: 'localhost:3000', // or yourdomain.com
+    protocol: 'http',
   },
   filePath: process.env.FILEPATH,
-  secret : process.env.AWS_SECRET_ACCESS_KEY
-}
-app.use(companion.app(options))
+  secret: process.env.AWS_SECRET_ACCESS_KEY,
+};
+app.use(companion.app(options));
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {

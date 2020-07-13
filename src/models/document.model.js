@@ -34,22 +34,22 @@ const documentSchema = mongoose.Schema(
     extractionType: {
       type: String,
       enum: ['FORMS', 'TABLES', 'TEXT'],
-      default:'FORMS',
+      default: 'FORMS',
     },
     status: {
       type: String,
       enum: ['pending', 'smelted', 'validated'],
       default: 'pending',
     },
-    name:{
+    name: {
       type: String,
     },
-    uploadedBy:{
+    uploadedBy: {
       type: String,
       required: true,
       default: '',
     },
-    validatedBy:{
+    validatedBy: {
       type: String,
       required: true,
       default: '',
@@ -66,7 +66,22 @@ const documentSchema = mongoose.Schema(
 
 documentSchema.methods.transform = function() {
   const user = this;
-  return pick(user.toJSON(), ['id', 'name', 'metadata', 'uploadedBy', 'validatedBy', 'client', 'mimeType', 'businessPurpose', 'extractionType', 'status','createdAt','updatedAt', 'alias', 'stdFilter']);
+  return pick(user.toJSON(), [
+    'id',
+    'name',
+    'metadata',
+    'uploadedBy',
+    'validatedBy',
+    'client',
+    'mimeType',
+    'businessPurpose',
+    'extractionType',
+    'status',
+    'createdAt',
+    'updatedAt',
+    'alias',
+    'stdFilter',
+  ]);
 };
 
 const Document = mongoose.model('Document', documentSchema);

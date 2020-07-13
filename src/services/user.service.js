@@ -5,7 +5,7 @@ const { User, Company, Client } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeUserId) => {
-  const usedForbiddenEmail  = (email === process.env.GENERIC_EMAIL);
+  const usedForbiddenEmail = email === process.env.GENERIC_EMAIL;
   const client = await Client.findOne({ email });
   const user = await User.findOne({ email, _id: { $ne: excludeUserId } });
   if (user || client || usedForbiddenEmail) {
@@ -13,16 +13,17 @@ const checkDuplicateEmail = async (email, excludeUserId) => {
   }
 };
 
-const checkUserExists = async (email) => { // Created for auth.controller.login 
+const checkUserExists = async email => {
+  // Created for auth.controller.login
   const user = await User.findOne({ email });
-  if (user) {
+  if (user) {
     return true;
   }
   return false;
 };
 
-const checkCompanyExists = async (companyName) => {
-  const company = await Company.findOne({name: companyName});
+const checkCompanyExists = async companyName => {
+  const company = await Company.findOne({ name: companyName });
   if (!company) {
     throw new AppError(httpStatus.BAD_REQUEST, 'Company does not exist');
   }
@@ -31,7 +32,7 @@ const checkCompanyExists = async (companyName) => {
 
 const createUser = async userBody => {
   await checkDuplicateEmail(userBody.email);
-  company =  await checkCompanyExists(userBody.company);
+  company = await checkCompanyExists(userBody.company);
   userBody.company = company._id;
   const user = await User.create(userBody);
   return user;

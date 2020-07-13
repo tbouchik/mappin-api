@@ -17,14 +17,14 @@ const companySchema = mongoose.Schema(
 );
 
 companySchema.methods.toJSON = function() {
-    const company = this;
-    return company.toObject();
-  };
+  const company = this;
+  return company.toObject();
+};
 
 companySchema.methods.transform = function() {
-    const company = this;
-    return pick(company.toJSON(), ['id', 'name']);
-  };
+  const company = this;
+  return pick(company.toJSON(), ['id', 'name']);
+};
 
 const Company = mongoose.model('Company', companySchema);
 

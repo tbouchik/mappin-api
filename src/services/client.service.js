@@ -5,7 +5,7 @@ const { Client, User } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateEmail = async (email, excludeClientId) => {
-  if (email !== process.env.GENERIC_EMAIL){
+  if (email !== process.env.GENERIC_EMAIL) {
     const user = await User.findOne({ email });
     const client = await Client.findOne({ email, _id: { $ne: excludeClientId } });
     if (client || user) {
@@ -33,7 +33,7 @@ const getClientById = async (user, clientId) => {
   const client = await Client.findById(clientId);
   if (!client) {
     throw new AppError(httpStatus.NOT_FOUND, 'Client not found');
-  } else if (parseInt(client.user) !== parseInt(user._id)){
+  } else if (parseInt(client.user) !== parseInt(user._id)) {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this client information');
   }
   return client;

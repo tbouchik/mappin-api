@@ -13,7 +13,8 @@ const jwtVerify = async (payload, done) => {
     const client = await Client.findById(payload.sub);
     if (!user && !client) {
       return done(null, false);
-    } else if (user) {
+    }
+    if (user) {
       done(null, user);
     } else {
       done(null, client);
