@@ -126,7 +126,6 @@ const bulkSmelt = (req, res) => {
       });
     }
     queue.on('task_finish', (taskId, result) => {
-      console.log('smelt result: \n', result);
       updateDocument(user, taskId, {
         metadata: { ...result },
         status: 'smelted',

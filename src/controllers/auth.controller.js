@@ -1,5 +1,4 @@
 const httpStatus = require('http-status');
-const uuidv4 = require('uuid/v4');
 const catchAsync = require('../utils/catchAsync');
 const { authService, userService, clientService, emailService, filterService } = require('../services');
 

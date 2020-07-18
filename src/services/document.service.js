@@ -24,14 +24,19 @@ const createDocument = async (user, documentBody) => {
     const query = {
       name: 'Smart Filter',
     };
-    const smartFilter = await getFilters(user, query);
-    smartFilter = smartFilter[0];
+    let smartFilter = await getFilters(user, query);
+    if (smartFilter) {
+      smartFilter = smartFilter[0];
+    }
     documentBody.filter = smartFilter._id;
+    documentBody.osmium = shapeOsmiumFromFilterKeys(smartFilter.keys);
+    
+  }else{
+    // Shape Osmium according to filter
+    documentBody.osmium = await shapeOsmiumFromFilterId(documentBody.filter);
   }
   // Populate uploader
   documentBody.uploadedBy = user._id;
-  // Shape Osmium according to filter
-  documentBody.osmium = shapeOsmium(documentBody.filter);
   const document = await Document.create(documentBody);
   return document;
 };
@@ -73,9 +78,9 @@ const updateDocument = async (user, documentId, updateBody) => {
     } else if (user.isClient) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
     }
-    if (document.filter !== updateBody.filter) {
+    if (updateBody.filter && (document.filter !== updateBody.filter)) {
       // User chose to change filter
-      documentBody.osmium = shapeOsmium(updateBody.filter); // Osmium must follow
+      updateBody.osmium = shapeOsmiumFromFilterId(updateBody.filter); // Osmium must follow
     }
     Object.assign(document, updateBody);
     await document.save();
@@ -93,18 +98,26 @@ const deleteDocument = async (user, documentId) => {
     } else if (user.isClient) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to delete this document');
     }
-    Object.assign(document, updateBody);
     await document.remove();
     return document;
   }
 };
 
-const shapeOsmium = async filterId => {
+const shapeOsmiumFromFilterId = async filterId => {
   let osmium = [];
   // load filter from DB
   const filterArr = await getFilterById(filterId);
   // Shape Osmium according to filter
-  osmium = filterArr.map(filterKey => {
+  osmium = filterArr.keys.map(filterKey => {
+    return { Key: filterKey, Value: null };
+  });
+  return osmium;
+};
+
+const shapeOsmiumFromFilterKeys = filterKeys => {
+  let osmium = [];
+  // Shape Osmium according to filter
+  osmium = filterKeys.map(filterKey => {
     return { Key: filterKey, Value: null };
   });
   return osmium;

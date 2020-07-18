@@ -3,6 +3,7 @@ const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Client, User } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
+const uuidv4 = require('uuid/v4');
 
 const checkDuplicateEmail = async (email, excludeClientId) => {
   if (email !== process.env.GENERIC_EMAIL) {
