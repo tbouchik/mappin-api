@@ -4,11 +4,12 @@ const AppError = require('../utils/AppError');
 const { Filter } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const defaultFilter = require('../utils/defaultFilter');
+
 const checkDuplicateName = async (name, excludeFilterId) => {
-    const filter = await Filter.findOne({ name, _id: { $ne: excludeFilterId } });
-    if (filter ) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'Name already taken');
-    }
+  const filter = await Filter.findOne({ name, _id: { $ne: excludeFilterId } });
+  if (filter) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Name already taken');
+  }
 };
 
 const createFilter = async (user, filterBody) => {
@@ -18,12 +19,12 @@ const createFilter = async (user, filterBody) => {
   return filter;
 };
 
-const createDefaultFilter = async (userId) => {
+const createDefaultFilter = async userId => {
   const filterBody = {
     user: userId,
     keys: defaultFilter,
     name: 'Smart Filter',
-  }
+  };
   const filter = await Filter.create(filterBody);
   return filter;
 };

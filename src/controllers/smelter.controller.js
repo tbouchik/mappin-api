@@ -12,7 +12,7 @@ AWS.config.update({ region: 'us-east-1' });
 
 const queue = new Queue(async (payload, cb) => {
   let finalJson = {};
-  let filename = payload.documentBody.alias;
+  const filename = payload.documentBody.alias;
   const fileName = filename.split('.')[0];
   const fileExtension = filename.split('.')[1];
   const outputDirName = `${fileName}-${fileExtension}`;
@@ -48,7 +48,7 @@ const queue = new Queue(async (payload, cb) => {
 const singleSmelt = async (req, res) => {
   try {
     const { body, user } = req;
-    let command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${body.filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
+    const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${body.filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
     await exec(command, {
       timeout: 200000,
     });
@@ -104,7 +104,7 @@ const bulkSmelt = (req, res) => {
   try {
     const { body, user } = req;
     files = body.files;
-    for (let file of files) {
+    for (const file of files) {
       let documentBody = {
         link: `${process.env.AWS_BUCKET}/${file.alias}`,
         name: file.name,

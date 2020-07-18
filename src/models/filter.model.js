@@ -15,12 +15,12 @@ const filterSchema = mongoose.Schema(
       required: true,
     },
     keys: [],
-    },
-    {
-        timestamps: true,
-        toObject: { getters: true },
-        toJSON: { getters: true },
-    },
+  },
+  {
+    timestamps: true,
+    toObject: { getters: true },
+    toJSON: { getters: true },
+  },
 );
 
 filterSchema.methods.transform = function() {

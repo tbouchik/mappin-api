@@ -4,7 +4,7 @@ const AppError = require('../utils/AppError');
 const { Document } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const { getFilterById, getFilters } = require('./filter.service');
-const { getClientByEmail } = require ('./client.service');
+const { getClientByEmail } = require('./client.service');
 
 const createDocument = async (user, documentBody) => {
   if (!user.isClient) {
@@ -23,7 +23,7 @@ const createDocument = async (user, documentBody) => {
   if (!documentBody.filter) {
     const query = {
       name: 'Smart Filter',
-    }
+    };
     const smartFilter = await getFilters(user, query);
     smartFilter = smartFilter[0];
     documentBody.filter = smartFilter._id;
@@ -73,7 +73,8 @@ const updateDocument = async (user, documentId, updateBody) => {
     } else if (user.isClient) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
     }
-    if (document.filter !== updateBody.filter) { // User chose to change filter
+    if (document.filter !== updateBody.filter) {
+      // User chose to change filter
       documentBody.osmium = shapeOsmium(updateBody.filter); // Osmium must follow
     }
     Object.assign(document, updateBody);
@@ -98,16 +99,16 @@ const deleteDocument = async (user, documentId) => {
   }
 };
 
-const shapeOsmium = async (filterId) => {
+const shapeOsmium = async filterId => {
   let osmium = [];
   // load filter from DB
   const filterArr = await getFilterById(filterId);
   // Shape Osmium according to filter
   osmium = filterArr.map(filterKey => {
     return { Key: filterKey, Value: null };
-  })
+  });
   return osmium;
-}
+};
 
 module.exports = {
   createDocument,
