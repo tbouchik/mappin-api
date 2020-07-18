@@ -18,6 +18,11 @@ const documentSchema = mongoose.Schema(
       ref: 'Client',
       required: true,
     },
+    filter: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Filter',
+      required: true,
+    },
     mimeType: {
       type: String,
       enum: ['image/png', 'image/jpeg', 'application/pdf'],
@@ -51,11 +56,10 @@ const documentSchema = mongoose.Schema(
     },
     validatedBy: {
       type: String,
-      required: true,
       default: '',
     },
     metadata: {},
-    stdFilter: [],
+    osmium: [],
   },
   {
     timestamps: true,
@@ -73,6 +77,7 @@ documentSchema.methods.transform = function() {
     'uploadedBy',
     'validatedBy',
     'client',
+    'filter',
     'mimeType',
     'businessPurpose',
     'extractionType',
@@ -80,7 +85,7 @@ documentSchema.methods.transform = function() {
     'createdAt',
     'updatedAt',
     'alias',
-    'stdFilter',
+    'osmium',
   ]);
 };
 

@@ -21,6 +21,18 @@ const createClient = async (user, clientBody) => {
   return client;
 };
 
+const createDefaultClient = async (userId, company) => {
+  const genericClientBody = {
+    user: userId,
+    email: process.env.GENERIC_EMAIL,
+    password: uuidv4(),
+    name: 'Generic Client',
+    company,
+  };
+  const client = await Client.create(genericClientBody);
+  return client;
+};
+
 const getClients = async (user, query) => {
   const filter = pick(query, ['name', 'role', 'company']);
   filter.user = user._id;
@@ -65,6 +77,7 @@ const deleteClient = async (user, clientId) => {
 
 module.exports = {
   createClient,
+  createDefaultClient,
   getClients,
   getClientById,
   getClientByEmail,

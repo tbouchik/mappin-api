@@ -3,18 +3,35 @@ const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Document } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
+const { getFilterById, getFilters } = require('./filter.service');
+const { getClientByEmail } = require ('./client.service');
 
 const createDocument = async (user, documentBody) => {
   if (!user.isClient) {
     // Upload done by accountant
     documentBody.user = user._id;
-    documentBody.uploadedBy = user._id;
+    if (!documentBody.client) {
+      const genericClient = await getClientByEmail(process.env.GENERIC_EMAIL);
+      documentBody.client = genericClient._id;
+    }
   } else {
     // Upload done by client so "user" field must be populated with accountant id
     documentBody.client = user._id;
     documentBody.user = client.user;
-    documentBody.uploadedBy = user._id;
   }
+  // Assign smart filter if no filter is specified
+  if (!documentBody.filter) {
+    const query = {
+      name: 'Smart Filter',
+    }
+    const smartFilter = await getFilters(user, query);
+    smartFilter = smartFilter[0];
+    documentBody.filter = smartFilter._id;
+  }
+  // Populate uploader
+  documentBody.uploadedBy = user._id;
+  // Shape Osmium according to filter
+  documentBody.osmium = shapeOsmium(documentBody.filter);
   const document = await Document.create(documentBody);
   return document;
 };
@@ -56,6 +73,9 @@ const updateDocument = async (user, documentId, updateBody) => {
     } else if (user.isClient) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
     }
+    if (document.filter !== updateBody.filter) { // User chose to change filter
+      documentBody.osmium = shapeOsmium(updateBody.filter); // Osmium must follow
+    }
     Object.assign(document, updateBody);
     await document.save();
     return document;
@@ -77,6 +97,17 @@ const deleteDocument = async (user, documentId) => {
     return document;
   }
 };
+
+const shapeOsmium = async (filterId) => {
+  let osmium = [];
+  // load filter from DB
+  const filterArr = await getFilterById(filterId);
+  // Shape Osmium according to filter
+  osmium = filterArr.map(filterKey => {
+    return { Key: filterKey, Value: null };
+  })
+  return osmium;
+}
 
 module.exports = {
   createDocument,

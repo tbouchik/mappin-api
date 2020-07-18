@@ -14,7 +14,8 @@ const createDocument = {
     businessPurpose: Joi.string(),
     extractionType: Joi.string().valid('FORMS', 'TABLES', 'TEXT'),
     status: Joi.string().valid('pending', 'smelted', 'validated'),
-    stdFilter: Joi.array().required(),
+    osmium: Joi.array(),
+    filter: Joi.array(),
   }),
 };
 
@@ -43,13 +44,14 @@ const updateDocument = {
       metadata: Joi.array(),
       mimeType: Joi.string().valid('image/png', 'image/jpeg', 'application/pdf'),
       alias: Joi.string(),
-      stdFilter: Joi.array(),
+      osmium: Joi.array(),
       businessPurpose: Joi.string(),
       extractionType: Joi.string().valid('FORMS', 'TABLES', 'TEXT'),
       status: Joi.string().valid('pending', 'smelted', 'validated'),
       client: Joi.string(),
       validatedBy: Joi.string(),
       uploadedBy: Joi.string(),
+      filter: Joi.array(),
     })
     .min(1),
 };
