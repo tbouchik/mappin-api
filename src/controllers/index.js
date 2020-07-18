@@ -3,3 +3,4 @@ module.exports.userController = require('./user.controller');
 module.exports.companyController = require('./company.controller');
 module.exports.smelterController = require('./smelter.controller');
 module.exports.clientController = require('./client.controller');
+module.exports.filterController = require('./filter.controller');
