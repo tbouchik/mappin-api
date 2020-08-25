@@ -82,6 +82,9 @@ const updateDocument = async (user, documentId, updateBody) => {
       // User chose to change filter
       updateBody.osmium = shapeOsmiumFromFilterId(updateBody.filter); // Osmium must follow
     }
+    if (updateBody.validated && updateBody.validated == 'validates'){
+      updateBody.validatedBy = user._id;
+    }
     Object.assign(document, updateBody);
     await document.save();
     return document;

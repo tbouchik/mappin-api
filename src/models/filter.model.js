@@ -14,6 +14,10 @@ const filterSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    description: {
+        type: String,
+        default: 'No description added',
+    },
     keys: [],
   },
   {
