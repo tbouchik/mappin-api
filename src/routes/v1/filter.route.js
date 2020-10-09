@@ -11,6 +11,10 @@ router
   .post(auth('manageFilters'), validate(filterValidation.createFilter), filterController.createFilter)
   .get(auth('manageFilters'), validate(filterValidation.getFilters), filterController.getFilters);
 
+  router
+  .route('/default')
+  .get(auth('manageFilters'), filterController.getDefaultFilterId);
+
 router
   .route('/:filterId')
   .get(auth('manageFilters'), validate(filterValidation.getFilter), filterController.getFilter)

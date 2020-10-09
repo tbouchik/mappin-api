@@ -28,10 +28,16 @@ const deleteFilter = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const getDefaultFilterId = catchAsync(async (req, res) => {
+  const filterId = await filterService.getDefaultFilterId(req.user);
+  res.send(filterId);
+});
+
 module.exports = {
   createFilter,
   getFilters,
   getFilter,
   updateFilter,
   deleteFilter,
+  getDefaultFilterId,
 };

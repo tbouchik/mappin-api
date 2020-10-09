@@ -23,7 +23,7 @@ const createDefaultFilter = async userId => {
   const filterBody = {
     user: userId,
     keys: defaultFilter,
-    name: 'Smart Filter',
+    name: 'Smart Template',
   };
   const filter = await Filter.create(filterBody);
   return filter;
@@ -71,6 +71,16 @@ const deleteFilter = async (user, filterId) => {
   return filter;
 };
 
+const getDefaultFilterId = async (user) => {
+  const filter = await Filter.findOne({ user: user._id })
+  if (!filter) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Filter ID not found');
+  } else if (parseInt(filter.user) !== parseInt(user._id)) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this filter information');
+  }
+  return filter._id;
+};
+
 module.exports = {
   createFilter,
   createDefaultFilter,
@@ -79,4 +89,5 @@ module.exports = {
   getFilterByName,
   updateFilter,
   deleteFilter,
+  getDefaultFilterId,
 };
