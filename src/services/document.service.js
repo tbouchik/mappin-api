@@ -3,7 +3,7 @@ const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Document } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
-const { getFilterById, getFilters } = require('./filter.service');
+const { getFilterById, getDefaultFilterId } = require('./filter.service');
 const { getClientByEmail } = require('./client.service');
 
 const createDocument = async (user, documentBody) => {
@@ -20,20 +20,17 @@ const createDocument = async (user, documentBody) => {
     documentBody.user = client.user;
   }
   // Assign smart filter if no filter is specified
-  if (!documentBody.filter) {
-    const query = {
-      name: 'Smart Filter',
-    };
-    let smartFilter = await getFilters(user, query);
+  const smartFilterId = await getDefaultFilterId(user);
+  if (!documentBody.filter || documentBody.filter === smartFilterId) {
+    let smartFilter = await getFilterById(user, smartFilterId);
     if (smartFilter) {
       smartFilter = smartFilter[0];
+      documentBody.filter = smartFilter._id;
+      documentBody.osmium = shapeOsmiumForSmartFilter(smartFilter);
     }
-    documentBody.filter = smartFilter._id;
-    documentBody.osmium = shapeOsmiumFromFilterKeys(smartFilter.keys);
-    
   }else{
     // Shape Osmium according to filter
-    documentBody.osmium = await shapeOsmiumFromFilterId(documentBody.filter);
+    documentBody.osmium = await shapeOsmiumFromFilterId(user, documentBody.filter);
   }
   // Populate uploader
   documentBody.uploadedBy = user._id;
@@ -80,12 +77,13 @@ const updateDocument = async (user, documentId, updateBody) => {
     }
     if (updateBody.filter && (document.filter !== updateBody.filter)) {
       // User chose to change filter
-      updateBody.osmium = shapeOsmiumFromFilterId(updateBody.filter); // Osmium must follow
+      updateBody.osmium = shapeOsmiumFromFilterId(user,updateBody.filter); // Osmium must follow
     }
-    if (updateBody.validated && updateBody.validated == 'validates'){
+    if (updateBody.validated && updateBody.validated == 'validated'){
       updateBody.validatedBy = user._id;
     }
     Object.assign(document, updateBody);
+    console.log('updated document: \n',document)
     await document.save();
     return document;
   }
@@ -106,22 +104,22 @@ const deleteDocument = async (user, documentId) => {
   }
 };
 
-const shapeOsmiumFromFilterId = async filterId => {
+const shapeOsmiumFromFilterId = async (user, filterId) => {
   let osmium = [];
   // load filter from DB
-  const filterArr = await getFilterById(filterId);
+  const filterArr = await getFilterById(user, filterId);
   // Shape Osmium according to filter
   osmium = filterArr.keys.map(filterKey => {
-    return { Key: filterKey, Value: null };
+    return { Key: filterKey.value, Value: null };
   });
   return osmium;
 };
 
-const shapeOsmiumFromFilterKeys = filterKeys => {
+const shapeOsmiumForSmartFilter = smartFilter => {
   let osmium = [];
   // Shape Osmium according to filter
-  osmium = filterKeys.map(filterKey => {
-    return { Key: filterKey, Value: null };
+  osmium = smartFilter.keys.map(filterKey => {
+    return { Key: filterKey.value, Value: null };
   });
   return osmium;
 };
