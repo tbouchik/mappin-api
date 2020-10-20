@@ -3,7 +3,6 @@ const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Client, User } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
-const uuidv4 = require('uuid/v4');
 
 const checkDuplicateEmail = async (email, excludeClientId) => {
   if (email !== process.env.GENERIC_EMAIL) {
@@ -26,7 +25,7 @@ const createDefaultClient = async (userId, company) => {
   const genericClientBody = {
     user: userId,
     email: process.env.GENERIC_EMAIL,
-    password: uuidv4(),
+    password: 'Generated',
     name: 'Generic Client',
     company,
   };
