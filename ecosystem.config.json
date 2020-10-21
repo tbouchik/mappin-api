@@ -11,5 +11,15 @@
         "NODE_ENV": "production"
       }
     }
-  ]
+  ],
+  "deploy" : {
+    "production" : {
+      "user" : "root",
+      "host" : ["209.97.184.83"],
+      "ref"  : "origin/master",
+      "repo" : "git@github.com:tbouchik/mappin-api.git",
+      "path" : "/root/code",
+      "post-deploy" : "npm install; npm start"
+     }
+  }
 }
