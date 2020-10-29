@@ -25,7 +25,7 @@ const createDefaultClient = async (userId, company) => {
   const genericClientBody = {
     user: userId,
     email: process.env.GENERIC_EMAIL,
-    password: 'Generated',
+    password: 'Generated1',
     name: 'Generic Client',
     company,
   };
