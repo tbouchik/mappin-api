@@ -110,6 +110,7 @@ const bulkSmelt = (req, res) => {
         name: file.name,
         metadata: {},
         osmium: [],
+        client: file.client,
         filter: file.filter,
         mimeType: file.mimeType,
         alias: file.alias,
