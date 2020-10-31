@@ -6,6 +6,7 @@ const { getQueryOptions } = require('../utils/service.util');
 const { getFilterById, getDefaultFilterId } = require('./filter.service');
 const { getClientByEmail } = require('./client.service');
 
+
 const createDocument = async (user, documentBody) => {
   if (!user.isClient) {
     // Upload done by accountant
@@ -49,7 +50,10 @@ const getDocuments = async (user, query) => {
     filter.client = user._id; // clients should only view their own files
   }
   const options = getQueryOptions(query);
-  const documents = await Document.find(filter, null, options);
+  let documents = await Document.find(filter, null, options)
+    .populate('user', 'name')
+    .populate('client', 'name')
+    .populate('filter', 'name');
   return documents;
 };
 

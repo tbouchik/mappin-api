@@ -5,15 +5,8 @@ const { Filter } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const defaultFilter = require('../utils/defaultFilter');
 
-const checkDuplicateName = async (name, excludeFilterId) => {
-  const filter = await Filter.findOne({ name, _id: { $ne: excludeFilterId } });
-  if (filter) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Name already taken');
-  }
-};
 
 const createFilter = async (user, filterBody) => {
-  await checkDuplicateName(filterBody.name);
   filterBody.user = user._id;
   const filter = await Filter.create(filterBody);
   return filter;
@@ -58,9 +51,6 @@ const getFilterByName = async name => {
 
 const updateFilter = async (user, filterId, updateBody) => {
   const filter = await getFilterById(user, filterId);
-  if (updateBody.name) {
-    await checkDuplicateName(updateBody.name, filterId);
-  }
   Object.assign(filter, updateBody);
   await filter.save();
   return filter;
@@ -73,7 +63,7 @@ const deleteFilter = async (user, filterId) => {
 };
 
 const getDefaultFilterId = async (user) => {
-  const filter = await Filter.findOne({ user: user._id })
+  const filter = await Filter.findOne({ user: user._id, name: 'Smart Template' })
   if (!filter) {
     throw new AppError(httpStatus.NOT_FOUND, 'Filter ID not found');
   } else if (parseInt(filter.user) !== parseInt(user._id)) {

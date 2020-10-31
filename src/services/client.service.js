@@ -3,19 +3,25 @@ const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Client, User } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
+const { getDefaultFilterId } = require('./filter.service');
+const defaultFilter = require('../utils/defaultFilter');
 
-const checkDuplicateEmail = async (email, excludeClientId) => {
+const checkDuplicateEmail = async (email, userId) => {
   if (email !== process.env.GENERIC_EMAIL) {
-    const user = await User.findOne({ email });
-    const client = await Client.findOne({ email, _id: { $ne: excludeClientId } });
-    if (client || user) {
+    let ObjectId = require('mongoose').Types.ObjectId; 
+    const client = await Client.findOne({ 
+      email,
+      user: new ObjectId(userId)
+    });
+    console.log(client)
+    if (client) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Email already taken');
     }
   }
 };
 
 const createClient = async (user, clientBody) => {
-  await checkDuplicateEmail(clientBody.email);
+  await checkDuplicateEmail(clientBody.email, user._id);
   clientBody.user = user._id;
   const client = await Client.create(clientBody);
   return client;
@@ -35,7 +41,9 @@ const createDefaultClient = async (userId, company) => {
 
 const getClients = async (user, query) => {
   const filter = pick(query, ['name', 'role', 'company']);
+  const defaultClientId = await getDefaultClientId(user) // TODO: Optimize second call to DB 
   filter.user = user._id;
+  filter._id = { $ne: defaultClientId }
   const options = getQueryOptions(query);
   const clients = await Client.find(filter, null, options);
   return clients;
@@ -62,7 +70,7 @@ const getClientByEmail = async email => {
 const updateClient = async (user, clientId, updateBody) => {
   const client = await getClientById(user, clientId);
   if (updateBody.email) {
-    await checkDuplicateEmail(updateBody.email, clientId);
+    await checkDuplicateEmail(updateBody.email, user.id);
   }
   Object.assign(client, updateBody);
   await client.save();
@@ -75,6 +83,16 @@ const deleteClient = async (user, clientId) => {
   return client;
 };
 
+const getDefaultClientId = async (user) => {
+  const client = await Client.findOne({ user: user._id, name: 'Generic Client' })
+  if (!client) { 
+    throw new AppError(httpStatus.NOT_FOUND, 'Client ID not found');
+  } else if (parseInt(client.user) !== parseInt(user._id)) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this client information');
+  }
+  return client._id;
+};
+
 module.exports = {
   createClient,
   createDefaultClient,
@@ -83,4 +101,5 @@ module.exports = {
   getClientByEmail,
   updateClient,
   deleteClient,
+  getDefaultClientId,
 };
