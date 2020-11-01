@@ -17,4 +17,8 @@ router
   .patch(auth('manageDocuments'), validate(documentValidation.updateDocument), documentController.updateDocument)
   .delete(auth('manageDocuments'), validate(documentValidation.deleteDocument), documentController.deleteDocument);
 
-module.exports = router;
+router
+  .route('/client/:clientId')
+  .get(auth('manageDocuments'), validate(documentValidation.getDocumentsByClient), documentController.getDocumentsByClient)
+
+  module.exports = router;

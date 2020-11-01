@@ -13,6 +13,12 @@ const getDocuments = catchAsync(async (req, res) => {
   res.send(response);
 });
 
+const getDocumentsByClient = catchAsync(async (req, res) => {
+  const documents = await documentService.getDocumentsByClient(req.user, req.params.clientId);
+  const response = documents.map(document => document.transform());
+  res.send(response);
+});
+
 const getDocument = catchAsync(async (req, res) => {
   const document = await documentService.getDocumentById(req.user, req.params.documentId);
   res.send(document.transform());
@@ -34,4 +40,5 @@ module.exports = {
   getDocument,
   updateDocument,
   deleteDocument,
+  getDocumentsByClient,
 };

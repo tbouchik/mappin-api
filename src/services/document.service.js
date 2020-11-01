@@ -57,6 +57,24 @@ const getDocuments = async (user, query) => {
   return documents;
 };
 
+getDocumentsByClient = async (user, clientId) => {
+  let filter = {};
+  if (!user.isClient) {
+    // requestor is an accountant
+    filter.user = user._id; // filter by accountant
+  } else {
+    // requestor is a client
+    filter.client = user._id; // clients should only view their own files
+  }
+  let ObjectId = require('mongoose').Types.ObjectId; 
+  filter.client = ObjectId(clientId) // filter by client if specified in query by accountant
+  let documents = await Document.find(filter, null)
+    .populate('user', 'name')
+    .populate('client', 'name')
+    .populate('filter', 'name');
+  return documents;
+};
+
 const getDocumentById = async (user, documentId) => {
   const document = await Document.findById(documentId);
   if (!document) {
@@ -134,4 +152,5 @@ module.exports = {
   getDocumentById,
   updateDocument,
   deleteDocument,
+  getDocumentsByClient,
 };

@@ -28,6 +28,15 @@ const getDocuments = {
   }),
 };
 
+const getDocumentsByClient = {
+  query: Joi.object().keys({
+    userId: Joi.string().custom(objectId),
+    clientId: Joi.string().custom(objectId),
+    sortBy: Joi.string(),
+    limit: Joi.number().integer(),
+  }),
+};
+
 const getDocument = {
   params: Joi.object().keys({
     documentId: Joi.string().custom(objectId),
@@ -68,4 +77,5 @@ module.exports = {
   getDocument,
   updateDocument,
   deleteDocument,
+  getDocumentsByClient,
 };
