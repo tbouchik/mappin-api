@@ -7,7 +7,8 @@ const httpStatus = require('http-status');
 const Queue = require('better-queue');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
-
+const { getDefaultFilterId } = require('../services/filter.service');
+const { populate } = require('../miner/defaultMiner');
 AWS.config.update({ region: 'us-east-1' });
 
 const queue = new Queue(async (payload, cb) => {
@@ -118,7 +119,6 @@ const bulkSmelt = (req, res) => {
         extractionType: file.extractionType,
         status: 'pending',
       };
-
       createDocument(user, documentBody).then(res => {
         queue.push({
           id: res._id,
@@ -127,10 +127,16 @@ const bulkSmelt = (req, res) => {
       });
     }
     queue.on('task_finish', (taskId, result) => {
-      updateDocument(user, taskId, {
-        metadata: { ...result },
-        status: 'smelted',
-      }).then();
+      getDefaultFilterId(user)
+        .then((defautlFilterId) =>  {
+          if (defautlFilterId === result.filter) { // populate osmium
+            result = populate(result);
+          }
+          updateDocument(user, taskId, {
+            metadata: { ...result },
+            status: 'smelted',
+          }).then();
+        })
     });
     res.json({ done: true });
     queue.on('empty', () => {
