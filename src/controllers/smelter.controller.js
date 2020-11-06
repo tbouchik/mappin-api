@@ -7,12 +7,13 @@ const httpStatus = require('http-status');
 const Queue = require('better-queue');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
-const { getDefaultFilterId } = require('../services/filter.service');
-const { populate } = require('../miner/defaultMiner');
+const { getDefaultFilter } = require('../services/filter.service');
+const { populateOsmium } = require('../miner/defaultMiner');
 AWS.config.update({ region: 'us-east-1' });
 
 const queue = new Queue(async (payload, cb) => {
   let finalJson = {};
+  let newDocumentBody = Object.assign({}, payload.documentBody)
   const filename = payload.documentBody.alias;
   const fileName = filename.split('.')[0];
   const fileExtension = filename.split('.')[1];
@@ -41,7 +42,8 @@ const queue = new Queue(async (payload, cb) => {
           finalJson[`page_${pageNumber}`] = jsonArray;
         }
       }
-      cb(null, finalJson);
+      newDocumentBody.metadata = {...finalJson};
+      cb(null, newDocumentBody);
     });
   }
 });
@@ -126,14 +128,15 @@ const bulkSmelt = (req, res) => {
         });
       });
     }
-    queue.on('task_finish', (taskId, result) => {
-      getDefaultFilterId(user)
-        .then((defautlFilterId) =>  {
-          if (defautlFilterId === result.filter) { // populate osmium
-            result = populate(result);
+    queue.on('task_finish', (taskId, documentBody) => {
+      getDefaultFilter(user)
+        .then((defaultFilter) =>  {
+          if (defaultFilter.id === documentBody.filter) { // populate osmium
+            documentBody = populateOsmium(documentBody, defaultFilter);
           }
           updateDocument(user, taskId, {
-            metadata: { ...result },
+            osmium: documentBody.osmium,
+            metadata: documentBody.metadata,
             status: 'smelted',
           }).then();
         })

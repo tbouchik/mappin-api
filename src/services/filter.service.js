@@ -72,6 +72,16 @@ const getDefaultFilterId = async (user) => {
   return filter._id;
 };
 
+const getDefaultFilter = async (user) => {
+  const filter = await Filter.findOne({ user: user._id, name: 'Smart Template' })
+  if (!filter) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Filter ID not found');
+  } else if (parseInt(filter.user) !== parseInt(user._id)) {
+    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this filter information');
+  }
+  return filter;
+};
+
 module.exports = {
   createFilter,
   createDefaultFilter,
@@ -81,4 +91,5 @@ module.exports = {
   updateFilter,
   deleteFilter,
   getDefaultFilterId,
+  getDefaultFilter,
 };
