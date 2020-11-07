@@ -105,7 +105,6 @@ const updateDocument = async (user, documentId, updateBody) => {
       updateBody.validatedBy = user._id;
     }
     Object.assign(document, updateBody);
-    console.log('updated document: \n',document)
     await document.save();
     return document;
   }

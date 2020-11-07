@@ -1,6 +1,6 @@
 const defaultFilter = [
   {value:'Invoice Number', type:'NUMBER'},
-  {value:'Issue Date', type:'DATE'},
+  {value:'Date', type:'DATE'},
   {value:'Order Id / Tracking No', type:'TEXT'},
   {value:'Seller Name', type:'TEXT'},
   {value:'Seller Address', type:'TEXT'},
@@ -9,8 +9,7 @@ const defaultFilter = [
   {value:'Buyer Address', type:'TEXT'},
   {value:'Buyer GST VAT Number', type:'NUMBER'},
   {value:'Subtotal', type:'NUMBER'},
-  {value:'Tax Rate', type:'NUMBER'},
-  {value:'Tax Total', type:'NUMBER'},
+  {value:'Tax', type:'NUMBER'},
   {value:'Total Due', type:'NUMBER'},
 ];
 
