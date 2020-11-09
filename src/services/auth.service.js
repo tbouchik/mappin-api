@@ -41,7 +41,7 @@ const loginUser = async (email, password) => {
     await checkPassword(password, user.password);
     return user;
   } catch (error) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+    throw new AppError(httpStatus.BAD_REQUEST, 'Incorrect email or password');
   }
 };
 
@@ -51,7 +51,7 @@ const loginClient = async (email, password) => {
     await checkPassword(password, client.password);
     return client;
   } catch (error) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+    throw new AppError(httpStatus.BAD_REQUEST, 'Incorrect email or password');
   }
 };
 

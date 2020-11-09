@@ -69,7 +69,7 @@ const getClientByEmail = async email => {
 
 const updateClient = async (user, clientId, updateBody) => {
   const client = await getClientById(user, clientId);
-  if (updateBody.email) {
+  if (updateBody.email && updateBody.email !== client.email) {
     await checkDuplicateEmail(updateBody.email, user.id);
   }
   Object.assign(client, updateBody);
