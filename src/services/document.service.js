@@ -80,12 +80,15 @@ getDocumentsByClient = async (user, clientId) => {
 };
 
 const getDocumentById = async (user, documentId) => {
-  const document = await Document.findById(documentId);
+  const document = await Document.findById(documentId)
+  .populate('user', 'name')
+    .populate('client', 'name')
+    .populate('filter', 'name');
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
-  } else if (!user.isClient && parseInt(document.user) !== parseInt(user._id)) {
+  } else if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to read this document');
-  } else if (user.isClient && parseInt(document.client) !== parseInt(user._id)) {
+  } else if (user.isClient && parseInt(document.client._id) !== parseInt(user._id)) {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to read this document');
   }
   return document;
