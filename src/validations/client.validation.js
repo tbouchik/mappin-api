@@ -1,15 +1,13 @@
 const Joi = require('@hapi/joi');
-const { password, objectId } = require('./custom.validation');
+const { objectId } = require('./custom.validation');
 
 const createClient = {
   body: Joi.object().keys({
     email: Joi.string()
       .required()
       .email(),
-    password: Joi.string()
-      .required()
-      .custom(password),
     name: Joi.string().required(),
+    number: Joi.string(),
     company: Joi.string(),
     user: Joi.string(),
   }),
@@ -37,9 +35,9 @@ const updateClient = {
   body: Joi.object()
     .keys({
       email: Joi.string().email(),
-      password: Joi.string().custom(password),
       name: Joi.string(),
       company: Joi.string(),
+      number: Joi.string(),
     })
     .min(1),
 };

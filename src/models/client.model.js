@@ -35,6 +35,7 @@ const clientSchema = mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      default:'Generate1',
       minlength: 8,
       max: 1024,
       validate(value) {
@@ -46,6 +47,9 @@ const clientSchema = mongoose.Schema(
     company: {
       type: String,
       default: 'Trading Company',
+    },
+    number: {
+      type: String,
     },
     isClient: {
       type: Boolean,
@@ -71,7 +75,7 @@ clientSchema.methods.toJSON = function() {
 
 clientSchema.methods.transform = function() {
   const client = this;
-  return pick(client.toJSON(), ['id', 'email', 'name', 'isClient', 'company']);
+  return pick(client.toJSON(), ['id', 'email', 'name', 'isClient', 'company', 'number']);
 };
 
 clientSchema.pre('save', async function(next) {
