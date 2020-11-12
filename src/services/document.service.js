@@ -41,6 +41,8 @@ const createDocument = async (user, documentBody) => {
 
 const getDocuments = async (user, query) => {
   let filter = {};
+  let page = query.page || 0;
+  let size = query.size || 20;
   if (!user.isClient) {
     // requestor is an accountant
     filter = pick(query, ['client']); // filter by client if specified in query by accountant
@@ -51,6 +53,8 @@ const getDocuments = async (user, query) => {
   }
   const options = getQueryOptions(query);
   let documents = await Document.find(filter, null, options)
+    .skip(page*size)
+    .limit(size)
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('filter', 'name');
