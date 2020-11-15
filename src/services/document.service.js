@@ -40,9 +40,41 @@ const createDocument = async (user, documentBody) => {
 };
 
 const getDocuments = async (user, query) => {
+  // FILTER
   let filter = {};
+  if (!user.isClient) {
+    // requestor is an accountant
+    filter = pick(query, ['client']); // filter by client if specified in query by accountant
+    filter.user = user._id; // filter by accountant
+  } else {
+    // requestor is a client
+    filter.client = user._id; // clients should only view their own files
+    }
+  // OPTIONS
   let page = query.page || 0;
-  let size = query.size || 20;
+  let limit = query.limit || 100;
+  let skip = page * limit;
+  let sort = page.sort || {createdAt: -1};
+  const options = {
+    limit, 
+    skip, 
+    sort
+  }
+  console.log('options',options)
+  console.log('query', query)
+  console.log('filter', filter)
+  let documents = await Document.find(filter, null, options)
+    .skip(page*limit)
+    .limit(limit)
+    .populate('user', 'name')
+    .populate('client', 'name')
+    .populate('filter', 'name');
+  console.log(documents[0])
+  return documents;
+};
+
+const getDocumentsCount = async (user, query) => {
+  let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
     filter = pick(query, ['client']); // filter by client if specified in query by accountant
@@ -51,14 +83,10 @@ const getDocuments = async (user, query) => {
     // requestor is a client
     filter.client = user._id; // clients should only view their own files
   }
-  const options = getQueryOptions(query);
-  let documents = await Document.find(filter, null, options)
-    .skip(page*size)
-    .limit(size)
-    .populate('user', 'name')
-    .populate('client', 'name')
-    .populate('filter', 'name');
-  return documents;
+  console.log('filter count :', filter)
+  let count = await Document.countDocuments(filter)
+  console.log('count is at ; ', count)
+  return {count};
 };
 
 getDocumentsByClient = async (user, clientId) => {
@@ -99,7 +127,9 @@ const updateDocument = async (user, documentId, updateBody) => {
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
   } else {
-    if (!user.isClient && parseInt(document.user) !== parseInt(user._id)) {
+    console.log(document.user)
+    console.log(user._id)
+    if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
     } else if (user.isClient) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
@@ -122,7 +152,7 @@ const deleteDocument = async (user, documentId) => {
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
   } else {
-    if (!user.isClient && parseInt(document.user) !== parseInt(user._id)) {
+    if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to delete this document');
     } else if (user.isClient) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to delete this document');
@@ -159,4 +189,5 @@ module.exports = {
   updateDocument,
   deleteDocument,
   getDocumentsByClient,
+  getDocumentsCount,
 };

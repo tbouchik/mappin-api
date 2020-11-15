@@ -13,6 +13,11 @@ const getDocuments = catchAsync(async (req, res) => {
   res.send(response);
 });
 
+const getDocumentsCount = catchAsync(async (req, res) => {
+  const documentsCount = await documentService.getDocumentsCount(req.user, req.query);
+  res.send(documentsCount);
+});
+
 const getDocumentsByClient = catchAsync(async (req, res) => {
   const documents = await documentService.getDocumentsByClient(req.user, req.params.clientId);
   const response = documents.map(document => document.transform());
@@ -41,4 +46,5 @@ module.exports = {
   updateDocument,
   deleteDocument,
   getDocumentsByClient,
+  getDocumentsCount,
 };

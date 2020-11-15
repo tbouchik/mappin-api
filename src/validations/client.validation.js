@@ -19,6 +19,7 @@ const getClients = {
     companyId: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
+    page: Joi.number().integer(),
   }),
 };
 

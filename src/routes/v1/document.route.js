@@ -6,19 +6,21 @@ const documentController = require('../../controllers/document.controller');
 
 const router = express.Router();
 
-router
-  .route('/')
-  .post(auth('manageDocuments'), validate(documentValidation.createDocument), documentController.createDocument)
-  .get(auth('manageDocuments'), validate(documentValidation.getDocuments), documentController.getDocuments);
 
-router
-  .route('/:documentId')
-  .get(auth('manageDocuments'), validate(documentValidation.getDocument), documentController.getDocument)
-  .patch(auth('manageDocuments'), validate(documentValidation.updateDocument), documentController.updateDocument)
-  .delete(auth('manageDocuments'), validate(documentValidation.deleteDocument), documentController.deleteDocument);
+  router
+    .route('/count/')
+    .get(auth('manageDocuments'), validate(documentValidation.getDocumentsByClient), documentController.getDocumentsCount);
 
-router
-  .route('/client/:clientId')
-  .get(auth('manageDocuments'), validate(documentValidation.getDocumentsByClient), documentController.getDocumentsByClient)
+  router
+    .route('/')
+    .post(auth('manageDocuments'), validate(documentValidation.createDocument), documentController.createDocument)
+    .get(auth('manageDocuments'), validate(documentValidation.getDocuments), documentController.getDocuments);
+    
+  router
+    .route('/:documentId')
+    .get(auth('manageDocuments'), validate(documentValidation.getDocument), documentController.getDocument)
+    .patch(auth('manageDocuments'), validate(documentValidation.updateDocument), documentController.updateDocument)
+    .delete(auth('manageDocuments'), validate(documentValidation.deleteDocument), documentController.deleteDocument);
+    
 
-  module.exports = router;
+module.exports = router;

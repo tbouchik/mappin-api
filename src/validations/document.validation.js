@@ -25,15 +25,19 @@ const getDocuments = {
     companyId: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
+    page: Joi.number().integer(),
+    client:Joi.string(),
+    sort: Joi.any(),
   }),
 };
 
 const getDocumentsByClient = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
-    clientId: Joi.string().custom(objectId),
+    client: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
+    page: Joi.number().integer(),
   }),
 };
 
