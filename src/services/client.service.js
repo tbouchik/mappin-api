@@ -40,11 +40,21 @@ const createDefaultClient = async (userId, company) => {
 };
 
 const getClients = async (user, query) => {
-  const filter = pick(query, ['name', 'role', 'company']);
+  // FILTER
+  const filter = pick(query, ['company']);
   const defaultClientId = await getDefaultClientId(user) // TODO: Optimize second call to DB 
   filter.user = user._id;
   filter._id = { $ne: defaultClientId }
-  const options = getQueryOptions(query);
+  // OPTIONS
+  let page = query.page || 0;
+  let limit = query.limit || 300;
+  let skip = page * limit;
+  let sort = page.sort || {createdAt: -1};
+  const options = {
+    limit, 
+    skip, 
+    sort
+  }
   const clients = await Client.find(filter, null, options);
   return clients;
 };
@@ -93,6 +103,15 @@ const getDefaultClientId = async (user) => {
   return client._id;
 };
 
+const getClientsCount = async (user, query) => {
+  let filter = {};
+  filter.user = user._id; // filter by accountant
+  console.log('filter count :', filter)
+  let count = await Client.countDocuments(filter)
+  console.log('count is at ; ', count)
+  return {count};
+};
+
 module.exports = {
   createClient,
   createDefaultClient,
@@ -102,4 +121,5 @@ module.exports = {
   updateClient,
   deleteClient,
   getDefaultClientId,
+  getClientsCount,
 };

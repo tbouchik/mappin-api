@@ -52,7 +52,7 @@ const getDocuments = async (user, query) => {
     }
   // OPTIONS
   let page = query.page || 0;
-  let limit = query.limit || 100;
+  let limit = query.limit || 300;
   let skip = page * limit;
   let sort = page.sort || {createdAt: -1};
   const options = {
@@ -64,12 +64,9 @@ const getDocuments = async (user, query) => {
   console.log('query', query)
   console.log('filter', filter)
   let documents = await Document.find(filter, null, options)
-    .skip(page*limit)
-    .limit(limit)
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('filter', 'name');
-  console.log(documents[0])
   return documents;
 };
 

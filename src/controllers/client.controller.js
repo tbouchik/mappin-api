@@ -13,6 +13,11 @@ const getClients = catchAsync(async (req, res) => {
   res.send(response);
 });
 
+const getClientsCount = catchAsync(async (req, res) => {
+  const clientsCount = await clientService.getClientsCount(req.user, req.query);
+  res.send(clientsCount);
+});
+
 const getClient = catchAsync(async (req, res) => {
   const client = await clientService.getClientById(req.user, req.params.clientId);
   res.send(client.transform());
@@ -34,4 +39,5 @@ module.exports = {
   getClient,
   updateClient,
   deleteClient,
+  getClientsCount,
 };
