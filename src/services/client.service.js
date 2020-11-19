@@ -45,6 +45,9 @@ const getClients = async (user, query) => {
   const defaultClientId = await getDefaultClientId(user) // TODO: Optimize second call to DB 
   filter.user = user._id;
   filter._id = { $ne: defaultClientId }
+  if (query.name) {
+    filter.name = { $regex: query.name } 
+  }
   // OPTIONS
   let page = query.page || 0;
   let limit = query.limit || 300;
@@ -55,6 +58,9 @@ const getClients = async (user, query) => {
     skip, 
     sort
   }
+  console.log('options', options);
+  console.log('query', query);
+  console.log('filter', filter);
   const clients = await Client.find(filter, null, options);
   return clients;
 };
@@ -106,6 +112,9 @@ const getDefaultClientId = async (user) => {
 const getClientsCount = async (user, query) => {
   let filter = {};
   filter.user = user._id; // filter by accountant
+  if (query.name) {
+    filter.name = { $regex: query.name } 
+  }
   console.log('filter count :', filter)
   let count = await Client.countDocuments(filter)
   console.log('count is at ; ', count)
