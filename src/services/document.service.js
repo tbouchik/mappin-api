@@ -50,7 +50,7 @@ const getDocuments = async (user, query) => {
     filter.client = user._id; // clients should only view their own files
   }
   if (query.name) {
-    filter.name = { $regex: query.name } 
+    filter.name = { $regex: `(?i)${query.name}` } 
   }
   // OPTIONS
   let page = query.page || 0;
@@ -83,7 +83,7 @@ const getDocumentsCount = async (user, query) => {
     filter.client = user._id; // clients should only view their own files
   }
   if (query.name) {
-    filter.name = { $regex: query.name } 
+    filter.name = { $regex: `(?i)${query.name}` } 
   }
   console.log('filter count :', filter);
   let count = await Document.countDocuments(filter);

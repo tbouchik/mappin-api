@@ -1,10 +1,7 @@
 const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
-const { Client, User } = require('../models');
-const { getQueryOptions } = require('../utils/service.util');
-const { getDefaultFilterId } = require('./filter.service');
-const defaultFilter = require('../utils/defaultFilter');
+const { Client } = require('../models');
 
 const checkDuplicateEmail = async (email, userId) => {
   if (email !== process.env.GENERIC_EMAIL) {
@@ -46,7 +43,7 @@ const getClients = async (user, query) => {
   filter.user = user._id;
   filter._id = { $ne: defaultClientId }
   if (query.name) {
-    filter.name = { $regex: query.name } 
+    filter.name = { $regex: `(?i)${query.name}` } 
   }
   // OPTIONS
   let page = query.page || 0;
@@ -113,7 +110,7 @@ const getClientsCount = async (user, query) => {
   let filter = {};
   filter.user = user._id; // filter by accountant
   if (query.name) {
-    filter.name = { $regex: query.name } 
+    filter.name = { $regex: `(?i)${query.name}` } 
   }
   console.log('filter count :', filter)
   let count = await Client.countDocuments(filter)
