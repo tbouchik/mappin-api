@@ -6,7 +6,6 @@ const documentSchema = mongoose.Schema(
     link: {
       type: String,
       required: true,
-      index: true,
     },
     user: {
       type: mongoose.SchemaTypes.ObjectId,
@@ -48,6 +47,7 @@ const documentSchema = mongoose.Schema(
     },
     name: {
       type: String,
+      index: true,
     },
     uploadedBy: {
       type: String,
@@ -65,9 +65,11 @@ const documentSchema = mongoose.Schema(
     timestamps: true,
     toObject: { getters: true },
     toJSON: { getters: true },
+    autoIndex: false,
   }
 );
-
+const index = { name: 'text'};
+documentSchema.index(index);
 documentSchema.methods.transform = function() {
   const user = this;
   return pick(user.toJSON(), [

@@ -28,6 +28,9 @@ const getDocuments = {
     page: Joi.number().integer(),
     client:Joi.string(),
     sort: Joi.any(),
+    name: Joi.string(),
+    status: Joi.string().valid('pending', 'smelted', 'validated'),
+    template: Joi.string().custom(objectId),
   }),
 };
 

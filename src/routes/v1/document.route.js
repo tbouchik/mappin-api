@@ -9,7 +9,7 @@ const router = express.Router();
 
   router
     .route('/count/')
-    .get(auth('manageDocuments'), validate(documentValidation.getDocumentsByClient), documentController.getDocumentsCount);
+    .get(auth('manageDocuments'), validate(documentValidation.getDocuments), documentController.getDocumentsCount);
 
   router
     .route('/')

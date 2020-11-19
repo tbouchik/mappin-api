@@ -6,7 +6,6 @@ const { getQueryOptions } = require('../utils/service.util');
 const { getFilterById, getDefaultFilterId } = require('./filter.service');
 const { getClientByEmail } = require('./client.service');
 
-
 const createDocument = async (user, documentBody) => {
   if (!user.isClient) {
     // Upload done by accountant
@@ -29,7 +28,7 @@ const createDocument = async (user, documentBody) => {
       documentBody.filter = smartFilter._id;
       documentBody.osmium = shapeOsmiumForSmartFilter(smartFilter);
     }
-  }else{
+  } else {
     // Shape Osmium according to filter
     documentBody.osmium = await shapeOsmiumFromFilterId(user, documentBody.filter);
   }
@@ -44,25 +43,28 @@ const getDocuments = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'template']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
     filter.client = user._id; // clients should only view their own files
-    }
+  }
+  if (query.name) {
+    filter.name = { $regex: query.name } 
+  }
   // OPTIONS
   let page = query.page || 0;
   let limit = query.limit || 300;
   let skip = page * limit;
-  let sort = page.sort || {createdAt: -1};
+  let sort = page.sort || { createdAt: -1 };
   const options = {
-    limit, 
-    skip, 
-    sort
-  }
-  console.log('options',options)
-  console.log('query', query)
-  console.log('filter', filter)
+    limit,
+    skip,
+    sort,
+  };
+  console.log('options', options);
+  console.log('query', query);
+  console.log('filter', filter);
   let documents = await Document.find(filter, null, options)
     .populate('user', 'name')
     .populate('client', 'name')
@@ -74,16 +76,19 @@ const getDocumentsCount = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'template']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
     filter.client = user._id; // clients should only view their own files
   }
-  console.log('filter count :', filter)
-  let count = await Document.countDocuments(filter)
-  console.log('count is at ; ', count)
-  return {count};
+  if (query.name) {
+    filter.name = { $regex: query.name } 
+  }
+  console.log('filter count :', filter);
+  let count = await Document.countDocuments(filter);
+  console.log('count is at ; ', count);
+  return { count };
 };
 
 getDocumentsByClient = async (user, clientId) => {
@@ -95,8 +100,8 @@ getDocumentsByClient = async (user, clientId) => {
     // requestor is a client
     filter.client = user._id; // clients should only view their own files
   }
-  let ObjectId = require('mongoose').Types.ObjectId; 
-  filter.client = ObjectId(clientId) // filter by client if specified in query by accountant
+  let ObjectId = require('mongoose').Types.ObjectId;
+  filter.client = ObjectId(clientId); // filter by client if specified in query by accountant
   let documents = await Document.find(filter, null)
     .populate('user', 'name')
     .populate('client', 'name')
@@ -106,7 +111,7 @@ getDocumentsByClient = async (user, clientId) => {
 
 const getDocumentById = async (user, documentId) => {
   const document = await Document.findById(documentId)
-  .populate('user', 'name')
+    .populate('user', 'name')
     .populate('client', 'name')
     .populate('filter', 'name');
   if (!document) {
@@ -124,18 +129,18 @@ const updateDocument = async (user, documentId, updateBody) => {
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
   } else {
-    console.log(document.user)
-    console.log(user._id)
+    console.log(document.user);
+    console.log(user._id);
     if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
     } else if (user.isClient) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
     }
-    if (updateBody.filter && (document.filter !== updateBody.filter)) {
+    if (updateBody.filter && document.filter !== updateBody.filter) {
       // User chose to change filter
-      updateBody.osmium = shapeOsmiumFromFilterId(user,updateBody.filter); // Osmium must follow
+      updateBody.osmium = shapeOsmiumFromFilterId(user, updateBody.filter); // Osmium must follow
     }
-    if (updateBody.validated && updateBody.validated == 'validated'){
+    if (updateBody.validated && updateBody.validated == 'validated') {
       updateBody.validatedBy = user._id;
     }
     Object.assign(document, updateBody);
