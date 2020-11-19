@@ -30,7 +30,7 @@ const getDocuments = {
     sort: Joi.any(),
     name: Joi.string(),
     status: Joi.string().valid('pending', 'smelted', 'validated'),
-    template: Joi.string().custom(objectId),
+    filter: Joi.string().custom(objectId),
   }),
 };
 

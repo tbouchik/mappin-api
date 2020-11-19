@@ -43,7 +43,7 @@ const getDocuments = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'template']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'filter']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
@@ -76,7 +76,7 @@ const getDocumentsCount = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'template']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'filter']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
