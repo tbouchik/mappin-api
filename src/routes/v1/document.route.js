@@ -7,6 +7,10 @@ const documentController = require('../../controllers/document.controller');
 const router = express.Router();
 
 
+router
+    .route('/next/')
+    .get(auth('manageDocuments'), validate(documentValidation.getNextSmeltedId), documentController.getNextSmeltedId);
+
   router
     .route('/count/')
     .get(auth('manageDocuments'), validate(documentValidation.getDocuments), documentController.getDocumentsCount);
