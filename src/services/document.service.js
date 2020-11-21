@@ -178,7 +178,7 @@ const getNextSmeltedId = async (user, query) => {
       filter.name = { $regex: `(?i)${query.name}` } 
     }
     if(query.current) {
-      filter._id = { $nin: query.current }
+      filter._id = { $ne: query.current }
     }
   } else {
     // requestor is a client
@@ -189,6 +189,7 @@ const getNextSmeltedId = async (user, query) => {
     sort,
   };
   let documents = await Document.find(filter, null, options)
+
   return {
     id: documents.length? documents[0]._id: null,
     next: documents.length > 1
