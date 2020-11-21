@@ -2,6 +2,7 @@ const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Document } = require('../models');
+const { getQueryOptions } = require('../utils/service.util');
 const { getFilterById, getDefaultFilterId } = require('./filter.service');
 const { getClientByEmail } = require('./client.service');
 
@@ -90,6 +91,23 @@ const getDocumentsCount = async (user, query) => {
   return { count };
 };
 
+getDocumentsByClient = async (user, clientId) => {
+  let filter = {};
+  if (!user.isClient) {
+    // requestor is an accountant
+    filter.user = user._id; // filter by accountant
+  } else {
+    // requestor is a client
+    filter.client = user._id; // clients should only view their own files
+  }
+  let ObjectId = require('mongoose').Types.ObjectId;
+  filter.client = ObjectId(clientId); // filter by client if specified in query by accountant
+  let documents = await Document.find(filter, null)
+    .populate('user', 'name')
+    .populate('client', 'name')
+    .populate('filter', 'name');
+  return documents;
+};
 
 const getDocumentById = async (user, documentId) => {
   const document = await Document.findById(documentId)
@@ -166,42 +184,12 @@ const shapeOsmiumForSmartFilter = smartFilter => {
   return osmium;
 };
 
-const getNextSmeltedId = async (user, query) => {
-  // FILTER
-  let filter = {};
-  if (!user.isClient) {
-    // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter']); // filter by client if specified in query by accountant
-    filter.user = user._id; // filter by accountant
-    filter.status = 'smelted'
-    if (query.name) {
-      filter.name = { $regex: `(?i)${query.name}` } 
-    }
-    if(query.current) {
-      filter._id = { $ne: query.current }
-    }
-  } else {
-    // requestor is a client
-    filter.client = user._id; // clients should only view their own files
-  }
-  let sort = { createdAt: -1 };
-  const options = {
-    sort,
-  };
-  let documents = await Document.find(filter, null, options)
-
-  return {
-    id: documents.length? documents[0]._id: null,
-    next: documents.length > 1
-  };
-}
-
 module.exports = {
   createDocument,
   getDocuments,
   getDocumentById,
   updateDocument,
   deleteDocument,
+  getDocumentsByClient,
   getDocumentsCount,
-  getNextSmeltedId,
 };
