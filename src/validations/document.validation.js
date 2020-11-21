@@ -43,7 +43,7 @@ const getNextSmeltedId = {
     page: Joi.number().integer(),
     client:Joi.string(),
     sort: Joi.any(),
-    current: Joi.string().custom(objectId),
+    current: Joi.array(),
     name: Joi.string(),
     status: Joi.string().valid('pending', 'smelted', 'validated'),
     filter: Joi.string().custom(objectId),
