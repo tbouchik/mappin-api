@@ -72,6 +72,37 @@ const getDocuments = async (user, query) => {
   return documents;
 };
 
+const getNextSmeltedDocuments = async (user, query) => {
+  // FILTER
+  let filter = {};
+  if (!user.isClient) {
+    // requestor is an accountant
+    filter = pick(query, ['client', 'filter']); // filter by client if specified in query by accountant
+    filter.user = user._id; // filter by accountant
+  } else {
+    // requestor is a client
+    filter.client = user._id; // clients should only view their own files
+  }
+  if (query.name) {
+    filter.name = { $regex: `(?i)${query.name}` } 
+  }
+  filter.status = 'smelted'
+  // OPTIONS
+  let limit = 10
+  let skip = query.skip || 0;
+  let sort = { createdAt: -1 };
+  const options = {
+    limit,
+    skip,
+    sort,
+  };
+  console.log('options', options);
+  console.log('query', query);
+  console.log('filter', filter);
+  let documents = await Document.find(filter, '_id', options)
+  return documents;
+};
+
 const getDocumentsCount = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
@@ -192,4 +223,5 @@ module.exports = {
   deleteDocument,
   getDocumentsByClient,
   getDocumentsCount,
+  getNextSmeltedDocuments,
 };
