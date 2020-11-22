@@ -45,6 +45,7 @@ const getNextSmeltedDocumentIds = {
     skip: Joi.number(),
     sort: Joi.any(),
     name: Joi.string(),
+    status: Joi.string().valid('pending', 'smelted', 'validated'),
     filter: Joi.string().custom(objectId),
   }),
 };

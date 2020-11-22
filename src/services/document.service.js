@@ -77,7 +77,7 @@ const getNextSmeltedDocuments = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'filter']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'filter', 'status']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
@@ -86,7 +86,10 @@ const getNextSmeltedDocuments = async (user, query) => {
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
-  filter.status = 'smelted'
+  filter.status = filter.status ? filter.status : 'smelted'
+  if (filter.status !== 'smelted'){
+    return []
+  }
   // OPTIONS
   let limit = 10
   let skip = query.skip || 0;
