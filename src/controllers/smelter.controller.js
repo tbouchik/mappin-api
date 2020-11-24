@@ -138,7 +138,8 @@ const bulkSmelt = (req, res) => {
             osmium: documentBody.osmium,
             metadata: documentBody.metadata,
             status: 'smelted',
-          }).then();
+          }).then()
+          .catch(err=> {console.log(err)});
         })
     });
     res.json({ done: true });
