@@ -23,6 +23,11 @@ const getNextSmeltedDocumentIds = catchAsync(async (req, res) => {
   res.send(smeltedIds);
 });
 
+const getNextDocumentIds = catchAsync(async (req, res) => {
+  const nextIds = await documentService.getNextDocuments(req.user, req.query);
+  res.send(nextIds);
+});
+
 const getDocumentsByClient = catchAsync(async (req, res) => {
   const documents = await documentService.getDocumentsByClient(req.user, req.params.clientId);
   const response = documents.map(document => document.transform());
@@ -53,4 +58,5 @@ module.exports = {
   getDocumentsByClient,
   getDocumentsCount,
   getNextSmeltedDocumentIds,
+  getNextDocumentIds,
 };

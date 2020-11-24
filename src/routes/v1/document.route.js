@@ -8,6 +8,10 @@ const router = express.Router();
 
   router
     .route('/next/')
+    .get(auth('manageDocuments'), validate(documentValidation.getNextDocumentIds), documentController.getNextDocumentIds);
+
+  router
+    .route('/nextsmelted/')
     .get(auth('manageDocuments'), validate(documentValidation.getNextSmeltedDocumentIds), documentController.getNextSmeltedDocumentIds);
 
   router

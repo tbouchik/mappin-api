@@ -99,11 +99,44 @@ const getNextSmeltedDocuments = async (user, query) => {
     skip,
     sort,
   };
-  console.log('options', options);
-  console.log('query', query);
-  console.log('filter', filter);
+  // console.log('options', options);
+  // console.log('query', query);
+  // console.log('filter', filter);
   let documents = await Document.find(filter, '_id', options)
   return documents;
+};
+
+const getNextDocuments = async (user, query) => {
+  // FILTER
+  let filter = {};
+  if (!user.isClient) {
+    // requestor is an accountant
+    filter = pick(query, ['client', 'filter', 'status']); // filter by client if specified in query by accountant
+    filter.user = user._id; // filter by accountant
+  } else {
+    // requestor is a client
+    filter.client = user._id; // clients should only view their own files
+  }
+  if (query.name) {
+    filter.name = { $regex: `(?i)${query.name}` } 
+  }
+  
+  // OPTIONS
+  let sort = { createdAt: -1 };
+  const options = {
+    sort,
+  };
+  let documents = await Document.find(filter, '_id', options)
+  console.log('docs, ', documents[0], query.current)
+  let slicedDocs = []
+  if (query.side === 'left' ){
+    const currentIndex = documents.findIndex(x => x.id === query.current)
+    slicedDocs = documents.slice(Math.max(0, currentIndex - 10) , currentIndex)
+  }else {
+    const currentIndex = documents.findIndex(x => x.id === query.current)
+    slicedDocs = documents.slice(currentIndex+ 1, currentIndex + 10)
+  }
+  return slicedDocs;
 };
 
 const getDocumentsCount = async (user, query) => {
@@ -123,24 +156,6 @@ const getDocumentsCount = async (user, query) => {
   let count = await Document.countDocuments(filter);
   console.log('count is at ; ', count);
   return { count };
-};
-
-getDocumentsByClient = async (user, clientId) => {
-  let filter = {};
-  if (!user.isClient) {
-    // requestor is an accountant
-    filter.user = user._id; // filter by accountant
-  } else {
-    // requestor is a client
-    filter.client = user._id; // clients should only view their own files
-  }
-  let ObjectId = require('mongoose').Types.ObjectId;
-  filter.client = ObjectId(clientId); // filter by client if specified in query by accountant
-  let documents = await Document.find(filter, null)
-    .populate('user', 'name')
-    .populate('client', 'name')
-    .populate('filter', 'name');
-  return documents;
 };
 
 const getDocumentById = async (user, documentId) => {
@@ -224,7 +239,7 @@ module.exports = {
   getDocumentById,
   updateDocument,
   deleteDocument,
-  getDocumentsByClient,
   getDocumentsCount,
   getNextSmeltedDocuments,
+  getNextDocuments,
 };

@@ -50,6 +50,24 @@ const getNextSmeltedDocumentIds = {
   }),
 };
 
+const getNextDocumentIds = {
+  query: Joi.object().keys({
+    userId: Joi.string().custom(objectId),
+    companyId: Joi.string().custom(objectId),
+    sortBy: Joi.string(),
+    limit: Joi.number().integer(),
+    page: Joi.number().integer(),
+    client:Joi.string(),
+    skip: Joi.number(),
+    sort: Joi.any(),
+    name: Joi.string(),
+    side: Joi.string(),
+    current: Joi.string(),
+    status: Joi.string().valid('pending', 'smelted', 'validated'),
+    filter: Joi.string().custom(objectId),
+  }),
+};
+
 const getDocumentsByClient = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
@@ -102,4 +120,5 @@ module.exports = {
   deleteDocument,
   getDocumentsByClient,
   getNextSmeltedDocumentIds,
+  getNextDocumentIds,
 };
