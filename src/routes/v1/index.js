@@ -6,6 +6,7 @@ const documentRoute = require('./document.route');
 const smelterRoute = require('./smelter.route');
 const clientRoute = require('./client.route');
 const filterRoute = require('./filter.route');
+const subscriptionRoute = require('./subscription.route');
 
 const router = express.Router();
 
@@ -16,5 +17,6 @@ router.use('/documents', documentRoute);
 router.use('/smelt', smelterRoute);
 router.use('/clients', clientRoute);
 router.use('/filters', filterRoute);
+router.use('/subs', subscriptionRoute);
 
 module.exports = router;
