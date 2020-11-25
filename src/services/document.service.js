@@ -68,7 +68,7 @@ const getDocuments = async (user, query) => {
   let documents = await Document.find(filter, null, options)
     .populate('user', 'name')
     .populate('client', 'name')
-    .populate('filter', 'name');
+    .populate('filter');
   return documents;
 };
 
@@ -162,7 +162,7 @@ const getDocumentById = async (user, documentId) => {
   const document = await Document.findById(documentId)
     .populate('user', 'name')
     .populate('client', 'name')
-    .populate('filter', 'name');
+    .populate('filter');
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
   } else if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
