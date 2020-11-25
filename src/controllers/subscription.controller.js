@@ -1,20 +1,18 @@
 const catchAsync = require('../utils/catchAsync');
-const { Subscription } = require('../models');
-const httpStatus = require('http-status');
+const { subscriptionService } = require('../services');
 
-const getSubscriptions = catchAsync(async (req, res) => {
-  const filter = {};
-  const subs = await Subscription.find(filter, null);
-  res.send(subs);
+const getSubscription = catchAsync(async (req, res) => {
+  const subscription = await subscriptionService.getSubscriptionById(req.params.subscriptionId);
+  res.send(subscription.transform());
 });
 
-const createSubscription = catchAsync(async (req, res) => {
-    const sub = await Subscription.create(req.body);
-    res.status(httpStatus.CREATED).send(sub.transform());
-  });
-
+const getSubscriptions = catchAsync(async (req, res) => {
+  const subscriptions = await subscriptionService.getSubscriptions(req.query);
+  const response = subscriptions.map(subscription => subscription.transform());
+  res.send(response);
+});
 
 module.exports = {
+  getSubscription,
   getSubscriptions,
-  createSubscription,
 };

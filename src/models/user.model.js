@@ -49,6 +49,10 @@ const userSchema = mongoose.Schema(
       enum: roles,
       default: 'admin',
     },
+    subscription: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Subscription',
+    }
   },
   {
     timestamps: true,
@@ -64,7 +68,7 @@ userSchema.methods.toJSON = function() {
 
 userSchema.methods.transform = function() {
   const user = this;
-  return pick(user.toJSON(), ['id', 'email', 'name', 'role', 'company']);
+  return pick(user.toJSON(), ['id', 'email', 'name', 'role', 'company', 'subscription']);
 };
 
 userSchema.pre('save', async function(next) {
