@@ -7,6 +7,10 @@ const documentController = require('../../controllers/document.controller');
 const router = express.Router();
 
   router
+    .route('/export/')
+    .get(auth('manageDocuments'), validate(documentValidation.exportBulkCSV), documentController.exportBulkCSV);
+
+  router
     .route('/next/')
     .get(auth('manageDocuments'), validate(documentValidation.getNextDocumentIds), documentController.getNextDocumentIds);
 

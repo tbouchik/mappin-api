@@ -6,6 +6,7 @@ const createFilter = {
     name: Joi.string().required(),
     keys: Joi.array().required(),
     description: Joi.string(),
+    type: Joi.string(),
   }),
 };
 
@@ -14,6 +15,7 @@ const getFilters = {
     userId: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
+    type: Joi.string(),
   }),
 };
 
@@ -32,6 +34,7 @@ const updateFilter = {
       name: Joi.string(),
       keys: Joi.array(),
       description: Joi.string(),
+      type: Joi.string(),
     })
     .min(1),
 };

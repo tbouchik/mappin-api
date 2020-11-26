@@ -106,6 +106,45 @@ const getNextSmeltedDocuments = async (user, query) => {
   return documents;
 };
 
+const exportBulkCSV = async (user, query) => {
+  // FILTER
+  let filter = {};
+  if (!user.isClient) {
+    // requestor is an accountant
+    filter = pick(query, ['client', 'status', 'filter']); // filter by client if specified in query by accountant
+    filter.user = user._id; // filter by accountant
+    let ObjectId = require('mongoose').Types.ObjectId; 
+    filter.client = filter.client? ObjectId(filter.client): null
+  } else {
+    // requestor is a client
+    filter.client = user._id; // clients should only view their own files
+  }
+  if (query.name) {
+    filter.name = { $regex: `(?i)${query.name}` } 
+  }
+  let templateIds = await Document.aggregate([
+    { $match: filter },
+    {
+      $group: {
+        _id: '$filter',
+      }
+    }
+  ]);
+  let result = Promise.all(templateIds.map( async  (templateIdObj) => {
+    let aggregate = Object.assign({}, templateIdObj)
+    filter.filter = templateIdObj._id
+    let docs = await getDocuments(user, filter)
+    const osmiumKeys = docs[0].filter.keys.map((keyObj) => keyObj.value)
+    aggregate.template = docs[0].filter.name
+    aggregate.header = osmiumKeys
+    aggregate.osmiums = docs.map((doc) => {
+        return doc.osmium.map((osmiumItem) => { return osmiumItem.Value })
+    })
+    return aggregate
+  }));
+  return result
+};
+
 const getNextDocuments = async (user, query) => {
   // FILTER
   let filter = {};
@@ -242,4 +281,5 @@ module.exports = {
   getDocumentsCount,
   getNextSmeltedDocuments,
   getNextDocuments,
+  exportBulkCSV
 };

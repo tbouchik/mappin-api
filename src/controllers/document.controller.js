@@ -13,6 +13,11 @@ const getDocuments = catchAsync(async (req, res) => {
   res.send(response);
 });
 
+const exportBulkCSV = catchAsync(async (req, res) => {
+  const documents = await documentService.exportBulkCSV(req.user, req.query);
+  res.send(documents);
+});
+
 const getDocumentsCount = catchAsync(async (req, res) => {
   const documentsCount = await documentService.getDocumentsCount(req.user, req.query);
   res.send(documentsCount);
@@ -59,4 +64,5 @@ module.exports = {
   getDocumentsCount,
   getNextSmeltedDocumentIds,
   getNextDocumentIds,
+  exportBulkCSV,
 };

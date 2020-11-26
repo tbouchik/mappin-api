@@ -14,6 +14,10 @@ const filterSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    type: {
+      type: String,
+      enum: ['expense', 'sale'],
+    },
     description: {
         type: String,
         default: 'No description added',

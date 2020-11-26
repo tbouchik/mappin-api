@@ -34,6 +34,21 @@ const getDocuments = {
   }),
 };
 
+const exportBulkCSV = {
+  query: Joi.object().keys({
+    userId: Joi.string().custom(objectId),
+    companyId: Joi.string().custom(objectId),
+    sortBy: Joi.string(),
+    limit: Joi.number().integer(),
+    page: Joi.number().integer(),
+    client:Joi.string(),
+    sort: Joi.any(),
+    name: Joi.string(),
+    status: Joi.string().valid('pending', 'smelted', 'validated'),
+    filter: Joi.string().custom(objectId),
+  }),
+};
+
 const getNextSmeltedDocumentIds = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
@@ -121,4 +136,5 @@ module.exports = {
   getDocumentsByClient,
   getNextSmeltedDocumentIds,
   getNextDocumentIds,
+  exportBulkCSV,
 };
