@@ -8,6 +8,7 @@ const Queue = require('better-queue');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { getDefaultFilter } = require('../services/filter.service');
+const { updateUserCounter } = require('../services/user.service');
 const { populateOsmium } = require('../miner/defaultMiner');
 AWS.config.update({ region: 'us-east-1' });
 
@@ -107,6 +108,8 @@ const bulkSmelt = (req, res) => {
   try {
     const { body, user } = req;
     files = body.files;
+    // TODO update user credits
+    updateUserCounter(user._id, {counter: files.length})
     for (const file of files) {
       let documentBody = {
         link: `${process.env.AWS_BUCKET}/${file.alias}`,

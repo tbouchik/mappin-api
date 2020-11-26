@@ -71,6 +71,17 @@ const updateUser = async (userId, updateBody) => {
   return user;
 };
 
+const updateUserCounter = async (userId, updateBody) => {
+  const user = await getUserById(userId);
+  if (updateBody.email) {
+    await checkDuplicateEmail(updateBody.email, userId);
+  }
+  updateBody.counter = user.counter? updateBody.counter + user.counter : updateBody.counter
+  Object.assign(user, updateBody);
+  await user.save();
+  return user;
+};
+
 const deleteUser = async userId => {
   const user = await getUserById(userId);
   await user.remove();
@@ -85,4 +96,5 @@ module.exports = {
   updateUser,
   deleteUser,
   checkUserExists,
+  updateUserCounter
 };

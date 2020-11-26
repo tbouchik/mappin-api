@@ -52,6 +52,10 @@ const userSchema = mongoose.Schema(
     subscription: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Subscription',
+    },
+    counter: {
+      type: Number,
+      default:0,
     }
   },
   {

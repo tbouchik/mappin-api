@@ -99,9 +99,6 @@ const getNextSmeltedDocuments = async (user, query) => {
     skip,
     sort,
   };
-  // console.log('options', options);
-  // console.log('query', query);
-  // console.log('filter', filter);
   let documents = await Document.find(filter, '_id', options)
   return documents;
 };
