@@ -72,7 +72,7 @@ userSchema.methods.toJSON = function() {
 
 userSchema.methods.transform = function() {
   const user = this;
-  return pick(user.toJSON(), ['id', 'email', 'name', 'role', 'company', 'subscription']);
+  return pick(user.toJSON(), ['id', 'email', 'name', 'role', 'company', 'subscription', 'counter']);
 };
 
 userSchema.pre('save', async function(next) {
