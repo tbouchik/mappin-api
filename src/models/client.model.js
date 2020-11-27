@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const { omit, pick } = require('lodash');
+const { omit } = require('lodash');
 const { roles } = require('../config/roles');
 
 const clientSchema = mongoose.Schema(
@@ -16,6 +16,10 @@ const clientSchema = mongoose.Schema(
     user: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'User',
+      required: true,
+    },
+    reference: {
+      type: String,
       required: true,
     },
     email: {
@@ -75,7 +79,7 @@ clientSchema.methods.toJSON = function() {
 
 clientSchema.methods.transform = function() {
   const client = this;
-  return pick(client.toJSON(), ['id', 'email', 'name', 'isClient', 'company', 'number']);
+  return omit(client.toJSON(), ['password', 'role']);
 };
 
 clientSchema.pre('save', async function(next) {

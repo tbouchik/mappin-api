@@ -10,6 +10,7 @@ const createClient = {
     number: Joi.string(),
     company: Joi.string(),
     user: Joi.string(),
+    reference: Joi.string(),
   }),
 };
 
@@ -21,6 +22,7 @@ const getClients = {
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
     name: Joi.string(),
+    reference: Joi.string(),
   }),
 };
 
@@ -40,6 +42,7 @@ const updateClient = {
       name: Joi.string(),
       company: Joi.string(),
       number: Joi.string(),
+      reference: Joi.string(),
     })
     .min(1),
 };
