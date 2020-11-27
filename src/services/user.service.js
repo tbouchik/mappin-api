@@ -82,6 +82,11 @@ const updateUserCounter = async (userId, updateBody) => {
   return user;
 };
 
+const userCreditsRemaining = async (userId) => {
+  const user = await getUserById(userId);
+  return user.counter
+}
+
 const deleteUser = async userId => {
   const user = await getUserById(userId);
   await user.remove();
@@ -96,5 +101,6 @@ module.exports = {
   updateUser,
   deleteUser,
   checkUserExists,
-  updateUserCounter
+  updateUserCounter,
+  userCreditsRemaining,
 };

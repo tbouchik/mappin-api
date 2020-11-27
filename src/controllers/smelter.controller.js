@@ -8,7 +8,7 @@ const Queue = require('better-queue');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { getDefaultFilter } = require('../services/filter.service');
-const { updateUserCounter } = require('../services/user.service');
+const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { populateOsmium } = require('../miner/defaultMiner');
 AWS.config.update({ region: 'us-east-1' });
 
@@ -107,51 +107,59 @@ const singleSmelt = async (req, res) => {
 const bulkSmelt = (req, res) => {
   try {
     const { body, user } = req;
-    files = body.files;
+    let files = body.files;
     // TODO update user credits
-    updateUserCounter(user._id, {counter: files.length})
-    for (const file of files) {
-      let documentBody = {
-        link: `${process.env.AWS_BUCKET}/${file.alias}`,
-        name: file.name,
-        metadata: {},
-        osmium: [],
-        client: file.client,
-        filter: file.filter,
-        mimeType: file.mimeType,
-        alias: file.alias,
-        businessPurpose: file.businessPurpose,
-        extractionType: file.extractionType,
-        status: 'pending',
-      };
-      createDocument(user, documentBody).then(res => {
-        queue.push({
-          id: res._id,
-          documentBody,
+    userCreditsRemaining(user._id)
+      .then((creditsRemaining)=>{
+        const filesLength = files.length
+        if (filesLength > creditsRemaining){
+          files = files.slice(0,creditsRemaining)
+          console.log('BREACH TENTATIVE: changed files length to : ',creditsRemaining )
+        }
+        updateUserCounter(user._id, {counter: files.length})
+        for (const file of files) {
+          let documentBody = {
+            link: `${process.env.AWS_BUCKET}/${file.alias}`,
+            name: file.name,
+            metadata: {},
+            osmium: [],
+            client: file.client,
+            filter: file.filter,
+            mimeType: file.mimeType,
+            alias: file.alias,
+            businessPurpose: file.businessPurpose,
+            extractionType: file.extractionType,
+            status: 'pending',
+          };
+          createDocument(user, documentBody).then(res => {
+            queue.push({
+              id: res._id,
+              documentBody,
+            });
+          });
+        }
+        queue.on('task_finish', (taskId, documentBody) => {
+          getDefaultFilter(user)
+            .then((defaultFilter) =>  {
+              if (defaultFilter.id === documentBody.filter) { // populate osmium
+                documentBody = populateOsmium(documentBody, defaultFilter);
+              }
+              updateDocument(user, taskId, {
+                osmium: documentBody.osmium,
+                metadata: documentBody.metadata,
+                status: 'smelted',
+              }).then()
+              .catch(err=> {console.log(err)});
+            })
         });
-      });
-    }
-    queue.on('task_finish', (taskId, documentBody) => {
-      getDefaultFilter(user)
-        .then((defaultFilter) =>  {
-          if (defaultFilter.id === documentBody.filter) { // populate osmium
-            documentBody = populateOsmium(documentBody, defaultFilter);
-          }
-          updateDocument(user, taskId, {
-            osmium: documentBody.osmium,
-            metadata: documentBody.metadata,
-            status: 'smelted',
-          }).then()
-          .catch(err=> {console.log(err)});
-        })
-    });
-    res.json({ done: true });
-    queue.on('empty', () => {
-      console.log('EMPTY');
-    });
-    queue.on('drain', () => {
-      console.log('DRAIN');
-    });
+        res.json({ done: true });
+        queue.on('empty', () => {
+          console.log('EMPTY');
+        });
+        queue.on('drain', () => {
+          console.log('DRAIN');
+        });
+  });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Caught error' });
