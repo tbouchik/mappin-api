@@ -91,16 +91,22 @@ const getNextSmeltedDocuments = async (user, query) => {
     return []
   }
   // OPTIONS
-  let limit = 10
-  let skip = query.skip || 0;
   let sort = { createdAt: -1 };
   const options = {
-    limit,
-    skip,
     sort,
   };
   let documents = await Document.find(filter, '_id', options)
-  return documents;
+  console.log('smelted docs, ', documents[0], query.current)
+  let slicedDocs = []
+  
+  if (query.side === 'left' ){
+    const currentIndex = documents.findIndex(x => x.id === query.current)
+    slicedDocs = documents.slice(Math.max(0, currentIndex - 10) , currentIndex)
+  }else {
+    const currentIndex = documents.findIndex(x => x.id === query.current)
+    slicedDocs = documents.slice(currentIndex+ 1, currentIndex + 10)
+  }
+  return slicedDocs;
 };
 
 const exportBulkCSV = async (user, query) => {
