@@ -3,6 +3,7 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const { omit, pick } = require('lodash');
 const { roles } = require('../config/roles');
+let ObjectId = require('mongoose').Types.ObjectId; 
 
 const userSchema = mongoose.Schema(
   {
@@ -52,6 +53,7 @@ const userSchema = mongoose.Schema(
     subscription: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Subscription',
+      default: ObjectId('5fbcc018850e56cffb4b4fb6')
     },
     counter: {
       type: Number,

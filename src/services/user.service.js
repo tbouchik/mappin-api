@@ -46,7 +46,7 @@ const getUsers = async query => {
 };
 
 const getUserById = async userId => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).populate('subscription');
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
@@ -84,7 +84,7 @@ const updateUserCounter = async (userId, updateBody) => {
 
 const userCreditsRemaining = async (userId) => {
   const user = await getUserById(userId);
-  return user.counter
+  return user.subscription.credits - user.counter
 }
 
 const deleteUser = async userId => {
