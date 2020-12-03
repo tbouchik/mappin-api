@@ -21,6 +21,7 @@ const getClients = {
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
     name: Joi.string(),
+    current: Joi.string().custom(objectId),
   }),
 };
 

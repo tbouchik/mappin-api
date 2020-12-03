@@ -23,7 +23,15 @@ const createDefaultFilter = async userId => {
 };
 
 const getFilters = async (user, query) => {
-  const filter = pick(query, ['name']);
+  const filter = {};
+  if (query.name) {
+    filter.name = { $regex: `(?i)${query.name}` } 
+  }
+  if(query.current) {
+    let ObjectId = require('mongoose').Types.ObjectId;
+    const idToExclude = new ObjectId(query.current)
+    filter._id = { $ne: idToExclude }
+  }
   filter.user = user._id;
   const options = getQueryOptions(query);
   const filters = await Filter.find(filter, null, options);

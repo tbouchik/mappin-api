@@ -15,7 +15,10 @@ const getFilters = {
     userId: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
+    page: Joi.number(),
     type: Joi.string(),
+    current: Joi.string().custom(objectId),
+    name: Joi.string(),
   }),
 };
 

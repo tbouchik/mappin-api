@@ -39,11 +39,18 @@ const createDefaultClient = async (userId, company) => {
 const getClients = async (user, query) => {
   // FILTER
   const filter = pick(query, ['company']);
-  const defaultClientId = await getDefaultClientId(user) // TODO: Optimize second call to DB 
   filter.user = user._id;
-  filter._id = { $ne: defaultClientId }
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
+  }
+  const defaultClientId = await getDefaultClientId(user) // TODO: Optimize second call to DB 
+  if(query.current) {
+    let ObjectId = require('mongoose').Types.ObjectId;
+    const idToExclude = new ObjectId(query.current)
+    // qty: { $nin: [ 5, 15 ] }
+    filter._id = { $nin: [defaultClientId, idToExclude]}
+  }else {
+    filter._id = { $ne: defaultClientId }
   }
   // OPTIONS
   let page = query.page || 0;

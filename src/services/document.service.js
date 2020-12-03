@@ -98,7 +98,7 @@ const getNextSmeltedDocuments = async (user, query) => {
   let documents = await Document.find(filter, '_id', options)
   console.log('smelted docs, ', documents[0], query.current)
   let slicedDocs = []
-  
+
   if (query.side === 'left' ){
     const currentIndex = documents.findIndex(x => x.id === query.current)
     slicedDocs = documents.slice(Math.max(0, currentIndex - 10) , currentIndex)
@@ -235,7 +235,11 @@ const updateDocument = async (user, documentId, updateBody) => {
       updateBody.validatedBy = user._id;
     }
     Object.assign(document, updateBody);
-    await document.save();
+    try{
+      await document.save();
+    } catch(error){
+      console.log(error)
+    }
     return document;
   }
 };
