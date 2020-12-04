@@ -229,7 +229,8 @@ const updateDocument = async (user, documentId, updateBody) => {
     }
     if (updateBody.filter && document.filter !== updateBody.filter) {
       // User chose to change filter
-      updateBody.osmium = shapeOsmiumFromFilterId(user, updateBody.filter); // Osmium must follow
+      updateBody.osmium = await shapeOsmiumFromFilterId(user, updateBody.filter); // Osmium must follow
+      updateBody.status = 'smelted';
     }
     if (updateBody.validated && updateBody.validated == 'validated') {
       updateBody.validatedBy = user._id;

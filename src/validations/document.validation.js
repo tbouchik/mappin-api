@@ -118,7 +118,7 @@ const updateDocument = {
       client: Joi.string(),
       validatedBy: Joi.string(),
       uploadedBy: Joi.string(),
-      filter: Joi.array(),
+      filter: Joi.string().custom(objectId),
     })
     .min(1),
 };
