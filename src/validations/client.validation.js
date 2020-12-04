@@ -3,10 +3,9 @@ const { objectId } = require('./custom.validation');
 
 const createClient = {
   body: Joi.object().keys({
-    email: Joi.string()
-      .required()
-      .email(),
+    email: Joi.string().email(),
     name: Joi.string().required(),
+    reference: Joi.string().required(),
     number: Joi.string(),
     company: Joi.string(),
     user: Joi.string(),
@@ -41,6 +40,7 @@ const updateClient = {
       name: Joi.string(),
       company: Joi.string(),
       number: Joi.string(),
+      reference:Joi.string(),
     })
     .min(1),
 };
