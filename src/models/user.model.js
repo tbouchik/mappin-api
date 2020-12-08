@@ -58,6 +58,14 @@ const userSchema = mongoose.Schema(
     counter: {
       type: Number,
       default:0,
+    },
+    activated: {
+      type: Boolean,
+      default: true,
+    },
+    blacklisted: {
+      type: Boolean,
+      default: false
     }
   },
   {

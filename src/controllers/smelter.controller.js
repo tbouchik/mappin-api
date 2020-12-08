@@ -7,7 +7,8 @@ const httpStatus = require('http-status');
 const Queue = require('better-queue');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
-const { getDefaultFilter } = require('../services/filter.service');
+const { getFilterById } = require('../services/filter.service');
+const { getClientById } = require('../services/client.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { populateOsmium } = require('../miner/defaultMiner');
 AWS.config.update({ region: 'us-east-1' });
@@ -139,18 +140,43 @@ const bulkSmelt = (req, res) => {
           });
         }
         queue.on('task_finish', (taskId, documentBody) => {
-          getDefaultFilter(user)
-            .then((defaultFilter) =>  {
-              if (defaultFilter.id === documentBody.filter) { // populate osmium
-                documentBody = populateOsmium(documentBody, defaultFilter);
+          getFilterById(req.user, documentBody.filter)
+            .then((filter) => {
+              const hasRefField = filter.keys.some((key) => key.type === 'REF')
+              if (filter.type === 'sale' && hasRefField) {
+                const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF')
+                getClientById(req.user, documentBody.client)
+                  .then((client) => {
+                    documentBody.osmium[refFieldIndex].Value = client.reference
+                    updateDocument(user, taskId, {
+                      osmium: documentBody.osmium,
+                      metadata: documentBody.metadata,
+                      status: 'smelted',
+                    }).then()
+                    .catch(err=> {console.log(err)});
+                  })
+              }else {
+                updateDocument(user, taskId, {
+                  osmium: documentBody.osmium,
+                  metadata: documentBody.metadata,
+                  status: 'smelted',
+                }).then()
+                .catch(err=> {console.log(err)});
               }
-              updateDocument(user, taskId, {
-                osmium: documentBody.osmium,
-                metadata: documentBody.metadata,
-                status: 'smelted',
-              }).then()
-              .catch(err=> {console.log(err)});
             })
+          //TODO below is smart filter part. Logic should be reconsidered
+          // getDefaultFilter(user)
+          //   .then((defaultFilter) =>  {
+          //     if (defaultFilter.id === documentBody.filter) { // populate osmium for smart filter
+          //       documentBody = populateOsmium(documentBody, defaultFilter);
+          //     }
+          //     updateDocument(user, taskId, {
+          //       osmium: documentBody.osmium,
+          //       metadata: documentBody.metadata,
+          //       status: 'smelted',
+          //     }).then()
+          //     .catch(err=> {console.log(err)});
+          //   })
         });
         res.json({ done: true });
         queue.on('empty', () => {
