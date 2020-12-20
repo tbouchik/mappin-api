@@ -30,6 +30,7 @@ const createDefaultClient = async (userId, company) => {
     email: process.env.GENERIC_EMAIL,
     password: 'Generated1',
     name: 'Generic Client',
+    reference:'N/A',
     company,
   };
   const client = await Client.create(genericClientBody);
