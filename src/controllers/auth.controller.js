@@ -1,6 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
-const { authService, userService, clientService, emailService, filterService } = require('../services');
+const { authService, userService, clientService, filterService } = require('../services');
+const mailService = require('../services/mail.service');
 
 const register = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
@@ -34,7 +35,7 @@ const refreshTokens = catchAsync(async (req, res) => {
 
 const forgotPassword = catchAsync(async (req, res) => {
   const resetPasswordToken = await authService.generateResetPasswordToken(req.body.email);
-  await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
+  await mailService.sendResetPasswordEmail(req.body.email, resetPasswordToken.token, resetPasswordToken.user);
   res.status(httpStatus.NO_CONTENT).send();
 });
 

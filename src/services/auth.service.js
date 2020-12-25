@@ -72,7 +72,7 @@ const generateResetPasswordToken = async email => {
   const expires = moment().add(config.jwt.resetPasswordExpirationMinutes, 'minutes');
   const resetPasswordToken = tokenService.generateToken(user._id, expires);
   await tokenService.saveToken(resetPasswordToken, user._id, expires, 'resetPassword');
-  return resetPasswordToken;
+  return {token:resetPasswordToken, user};
 };
 
 const resetPassword = async (resetPasswordToken, newPassword) => {

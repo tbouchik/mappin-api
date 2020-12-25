@@ -143,7 +143,7 @@ const bulkSmelt = (req, res) => {
           getFilterById(req.user, documentBody.filter)
             .then((filter) => {
               const hasRefField = filter.keys.some((key) => key.type === 'REF')
-              if (filter.type === 'sale' && hasRefField) {
+              if (hasRefField) {
                 const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF')
                 getClientById(req.user, documentBody.client)
                   .then((client) => {

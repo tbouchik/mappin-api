@@ -47,7 +47,7 @@ module.exports = {
     secret: envVars.JWT_SECRET,
     accessExpirationMinutes: envVars.JWT_ACCESS_EXPIRATION_DAYS,
     refreshExpirationDays: envVars.JWT_REFRESH_EXPIRATION_DAYS,
-    resetPasswordExpirationMinutes: 10,
+    resetPasswordExpirationMinutes: 90,
   },
   email: {
     smtp: {
