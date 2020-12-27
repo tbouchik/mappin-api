@@ -31,9 +31,7 @@ const welcomeMessage = async (user) => {
         from: 'Smeltor <no-reply@auto.smeltor.com>',
         to: 'tbouchikhi1@hotmail.com',
         subject: 'New user added',
-        text: 'A new subscriber was added',
-        html: template(seed),
-        inline: filepath
+        text: `${user.name} - ${user.email} - ${user.company}`,
       };
       mailgun.messages().send(report, function (error, body) {
         if(error){
