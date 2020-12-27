@@ -16,7 +16,7 @@ const welcomeMessage = async (user) => {
     var template = Handlebars.compile(filedata.toString())
     const data = {
         from: 'Smeltor <no-reply@auto.smeltor.com>',
-        to: 'tbouchikhi1@hotmail.com',
+        to: user.email,
         subject: 'Welcome to Smeltor',
         text: '[Smeltor] Welcome to Smeltor',
         html: template(seed),
@@ -25,6 +25,19 @@ const welcomeMessage = async (user) => {
       mailgun.messages().send(data, function (error, body) {
         if(error){
             throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Could not send welcome email')
+        }
+      });
+      const report = {
+        from: 'Smeltor <no-reply@auto.smeltor.com>',
+        to: 'tbouchikhi1@hotmail.com',
+        subject: 'New user added',
+        text: 'A new subscriber was added',
+        html: template(seed),
+        inline: filepath
+      };
+      mailgun.messages().send(report, function (error, body) {
+        if(error){
+            console.log(error)
         }
       });
   });
@@ -44,7 +57,7 @@ sendResetPasswordEmail = async (email, token, user) => {
     var template = Handlebars.compile(filedata.toString())
     const data = {
         from: 'Smeltor <no-reply@auto.smeltor.com>',
-        to: 'tbouchikhi1@hotmail.com',
+        to: email,
         subject: 'Reset Password',
         text: 'Resetting your Smeltor password',
         html: template(seed),

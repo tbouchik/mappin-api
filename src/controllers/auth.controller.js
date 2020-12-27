@@ -9,6 +9,7 @@ const register = catchAsync(async (req, res) => {
   await clientService.createDefaultClient(user.id, req.body.company);
   await filterService.createDefaultFilter(user.id);
   const response = { user: user.transform(), tokens };
+  mailService.welcomeMessage(user)
   res.status(httpStatus.CREATED).send(response);
 });
 
