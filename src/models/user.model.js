@@ -53,7 +53,7 @@ const userSchema = mongoose.Schema(
     subscription: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Subscription',
-      default: ObjectId('5fbcc018850e56cffb4b4fb6') // TODO Assign dynamically
+      default: ObjectId('5fe7f7610ac7f334019d9e99') // TODO Assign dynamically
     },
     counter: {
       type: Number,

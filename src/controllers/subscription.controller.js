@@ -12,7 +12,13 @@ const getSubscriptions = catchAsync(async (req, res) => {
   res.send(response);
 });
 
+const createSubscription = catchAsync(async (req, res) => {
+  const subscription = await subscriptionService.createSubscription(req.body);
+  res.send(subscription);
+});
+
 module.exports = {
   getSubscription,
   getSubscriptions,
+  createSubscription,
 };

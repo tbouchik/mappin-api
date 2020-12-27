@@ -19,8 +19,14 @@ const getSubscriptionById = async subscriptionId => {
   return subscription;
 };
 
+const createSubscription = async subscriptionBody => {
+  const subscription = await Subscription.create(subscriptionBody);
+  return subscription;
+};
+
 
 module.exports = {
   getSubscriptions,
   getSubscriptionById,
+  createSubscription,
 };

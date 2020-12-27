@@ -7,6 +7,6 @@ const router = express.Router();
 
 router
     .route('/')
-    .get(auth('manageDocuments'), subscriptionController.getSubscriptions);
+    .get(auth('manageDocuments'), subscriptionController.getSubscriptions)
 
 module.exports = router;
