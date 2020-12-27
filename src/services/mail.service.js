@@ -39,7 +39,7 @@ sendResetPasswordEmail = async (email, token, user) => {
     var mailgun = new Mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN, host: process.env.MAILGUN_HOST});
     var seed = { 
       name: user.name,
-      hyperlink: `https://www.smeltor.com/reset-verification?key=${token}`
+      hyperlink: `https://www.smeltor.com/system/reset-password?key=${token}`
     }
     var template = Handlebars.compile(filedata.toString())
     const data = {

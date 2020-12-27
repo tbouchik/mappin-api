@@ -3,6 +3,7 @@ const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { User, Company, Client } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
+const { createCompany } = require('./company.service');
 
 const checkDuplicateEmail = async (email, excludeUserId) => {
   const usedForbiddenEmail = email === process.env.GENERIC_EMAIL;
@@ -25,7 +26,8 @@ const checkUserExists = async email => {
 const checkCompanyExists = async companyName => {
   const company = await Company.findOne({ name: companyName });
   if (!company) {
-    throw new AppError(httpStatus.BAD_REQUEST, 'Company does not exist');
+    const newCompany = await createCompany({ name: companyName });
+    return newCompany;
   }
   return company;
 };
