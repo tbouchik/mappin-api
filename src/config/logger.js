@@ -3,8 +3,8 @@ const config = require('./config');
 var {Loggly} = require('winston-loggly-bulk');
 
 winston.add(new Loggly({
-    token: "ab0c67b2-b2c4-4a5a-97f5-33c5fb099298",
-    subdomain: "smeltor",
+    token: process.env.LOGGLY_TOKEN,
+    subdomain: process.env.LOGGLY_SUBDOMAIN,
     tags: ["Winston-NodeJS"],
     json: true
 }));
