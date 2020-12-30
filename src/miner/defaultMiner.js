@@ -21,7 +21,6 @@ const populateOsmium = (document, template) => {
             date.isBefore(endDate) &&
             date.isAfter(startDate)
         ){
-          console.log('date =====>', date)
           newDocument.osmium[1].Value = date.format('DD/MM/YYYY')
         }
       }

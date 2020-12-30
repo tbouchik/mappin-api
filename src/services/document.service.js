@@ -62,13 +62,13 @@ const getDocuments = async (user, query) => {
     skip,
     sort,
   };
-  console.log('options', options);
-  console.log('query', query);
-  console.log('filter', filter);
   let documents = await Document.find(filter, null, options)
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('filter');
+  if (documents.length){
+    console.log(documents[0].user.name, documents[0].user.id, ' on docs dashboard')
+  }
   return documents;
 };
 
@@ -96,7 +96,6 @@ const getNextSmeltedDocuments = async (user, query) => {
     sort,
   };
   let documents = await Document.find(filter, '_id', options)
-  console.log('smelted docs, ', documents[0], query.current)
   let slicedDocs = []
 
   if (query.side === 'left' ){
@@ -169,7 +168,6 @@ const getNextDocuments = async (user, query) => {
     sort,
   };
   let documents = await Document.find(filter, '_id', options)
-  console.log('docs, ', documents[0], query.current)
   let slicedDocs = []
   if (query.side === 'left' ){
     const currentIndex = documents.findIndex(x => x.id === query.current)
@@ -194,9 +192,7 @@ const getDocumentsCount = async (user, query) => {
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
-  console.log('filter count :', filter);
   let count = await Document.countDocuments(filter);
-  console.log('count is at ; ', count);
   return { count };
 };
 
@@ -220,8 +216,6 @@ const updateDocument = async (user, documentId, updateBody) => {
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
   } else {
-    console.log(document.user);
-    console.log(user._id);
     if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
     } else if (user.isClient) {

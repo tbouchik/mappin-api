@@ -40,7 +40,6 @@ const getFilters = async (user, query) => {
 
 const getFilterById = async (user, filterId) => {
   const filter = await Filter.findById(filterId);
-  console.log('filter.service',filter)
   if (!filter) {
     throw new AppError(httpStatus.NOT_FOUND, 'Filter not found');
   } else if (parseInt(filter.user) !== parseInt(user._id)) {

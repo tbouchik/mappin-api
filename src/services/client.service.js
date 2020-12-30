@@ -10,7 +10,6 @@ const checkDuplicateEmail = async (email, userId) => {
       email,
       user: new ObjectId(userId)
     });
-    console.log(client)
     if (client) {
       throw new AppError(httpStatus.BAD_REQUEST, 'Email already taken');
     }
@@ -63,9 +62,6 @@ const getClients = async (user, query) => {
     skip, 
     sort
   }
-  console.log('options', options);
-  console.log('query', query);
-  console.log('filter', filter);
   const clients = await Client.find(filter, null, options);
   return clients;
 };
@@ -120,9 +116,7 @@ const getClientsCount = async (user, query) => {
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
-  console.log('filter count :', filter)
   let count = await Client.countDocuments(filter)
-  console.log('count is at ; ', count)
   return {count};
 };
 

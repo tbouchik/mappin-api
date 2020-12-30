@@ -10,7 +10,6 @@ const { createDocument, updateDocument } = require('../services/document.service
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
-const { populateOsmium } = require('../miner/defaultMiner');
 AWS.config.update({ region: 'us-east-1' });
 
 const queue = new Queue(async (payload, cb) => {
