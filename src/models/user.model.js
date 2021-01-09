@@ -66,7 +66,8 @@ const userSchema = mongoose.Schema(
     blacklisted: {
       type: Boolean,
       default: false
-    }
+    },
+    skeletons : []
   },
   {
     timestamps: true,
