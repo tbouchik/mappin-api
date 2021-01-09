@@ -19,7 +19,7 @@ const skeletonSchema = mongoose.Schema(
     timestamps: true,
     toObject: { getters: true },
     toJSON: { getters: true },
-  }
+  },
 );
 
 skeletonSchema.methods.toJSON = function() {

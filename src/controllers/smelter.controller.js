@@ -49,149 +49,89 @@ const queue = new Queue(async (payload, cb) => {
   }
 });
 
-const singleSmelt = async (req, res) => {
-  try {
-    const { body, user } = req;
-    const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${body.filename} --forms --output ${process.env.TEXTRACTOR_OUTPUT}`;
-    await exec(command, {
-      timeout: 200000,
-    });
-    const fileName = body.filename.split('.')[0];
-    const fileExtension = body.filename.split('.')[1];
-    const outputDirName = `${fileName}-${fileExtension}`;
-    if (fs.existsSync(`${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}/${outputDirName}-page-1-forms.csv`)) {
-      // joining path of directory
-      const directoryPath = `${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
-      // passing directoryPath and callback function
-      fs.readdir(directoryPath, async (err, files) => {
-        // handling error
-        if (err) {
-          throw new AppError(httpStatus.NOT_FOUND, err);
-        }
-        let pageNumber = 0;
-        let finalJson = {};
-        // listing all files using forEach
-        for (let i = 0; i < files.length; i++) {
-          if (files[i].split('.')[1] === 'csv' && files[i].includes('forms')) {
-            pageNumber += 1;
-            const jsonArray = await csv().fromFile(path.join(directoryPath, files[i]));
-            finalJson[`page_${pageNumber}`] = jsonArray;
-          }
-        }
-        try {
-          documentBody = {
-            link: `${process.env.AWS_BUCKET}/${body.filename}`,
-            name: body.filename,
-            metadata: finalJson,
-          };
-          createDocument(user, documentBody).then(result => {
-            res.send({
-              id: result._id,
-              name: body.filename,
-              metadata: finalJson,
-            });
-          });
-        } catch (err) {
-          throw new AppError(httpStatus.SERVICE_UNAVAILABLE, err);
-        }
-      });
-    } else {
-      throw new AppError(httpStatus.NO, 'Output file not found');
-    }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ msg: 'Caught error' });
-  }
-};
-
 const bulkSmelt = (req, res) => {
   try {
     const { body, user } = req;
-    let files = body.files;
-    // TODO update user credits
-    userCreditsRemaining(user._id)
-      .then((creditsRemaining)=>{
-        const filesLength = files.length
-        if (filesLength > creditsRemaining){
-          files = files.slice(0,creditsRemaining)
-          console.log('BREACH TENTATIVE: changed files length to : ',creditsRemaining )
-        }
-        updateUserCounter(user._id, {counter: files.length})
-        for (const file of files) {
-          let documentBody = {
-            link: `${process.env.AWS_BUCKET}/${file.alias}`,
-            name: file.name,
-            metadata: {},
-            osmium: [],
-            client: file.client,
-            filter: file.filter,
-            mimeType: file.mimeType,
-            alias: file.alias,
-            businessPurpose: file.businessPurpose,
-            extractionType: file.extractionType,
-            status: 'pending',
-          };
-          createDocument(user, documentBody).then(res => {
-            queue.push({
-              id: res._id,
-              documentBody,
-            });
-          });
-        }
-        queue.on('task_finish', (taskId, documentBody) => {
-          getFilterById(req.user, documentBody.filter)
-            .then((filter) => {
-              const hasRefField = filter.keys.some((key) => key.type === 'REF')
-              if (hasRefField) {
-                const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF')
-                getClientById(req.user, documentBody.client)
-                  .then((client) => {
-                    documentBody.osmium[refFieldIndex].Value = client.reference
-                    updateDocument(user, taskId, {
-                      osmium: documentBody.osmium,
-                      metadata: documentBody.metadata,
-                      status: 'smelted',
-                    }).then()
-                    .catch(err=> {console.log(err)});
-                  })
-              }else {
-                updateDocument(user, taskId, {
-                  osmium: documentBody.osmium,
-                  metadata: documentBody.metadata,
-                  status: 'smelted',
-                }).then()
-                .catch(err=> {console.log(err)});
-              }
-            })
-          //TODO below is smart filter part. Logic should be reconsidered
-          // getDefaultFilter(user)
-          //   .then((defaultFilter) =>  {
-          //     if (defaultFilter.id === documentBody.filter) { // populate osmium for smart filter
-          //       documentBody = populateOsmium(documentBody, defaultFilter);
-          //     }
-          //     updateDocument(user, taskId, {
-          //       osmium: documentBody.osmium,
-          //       metadata: documentBody.metadata,
-          //       status: 'smelted',
-          //     }).then()
-          //     .catch(err=> {console.log(err)});
-          //   })
-        });
-        res.json({ done: true });
-        queue.on('empty', () => {
-          console.log('EMPTY');
-        });
-        queue.on('drain', () => {
-          console.log('DRAIN');
-        });
-  });
+    addFilesToQueue(user, body.files)
+    queue.on('task_finish', (taskId, documentBody) => {
+      saveSmeltedResult(req.user, documentBody, taskId)
+    });
+    res.json({ done: true });
+    queue.on('empty', () => {
+      console.log('EMPTY');
+    });
+    queue.on('drain', () => {
+      console.log('DRAIN');
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Caught error' });
   }
 };
 
+const addFilesToQueue = async (user, files) => {
+  const trimedFiles = await trimUnauthorizedDocuments(user._id, files);
+  try{
+    updateUserCounter(user._id, {counter: trimedFiles.length})
+    for (const file of trimedFiles) {
+      let documentBody = {
+        link: `${process.env.AWS_BUCKET}/${file.alias}`,
+        name: file.name,
+        metadata: {},
+        osmium: [],
+        client: file.client,
+        filter: file.filter,
+        mimeType: file.mimeType,
+        alias: file.alias,
+        businessPurpose: file.businessPurpose,
+        extractionType: file.extractionType,
+        status: 'pending',
+      };
+      let createdDoc = await createDocument(user, documentBody)
+      queue.push({
+        id: createdDoc._id,
+        documentBody,
+      });
+    }  
+  } catch (err) {
+    console.log(err)
+  }
+}
+
+const saveSmeltedResult = async (user, documentBody, taskId) => {
+  try{
+    const filter = await getFilterById(user, documentBody.filter)
+    const hasRefField = filter.keys.some((key) => key.type === 'REF')
+    if (hasRefField) {
+      const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF')
+      const client = await getClientById(user, documentBody.client)
+      documentBody.osmium[refFieldIndex].Value = client.reference
+      updateDocument(user, taskId, {
+        osmium: documentBody.osmium,
+        metadata: documentBody.metadata,
+        status: 'smelted',
+      })
+    }else {
+      updateDocument(user, taskId, {
+        osmium: documentBody.osmium,
+        metadata: documentBody.metadata,
+        status: 'smelted',
+      })
+    }
+  } catch(err) {
+    console.log(err)
+  }
+}
+
+const trimUnauthorizedDocuments = async (user, files) => {
+  const creditsRemaining = await userCreditsRemaining(user._id);
+    if (files.length > creditsRemaining){
+      files = files.slice(0,creditsRemaining)
+      console.log('BREACH TENTATIVE: changed files length to : ',creditsRemaining )
+    }
+  return files
+}
+
 module.exports = {
-  singleSmelt,
-  bulkSmelt,
+  bulkSmelt
 };
