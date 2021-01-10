@@ -100,7 +100,7 @@ const getGeoIntersection = (bbox1, bbox2) => {
     const intersectionArea = turf.area(intersection);
     result = Math.min(intersectionArea/getBBoxArea(bbox1), intersectionArea/getBBoxArea(bbox2));
   }
-  return result
+  return Object.is(result, undefined) ? 0 : result;
 }
 
 const getSkeletonTopSignature = (skeleton) => {
@@ -113,8 +113,32 @@ const getSkeletonBottomSignature = (skeleton) => {
   return skeleton.slice(startIndex)
 }
 
+const getGeoClosestBoxScores = (skeleton, bbox) => {
+  let result = {
+    geoSimilitude: 0,
+    textSimilitude: 0,
+    bbox: {Text:''}
+  }
+  let checkedBboxes = [];
+  let index = 0;
+  while(result.geoSimilitude < 0.5 && index < skeleton.length) {
+    let currentGrade = {
+      geoSimilitude: getGeoIntersection(bbox, skeleton[index]),
+      textSimilitude: getTextIntersection(bbox.Text, skeleton[index].Text),
+      bbox: skeleton[index]
+    }
+    checkedBboxes.push(currentGrade);
+    if (currentGrade.geoSimilitude > result.geoSimilitude) {
+      Object.assign(result, currentGrade);
+    }
+    index++;
+  }
+  return result;
+}
+
 module.exports = {
-    skeletonsMatch
+    skeletonsMatch,
+    getGeoClosestBoxScores,
 };
 
 

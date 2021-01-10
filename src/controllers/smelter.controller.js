@@ -102,12 +102,6 @@ const addFilesToQueue = async (user, files) => {
 
 const saveSmeltedResult = async (user, documentBody, taskId) => {
   try{
-    const matchingSkelton = await findSimilarSkeleton(documentBody.metadata.page_1);
-    if (matchingSkelton) {
-     //  documentBody = populateOsmium TODO WIP
-    } else {
-      createSkeleton(user, documentBody);
-    }
     const filter = await getFilterById(user, documentBody.filter);
     const hasRefField = filter.keys.some((key) => key.type === 'REF');
     if (hasRefField) {
@@ -125,6 +119,20 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
         metadata: documentBody.metadata,
         status: 'smelted',
       });
+    }
+    const matchingSkelton = await findSimilarSkeleton(documentBody.metadata.page_1);
+    if (matchingSkelton) {
+     if (matchingSkelton.clientTemplateMapping.has(user.id)) {
+       if (matchingSkelton.clientTemplateMapping.get(user.id).includes(documentBody.filter)){
+         documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkelto, filter);  
+        } else {
+          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkelton, filter);
+        }
+      } else {
+        documentBody = populateOsmiumFromOtherClientPrior(documentBody, matchingSkelton, filter); 
+      } 
+    } else {
+      createSkeleton(user, documentBody);
     }
   } catch(err) {
     console.log(err)

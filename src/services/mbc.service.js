@@ -1,6 +1,6 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
-const { skeletonsMatch } = require('../miner/skeletons')
+const { skeletonsMatch, getGeoClosestBoxScores } = require('../miner/skeletons')
 const { mergeClientTemplateIds } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { stackTraceLimit } = require('../utils/AppError');
@@ -20,7 +20,7 @@ const findSimilarSkeleton = async (skeleton) => {
 
 const createSkeleton = async (user, payload) => {
   let clientTemplateMapping = new Map(); //used Map instead of Object because the keys of an Object must be either a String or a Symbol.
-  clientTemplateMapping[user._id] = payload.filter;
+  clientTemplateMapping.set(user.id,  payload.filter);
   let template = await getFilterById(user, payload.filter, true);
   let templateKeyBBoxMappingArr = []
   for (elt in template.keys){
@@ -28,7 +28,7 @@ const createSkeleton = async (user, payload) => {
   }
   let templateKeyBBoxMapping = new Map(templateKeyBBoxMappingArr) // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#relation_with_array_objects
   let bboxMappings = new Map();
-  bboxMappings[mergeClientTemplateIds(user._id, payload.filter)] = templateKeyBBoxMapping;
+  bboxMappings.set(mergeClientTemplateIds(user.id, payload.filter) , templateKeyBBoxMapping);
   const skeletonBody = {
     ossature: payload.metadata.page_1,
     accountingNumber: 000000,
@@ -41,14 +41,44 @@ const createSkeleton = async (user, payload) => {
   return skeleton;
 };
 
-const populateOsmium = (documentBody) => {
+const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) => {
+  /**
+   * for each key template of the filter
+   *    verify that bbox matched has a good matching area  in the metadata
+   *    if (above verifications work ){
+   *        then update osmium  
+   *    } else {
+   *        some guessing work is required
+   *    }
+   */
+  let newDocument = Object.assign({}, documentBody);
+  const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter)
+  const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(bboxMappingKey)
+  const docSkeleton = newDocument.metadata.page_1;
+  filter.keys.map((key, index) => {
+    let referenceBbox = tempkeysToBoxMappingReference.get(key.value);
+    let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
+    console.log("Scanning for item: ", key.value)
+    console.log("Best bbox found score:   ", bestBbox)
+    console.log("------------------------------------")
+    newDocument.osmium[index].Value = bestBbox.Text 
+  })
+}
+
+const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, filter) => {
+  return {};
+}
+
+const populateOsmiumFromOtherClientPrior = (documentBody, skeletonReference, filter) => {
   return {};
 }
 
 module.exports = {
   createSkeleton,
   findSimilarSkeleton,
-  populateOsmium,
+  populateOsmiumFromExactPrior,
+  populateOsmiumFromFuzzyPrior,
+  populateOsmiumFromOtherClientPrior,
 };
 
 /** **** ShapeOsmium ****
