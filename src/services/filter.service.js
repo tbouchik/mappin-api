@@ -38,11 +38,11 @@ const getFilters = async (user, query) => {
   return filters;
 };
 
-const getFilterById = async (user, filterId) => {
+const getFilterById = async (user, filterId, skipAuth = false) => {
   const filter = await Filter.findById(filterId);
   if (!filter) {
     throw new AppError(httpStatus.NOT_FOUND, 'Filter not found');
-  } else if (parseInt(filter.user) !== parseInt(user._id)) {
+  } else if (parseInt(filter.user) !== parseInt(user._id) && !skipAuth) {
     throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this filter information');
   }
   return filter;

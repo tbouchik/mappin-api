@@ -6,13 +6,17 @@ const skeletonSchema = mongoose.Schema(
       type: Array,
       required: true,
     },
-    user: {
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'User',
-        required: true,
-      },
+    accountingNumber: {
+      type: Number,
+      required: false,
+    },
+    document: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Document',
+      required: true,
+    },
     googleMetadata: {},
-    clientMapping: {}, // HashTable<ClientID; List<TemplateID>>
+    clientTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
     bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyIndex; Bbox>>
   },
   {

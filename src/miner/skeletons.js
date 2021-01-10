@@ -121,9 +121,9 @@ module.exports = {
 /** **** ShapeOsmium ****
  *    Extract Metadata
  *    Search for similar (skeleton)                                                         #Algo 1        
- *    if (similar skeleton<clientId;TemplateId> exists)
+ *    if ( skeleton.clientTemplateMapping(clientId).templateId exists)
  *      then { populate }                                                                   #Algo 2
- *    else if (similar skeleton exists)
+ *    else if (similar skeleton exists but from other client)
  *      then {
  *            do a bestGuessMapping between the 2 templateKeys                              #Algo 3
  *            do populate                                                                   #Algo 2
@@ -133,17 +133,11 @@ module.exports = {
  *              do bestGuessMapping between templateKeys and keysBoundingBoxes              #Algo 4
  *              do bestGuessMapping between keysBoundingBoxes and valuesBoundingBoxes       #Algo 5
  *              do populate                                                                 #Algo 2
+ *              do register the new Skeleton                                                #Algo 6
  *          } 
  */
 
  /** **** updateOsmium ****
  * If value is changed
  *    Change Skeleton.HashMap<Client-Template-Tuple; Bbox-TemplateKey-Pair>
- */
-
-/**
- * Skeleton:
- *    Shape TODO:
- *    List<Client; Template>
- *    HashMap<ClientTemplateTuple; TemplateKeysBBoxesMappings>
  */

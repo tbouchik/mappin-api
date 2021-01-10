@@ -1,7 +1,7 @@
 const fuzz = require('fuzzball');
 const moment = require('moment');
 
-const populateOsmium = (document, template) => {
+const populateOsmium_V1 = (document, template) => {
     let newDocument = Object.assign({}, document);
     // Detect boxes that correspond to template keys
     const metadata = newDocument.metadata.page_1;
@@ -74,72 +74,5 @@ const pullMirrorBoxText = (metadata, index) => {
 }
 
 module.exports = {
-  populateOsmium
+  populateOsmium_V1
 };
-
-// defaultFilter.keys = [
-//   {value:'Invoice Number', type:'NUMBER'},
-//   {value:'Issue Date', type:'DATE'},
-//   {value:'Order Id / Tracking No', type:'TEXT'},
-//   {value:'Seller Name', type:'TEXT'},
-//   {value:'Seller Address', type:'TEXT'},
-//   {value:'Seller GST VAT Number', type:'NUMBER'},
-//   {value:'Buyer Name', type:'TEXT'},
-//   {value:'Buyer Address', type:'TEXT'},
-//   {value:'Buyer GST VAT Number', type:'NUMBER'},
-//   {value:'Subtotal', type:'NUMBER'},
-//   {value:'Tax Rate', type:'NUMBER'},
-//   {value:'Tax Total', type:'NUMBER'},
-//   {value:'Total Due', type:'NUMBER'},
-// ];
-
-/** 
- * query = "126abzx";
-choices = [{id: 345, model: "123abc"},
-           {id: 346, model: "123efg"},
-           {id: 347, model: "456abdzx"}];
-
-options = {
-        scorer: fuzz.partial_ratio, // Any function that takes two values and returns a score, default: ratio
-        processor: choice => choice.model,  // Takes choice object, returns string, default: no processor. Must supply if choices are not already strings.
-        limit: 2, // Max number of top results to return, default: no limit / 0.
-        cutoff: 50, // Lowest score to return, default: 0
-        unsorted: false // Results won't be sorted if true, default: false. If true limit will be ignored.
-};
-
-results = fuzz.extract(query, choices, options);
-
-// [choice, score, index/key]
-[ [ { id: 347, model: '456abdzx' }, 71, 2 ],
-  [ { id: 345, model: '123abc' }, 67, 0 ] ]
- */
-
-/** **** ShapeOsmium ****
- *    Extract Metadata
- *    Search for similar (skeleton)                                                         #Algo 1        
- *    if (similar skeleton<clientId;TemplateId> exists)
- *      then { populate }                                                                   #Algo 2
- *    else if (similar skeleton exists)
- *      then {
- *            do a bestGuessMapping between the 2 templateKeys                              #Algo 3
- *            do populate                                                                   #Algo 2
- *           }
- *    else
- *      then {
- *              do bestGuessMapping between templateKeys and keysBoundingBoxes              #Algo 4
- *              do bestGuessMapping between keysBoundingBoxes and valuesBoundingBoxes       #Algo 5
- *              do populate                                                                 #Algo 2
- *          } 
- */
-
- /** **** updateOsmium ****
- * If value is changed
- *    Change Skeleton.HashMap<Client-Template-Tuple; Bbox-TemplateKey-Pair>
- */
-
-/**
- * Skeleton:
- *    Shape TODO:
- *    List<Client; Template>
- *    HashMap<ClientTemplateTuple; TemplateKeysBBoxesMappings>
- */

@@ -12,6 +12,10 @@ const getQueryOptions = query => {
   return { limit, skip, sort };
 };
 
+const mergeClientTemplateIds = (client, template) => {
+  return `${client}_${template}`;
+}
+
 const RegexType = Object.freeze({'EMAIL':1, 'DATE':2, 'OTHER':3})
 
 const SignatureMatchRating = Object.freeze({'EXCELLENT':1, 'SHAKY':2, 'BAD':3})
@@ -21,4 +25,5 @@ module.exports = {
   getQueryOptions,
   RegexType,
   SignatureMatchRating,
+  mergeClientTemplateIds,
 };

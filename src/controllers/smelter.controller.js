@@ -9,6 +9,7 @@ const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
+const { findSimilarSkeleton, createSkeleton, populateOsmium } = require('../services/mbc.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 AWS.config.update({ region: 'us-east-1' });
 
@@ -53,10 +54,11 @@ const bulkSmelt = (req, res) => {
   try {
     const { body, user } = req;
     addFilesToQueue(user, body.files)
+    res.json({ done: true });
     queue.on('task_finish', (taskId, documentBody) => {
+
       saveSmeltedResult(req.user, documentBody, taskId)
     });
-    res.json({ done: true });
     queue.on('empty', () => {
       console.log('EMPTY');
     });
@@ -100,23 +102,29 @@ const addFilesToQueue = async (user, files) => {
 
 const saveSmeltedResult = async (user, documentBody, taskId) => {
   try{
-    const filter = await getFilterById(user, documentBody.filter)
-    const hasRefField = filter.keys.some((key) => key.type === 'REF')
+    const matchingSkelton = await findSimilarSkeleton(documentBody.metadata.page_1);
+    if (matchingSkelton) {
+     //  documentBody = populateOsmium TODO WIP
+    } else {
+      createSkeleton(user, documentBody);
+    }
+    const filter = await getFilterById(user, documentBody.filter);
+    const hasRefField = filter.keys.some((key) => key.type === 'REF');
     if (hasRefField) {
-      const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF')
-      const client = await getClientById(user, documentBody.client)
-      documentBody.osmium[refFieldIndex].Value = client.reference
+      const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF');
+      const client = await getClientById(user, documentBody.client);
+      documentBody.osmium[refFieldIndex].Value = client.reference;
       updateDocument(user, taskId, {
         osmium: documentBody.osmium,
         metadata: documentBody.metadata,
         status: 'smelted',
-      })
+      });
     }else {
       updateDocument(user, taskId, {
         osmium: documentBody.osmium,
         metadata: documentBody.metadata,
         status: 'smelted',
-      })
+      });
     }
   } catch(err) {
     console.log(err)
