@@ -9,7 +9,7 @@ const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
-const { findSimilarSkeleton, createSkeleton, populateOsmium } = require('../services/mbc.service');
+const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 AWS.config.update({ region: 'us-east-1' });
 
@@ -120,18 +120,15 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
         status: 'smelted',
       });
     }
-    const matchingSkelton = await findSimilarSkeleton(documentBody.metadata.page_1);
-    if (matchingSkelton) {
-     if (matchingSkelton.clientTemplateMapping.has(user.id)) {
-       if (matchingSkelton.clientTemplateMapping.get(user.id).includes(documentBody.filter)){
-         documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkelto, filter);  
-        } else {
-          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkelton, filter);
-        }
+    const matchingSkeleton = await findSimilarSkeleton(documentBody.metadata.page_1);
+    if (matchingSkeleton) {
+     if (matchingSkeleton.clientTemplateMapping.has(user.id) && matchingSkeleton.clientTemplateMapping.get(user.id).includes(documentBody.filter)) {
+         documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);  
       } else {
-        documentBody = populateOsmiumFromOtherClientPrior(documentBody, matchingSkelton, filter); 
-      } 
+        documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter);
+      }
     } else {
+      // google api to the rescue
       createSkeleton(user, documentBody);
     }
   } catch(err) {

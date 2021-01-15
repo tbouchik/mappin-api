@@ -3,7 +3,8 @@ const { Skeleton } = require('../models');
 const { skeletonsMatch, getGeoClosestBoxScores } = require('../miner/skeletons')
 const { mergeClientTemplateIds } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
-const { stackTraceLimit } = require('../utils/AppError');
+const fuzz = require('fuzzball');
+const munkres = require('munkres-js');
 
 const findSimilarSkeleton = async (skeleton) => {
   const skeletons = await Skeleton.find();
@@ -16,6 +17,34 @@ const findSimilarSkeleton = async (skeleton) => {
     index++;
   }
   return candidate;
+};
+
+const buildKeysDistanceMatrix = (newTemplateKeys, refTemplateKeys) => {
+  let matrix = [];
+  newTemplateKeys.forEeach((newTemplateKey) => {
+    let row = refTemplateKeys.map((refTemplateKey) => 100 - fuzz.ratio(newTemplateKey.value, refTemplateKey.value));
+    matrix.push(row);
+  })
+  return matrix;
+}
+
+const bindTemplateKeys = (newTemplate, refTemplate) => {
+  let distanceMatrix = buildKeysDistanceMatrix(newTemplate.keys, refTemplate.keys);
+  let mapping =  munkres(distanceMatrix);
+  let result = [];
+  for (let i=0; i < newTemplate.keys.length; i++) {
+    if (i === mapping[i][0]) {
+      result.push(mapping[i][1]);
+    } else {
+      result.push(undefined)
+    }
+  }
+  return result
+}
+
+const getMostResemblantTemplate = (documentFilter, skeletonReference) => {
+  let result = {key:'', template:''};
+  return result
 };
 
 const createSkeleton = async (user, payload) => {
@@ -46,39 +75,47 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
    * for each key template of the filter
    *    verify that bbox matched has a good matching area  in the metadata
    *    if (above verifications work ){
-   *        then update osmium  
+   *        then update osmium
    *    } else {
    *        some guessing work is required
    *    }
    */
   let newDocument = Object.assign({}, documentBody);
-  const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter)
-  const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(bboxMappingKey)
+  const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
+  const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(bboxMappingKey);
   const docSkeleton = newDocument.metadata.page_1;
   filter.keys.map((key, index) => {
     let referenceBbox = tempkeysToBoxMappingReference.get(key.value);
     let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-    console.log("Scanning for item: ", key.value)
-    console.log("Best bbox found score:   ", bestBbox)
-    console.log("------------------------------------")
-    newDocument.osmium[index].Value = bestBbox.Text 
+    newDocument.osmium[index].Value = bestBbox.Text;
   })
+  return newDocument;
 }
 
 const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, filter) => {
-  return {};
+  const mostResemblantTemplateData = getMostResemblantTemplate(filter, skeletonReference);
+  const matchedTemplateData = bindTemplateKeys(filter, mostResemblantTemplateData.template);
+  let newDocument = Object.assign({}, documentBody);
+  const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(mostResemblantTemplateData.key);
+  const docSkeleton = newDocument.metadata.page_1;
+  filter.keys.map((key, index) => {
+    let matchedIndex = matchedTemplateData[index]
+    if (matchedIndex) {
+      let matchedKey = mostResemblantTemplateData.template.keys[matchedIndex]
+      let referenceBbox = tempkeysToBoxMappingReference.get(matchedKey.value);
+      let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
+      newDocument.osmium[index].Value = bestBbox.Text;
+    }
+  });
+  return newDocument;
 }
 
-const populateOsmiumFromOtherClientPrior = (documentBody, skeletonReference, filter) => {
-  return {};
-}
 
 module.exports = {
   createSkeleton,
   findSimilarSkeleton,
   populateOsmiumFromExactPrior,
   populateOsmiumFromFuzzyPrior,
-  populateOsmiumFromOtherClientPrior,
 };
 
 /** **** ShapeOsmium ****
@@ -90,14 +127,16 @@ module.exports = {
  *      then {
  *            do a bestGuessMapping between the 2 templateKeys                              #Algo 3
  *            do populate                                                                   #Algo 2
+ *            do update skeletonData with new clientID_templateID mappings
  *           }
  *    else
  *      then {
  *              do bestGuessMapping between templateKeys and keysBoundingBoxes              #Algo 4
  *              do bestGuessMapping between keysBoundingBoxes and valuesBoundingBoxes       #Algo 5
- *              do populate                                                                 #Algo 2
- *              do register the new Skeleton                                                #Algo 6 
- *          } 
+ *              do populate                                                                 #Algo 2   
+ *              do register the new Skeleton                                                #Algo 6   Done
+ *              do update skeletonData with new clientID_templateID mappings
+ *          }
  */
 
 

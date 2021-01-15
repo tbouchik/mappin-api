@@ -114,7 +114,7 @@ const getSkeletonBottomSignature = (skeleton) => {
 }
 
 const getGeoClosestBoxScores = (skeleton, bbox) => {
-  let result = {
+  let result = { // initializing default values to avoid null exceptions by caller function
     geoSimilitude: 0,
     textSimilitude: 0,
     bbox: {Text:''}
