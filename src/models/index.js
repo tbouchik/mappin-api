@@ -5,3 +5,4 @@ module.exports.Document = require('./document.model');
 module.exports.Client = require('./client.model');
 module.exports.Filter = require('./filter.model');
 module.exports.Subscription = require('./subscription.model');
+module.exports.Skeleton = require('./skeleton.model');

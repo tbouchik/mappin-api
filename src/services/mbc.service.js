@@ -28,13 +28,20 @@ const buildKeysDistanceMatrix = (newTemplateKeys, refTemplateKeys) => {
   return matrix;
 }
 
-const bindTemplateKeys = (newTemplate, refTemplate) => {
-  let distanceMatrix = buildKeysDistanceMatrix(newTemplate.keys, refTemplate.keys);
-  let mapping =  munkres(distanceMatrix);
+const computeTemplatesSimilitude = (templatesDistanceMatrix, munkresCombination) => {
+  let result = 0;
+  munkresCombination.forEach((pair) => {
+    result += templatesDistanceMatrix[pair[0]][pair[1]];
+  })
+  return result;
+}
+
+
+const flattenMunkres = (munkresOutput, templateKeysLength) => {
   let result = [];
-  for (let i=0; i < newTemplate.keys.length; i++) {
-    if (i === mapping[i][0]) {
-      result.push(mapping[i][1]);
+  for (let i=0; i < templateKeysLength; i++) {
+    if (i === munkresOutput[i][0]) {
+      result.push(munkresOutput[i][1]);
     } else {
       result.push(undefined)
     }
@@ -42,26 +49,62 @@ const bindTemplateKeys = (newTemplate, refTemplate) => {
   return result
 }
 
+
 const getMostResemblantTemplate = (documentFilter, skeletonReference) => {
-  let result = {key:'', template:''};
-  return result
+  let result = { key:'', template:'', indices: [] };
+  let candidates = [] 
+  let clientTemplateMap = skeletonReference.clientTemplateMapping;
+  let bboxMap = skeletonReference.bboxMappings;
+  for (let clientId in clientTemplateMap){
+    for (let i=0; i<clientTemplateMap.get(clientId).length; i++){
+      if (bboxMap.has(mergeClientTemplateIds(clientId, clientTemplateMap.get(clientId)))) {
+        candidates.push({ key: mergeClientTemplateIds(clientId, clientTemplateMap.get(clientId)),
+                          templateId: clientTemplateMap.get(clientId)[i],
+                          templateKeys: extractTemplateKeysFromBBoxMap(bboxMap.get(mergeClientTemplateIds(clientId, clientTemplateMap.get(clientId))))
+                        })
+      }
+    }
+  }
+  let bestScore = Number.MAX_SAFE_INTEGER;
+  candidates.forEach((candidate) => {
+    let distanceMatrix = buildKeysDistanceMatrix(documentFilter.keys, candidate.templateKeys);
+    let munkresDistance = munkres(distanceMatrix)
+    let newScore = computeTemplatesSimilitude(distanceMatrix, munkresDistance);
+    if (newScore < bestScore) {
+      bestScore = newScore;
+      Object.assign(result, {
+        key: candidate.key,
+        template: candidate.templateKeys,
+        indices: flattenMunkres(munkresDistance, documentFilter.keys.length),
+      });
+    }
+  })
+  return result;
 };
 
-const createSkeleton = async (user, payload) => {
+const extractTemplateKeysFromBBoxMap = (bboxMap) => {
+  let result = []
+  for (const [k, v] of Object.entries(bboxMap)) {
+    result.push({value: k})
+  }
+  return result;
+}
+
+const createSkeleton = async (user, payload, docId) => {
   let clientTemplateMapping = new Map(); //used Map instead of Object because the keys of an Object must be either a String or a Symbol.
-  clientTemplateMapping.set(user.id,  payload.filter);
+  clientTemplateMapping.set(user.id,  [payload.filter]);
   let template = await getFilterById(user, payload.filter, true);
   let templateKeyBBoxMappingArr = []
-  for (elt in template.keys){
-    templateKeyBBoxMappingArr.push([elt.value , null])
+  for (let i=0; i < template.keys.length; i++) {
+    templateKeyBBoxMappingArr.push([template.keys[i].value , null])
   }
   let templateKeyBBoxMapping = new Map(templateKeyBBoxMappingArr) // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#relation_with_array_objects
   let bboxMappings = new Map();
-  bboxMappings.set(mergeClientTemplateIds(user.id, payload.filter) , templateKeyBBoxMapping);
+  bboxMappings.set(mergeClientTemplateIds(user.id, payload.filter) , Object.fromEntries(templateKeyBBoxMapping));
   const skeletonBody = {
     ossature: payload.metadata.page_1,
     accountingNumber: 000000,
-    document: payload._id,
+    document: docId,
     googleMetadata: {},
     clientTemplateMapping,
     bboxMappings,
@@ -94,12 +137,11 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
 
 const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, filter) => {
   const mostResemblantTemplateData = getMostResemblantTemplate(filter, skeletonReference);
-  const matchedTemplateData = bindTemplateKeys(filter, mostResemblantTemplateData.template);
   let newDocument = Object.assign({}, documentBody);
   const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(mostResemblantTemplateData.key);
   const docSkeleton = newDocument.metadata.page_1;
   filter.keys.map((key, index) => {
-    let matchedIndex = matchedTemplateData[index]
+    let matchedIndex = mostResemblantTemplateData.indices[index]
     if (matchedIndex) {
       let matchedKey = mostResemblantTemplateData.template.keys[matchedIndex]
       let referenceBbox = tempkeysToBoxMappingReference.get(matchedKey.value);

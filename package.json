@@ -48,6 +48,7 @@
   ],
   "dependencies": {
     "@hapi/joi": "^17.1.0",
+    "@turf/turf": "^6.2.0",
     "@uppy/companion": "^2.0.0-alpha.2",
     "await-exec": "^0.1.2",
     "aws-sdk": "^2.665.0",

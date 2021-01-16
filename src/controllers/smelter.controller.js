@@ -102,7 +102,18 @@ const addFilesToQueue = async (user, files) => {
 
 const saveSmeltedResult = async (user, documentBody, taskId) => {
   try{
-    const filter = await getFilterById(user, documentBody.filter);
+    const filter = await getFilterById(user, documentBody.filter);    
+    const matchingSkeleton = await findSimilarSkeleton(documentBody.metadata.page_1);
+    if (matchingSkeleton) {
+     if (matchingSkeleton.clientTemplateMapping.has(user.id) && matchingSkeleton.clientTemplateMapping.get(user.id).includes(documentBody.filter)) {
+         documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);  
+      } else {
+        documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter);
+      }
+    } else {
+      // google api to the rescue
+      createSkeleton(user, documentBody, taskId);
+    }
     const hasRefField = filter.keys.some((key) => key.type === 'REF');
     if (hasRefField) {
       const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF');
@@ -119,17 +130,6 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
         metadata: documentBody.metadata,
         status: 'smelted',
       });
-    }
-    const matchingSkeleton = await findSimilarSkeleton(documentBody.metadata.page_1);
-    if (matchingSkeleton) {
-     if (matchingSkeleton.clientTemplateMapping.has(user.id) && matchingSkeleton.clientTemplateMapping.get(user.id).includes(documentBody.filter)) {
-         documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);  
-      } else {
-        documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter);
-      }
-    } else {
-      // google api to the rescue
-      createSkeleton(user, documentBody);
     }
   } catch(err) {
     console.log(err)

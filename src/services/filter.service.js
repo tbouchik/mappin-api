@@ -4,7 +4,7 @@ const AppError = require('../utils/AppError');
 const { Filter } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const defaultFilter = require('../utils/defaultFilter');
-
+let ObjectId = require('mongoose').Types.ObjectId;
 
 const createFilter = async (user, filterBody) => {
   filterBody.user = user._id;
@@ -89,6 +89,13 @@ const getDefaultFilter = async (user) => {
   return filter;
 };
 
+const getManyFiltersInternal = async (filterIds) => {
+  const idArray = filterIds.map((filterId) => new ObjectId(filterId))
+  const filters = await Filter.find({'_id': { $in: idArray }});
+  return filters
+
+}
+
 module.exports = {
   createFilter,
   createDefaultFilter,
@@ -99,4 +106,5 @@ module.exports = {
   deleteFilter,
   getDefaultFilterId,
   getDefaultFilter,
+  getManyFiltersInternal,
 };

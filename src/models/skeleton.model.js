@@ -15,9 +15,9 @@ const skeletonSchema = mongoose.Schema(
       ref: 'Document',
       required: true,
     },
-    googleMetadata: null,
-    clientTemplateMapping: null, // HashTable<ClientID; List<TemplateID>>
-    bboxMappings: null, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>
+    googleMetadata: {},
+    clientTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
+    bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>
   },
   {
     timestamps: true,
@@ -28,6 +28,8 @@ const skeletonSchema = mongoose.Schema(
 
 skeletonSchema.methods.toJSON = function() {
   const skeleton = this;
+  skeleton.clientTemplateMapping =  new Map(Object.entries(skeleton.clientTemplateMapping));
+  skeleton.bboxMappings = new Map(Object.entries(skeleton.bboxMappings));
   return skeleton.toObject();
 };
 
@@ -35,6 +37,13 @@ skeletonSchema.methods.transform = function() {
   const skeleton = this;
   return skeleton.toJSON();
 };
+
+skeletonSchema.pre('save', async function(next) {
+  const skeleton = this;
+  skeleton.clientTemplateMapping = Object.fromEntries(skeleton.clientTemplateMapping);
+  skeleton.bboxMappings = Object.fromEntries(skeleton.bboxMappings);
+  next();
+});
 
 const Skeleton = mongoose.model('Skeleton', skeletonSchema);
 
