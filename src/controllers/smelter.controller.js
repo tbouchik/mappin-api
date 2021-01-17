@@ -102,17 +102,20 @@ const addFilesToQueue = async (user, files) => {
 
 const saveSmeltedResult = async (user, documentBody, taskId) => {
   try{
+    const skeletonId = '';
     const filter = await getFilterById(user, documentBody.filter);    
     const matchingSkeleton = await findSimilarSkeleton(documentBody.metadata.page_1);
     if (matchingSkeleton) {
-     if (matchingSkeleton.clientTemplateMapping.has(user.id) && matchingSkeleton.clientTemplateMapping.get(user.id).includes(documentBody.filter)) {
-         documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);  
+      skeletonId = matchingSkeleton._id
+      if (matchingSkeleton.clientTemplateMapping.has(user.id) && matchingSkeleton.clientTemplateMapping.get(user.id).includes(documentBody.filter)) {
+          documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);  
+        } else {
+          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter);
+        }
       } else {
-        documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter);
-      }
-    } else {
-      // google api to the rescue
-      createSkeleton(user, documentBody, taskId);
+        // google api to the rescue
+        const newSkeleton = await createSkeleton(user, documentBody, taskId);
+        skeletonId = newSkeleton._id;
     }
     const hasRefField = filter.keys.some((key) => key.type === 'REF');
     if (hasRefField) {
@@ -123,12 +126,14 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
         osmium: documentBody.osmium,
         metadata: documentBody.metadata,
         status: 'smelted',
+        skeleton: skeletonId,
       });
     }else {
       updateDocument(user, taskId, {
         osmium: documentBody.osmium,
         metadata: documentBody.metadata,
         status: 'smelted',
+        skeleton: skeletonId,
       });
     }
   } catch(err) {

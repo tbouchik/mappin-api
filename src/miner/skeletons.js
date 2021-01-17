@@ -2,6 +2,7 @@ const fuzz = require('fuzzball');
 const moment = require('moment');
 const turf = require("@turf/turf")
 const { RegexType, SignatureMatchRating } = require('../utils/service.util');
+const { mergeClientTemplateIds } = require('../utils/service.util')
 
 const skeletonsMatch = (skeleton1, skeleton2) => {
   const topSignature1 = getSkeletonTopSignature(skeleton1);
@@ -136,9 +137,48 @@ const getGeoClosestBoxScores = (skeleton, bbox) => {
   return result;
 }
 
+/**
+ * check skeleton has client/template (clientId, templateId)
+ * add new client/template map (clientId, templateId, templateKeys)
+ */
+const constructBboxMapppings = (templateKeys) => {
+  let templateKeyBBoxMappingArr = []
+  for (let i=0; i < templateKeys.length; i++) {
+    templateKeyBBoxMappingArr.push([templateKeys[i].value , null])
+  }
+  let templateKeyBBoxMapping = new Map(templateKeyBBoxMappingArr)
+  return Object.fromEntries(templateKeyBBoxMapping)
+}
+
+const skeletonHasClientTemplate = (skeleton, clientId, templateId) => {
+  if (skeleton.clientTemplateMapping.has(clientId)) {
+    let templateIds = skeleton.clientTemplateMapping.get(clientId);
+    return templateIds.includes(templateId);
+  }
+  return false;
+}
+
+const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKeys) => {
+  if (skeleton.clientTemplateMapping.has(clientId)) {
+    let templateIds = skeleton.clientTemplateMapping.get(clientId);
+    if (!templateIds.includes(templateId)) {
+      templateIds = templateIds.push(templateId);
+      skeleton.clientTemplateMapping.set(clientId, templateIds)
+    }
+  } else {
+    skeleton.clientTemplateMapping.set(clientId, [templateId])
+  }
+  let bboxMapps = constructBboxMapppings(templateKeys);
+  skeleton.bboxMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
+  return skeleton
+}
+
+
 module.exports = {
     skeletonsMatch,
     getGeoClosestBoxScores,
+    skeletonHasClientTemplate,
+    skeletonStoreClientTemplate,
 };
 
 

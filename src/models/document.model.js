@@ -22,6 +22,11 @@ const documentSchema = mongoose.Schema(
       ref: 'Filter',
       required: true,
     },
+    skeleton: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Skeleton',
+      required: false,
+    },
     mimeType: {
       type: String,
       enum: ['image/png', 'image/jpeg', 'application/pdf'],
@@ -80,6 +85,7 @@ documentSchema.methods.transform = function() {
     'validatedBy',
     'client',
     'filter',
+    'skeleton',
     'mimeType',
     'businessPurpose',
     'extractionType',
