@@ -151,8 +151,9 @@ const constructBboxMapppings = (templateKeys) => {
 }
 
 const skeletonHasClientTemplate = (skeleton, clientId, templateId) => {
-  if (skeleton.clientTemplateMapping.has(clientId)) {
-    let templateIds = skeleton.clientTemplateMapping.get(clientId);
+  const clientIdStr = typeof clientId === 'string' ? clientId : clientId.toString(); 
+  if (skeleton.clientTemplateMapping.has(clientIdStr)) {
+    let templateIds = skeleton.clientTemplateMapping.get(clientIdStr);
     return templateIds.includes(templateId);
   }
   return false;
@@ -171,6 +172,18 @@ const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKey
   let bboxMapps = constructBboxMapppings(templateKeys);
   skeleton.bboxMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
   return skeleton
+}
+
+skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
+  const clientTemKey = mergeClientTemplateIds(clientId, templateId);
+  if (skeleton.bboxMappings.has(clientTemKey)) {
+    let newBboxmappings = skeleton.bboxMappings.get(clientTemKey);
+    if (keyName in newBboxmappings) {
+      newBboxmappings[keyName] = bbox;
+      skeleton.bboxMappings.set(clientTemKey, newBboxmappings);
+    }
+  }
+  return skeleton;
 }
 
 

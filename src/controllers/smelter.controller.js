@@ -110,7 +110,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
       if (matchingSkeleton.clientTemplateMapping.has(user.id) && matchingSkeleton.clientTemplateMapping.get(user.id).includes(documentBody.filter)) {
           documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);  
         } else {
-          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter);
+          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user._id);
         }
       } else {
         // google api to the rescue

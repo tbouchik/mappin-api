@@ -1,8 +1,9 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
-const { skeletonsMatch, getGeoClosestBoxScores } = require('../miner/skeletons')
+const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox } = require('../miner/skeletons')
 const { mergeClientTemplateIds } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
+const { updateSkeleton } = require('../services/skeleton.service');
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
 
@@ -135,20 +136,23 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
   return newDocument;
 }
 
-const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, filter) => {
-  const mostResemblantTemplateData = getMostResemblantTemplate(filter, skeletonReference);
+const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template, clientId) => {
+  const mostResemblantTemplateData = getMostResemblantTemplate(template, skeletonReference);
+  skeletonReference = skeletonStoreClientTemplate(skeletonReference,clientId, template._id, template.keys)
   let newDocument = Object.assign({}, documentBody);
   const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(mostResemblantTemplateData.key);
   const docSkeleton = newDocument.metadata.page_1;
-  filter.keys.map((key, index) => {
+  template.keys.map((key, index) => {
     let matchedIndex = mostResemblantTemplateData.indices[index]
     if (matchedIndex) {
       let matchedKey = mostResemblantTemplateData.template.keys[matchedIndex]
       let referenceBbox = tempkeysToBoxMappingReference.get(matchedKey.value);
       let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
       newDocument.osmium[index].Value = bestBbox.Text;
+      skeletonReference = skeletonUpdateBbox(skeletonReference, clientId, template._id, key.value, bestBbox);
     }
   });
+  updateSkeleton(skeletonReference._id, skeletonReference)
   return newDocument;
 }
 

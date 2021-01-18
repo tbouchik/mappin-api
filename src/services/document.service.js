@@ -1,9 +1,10 @@
 const httpStatus = require('http-status');
-const { pick } = require('lodash');
+const { pick, omit } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Document } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const { getFilterById, getDefaultFilterId } = require('./filter.service');
+const { updateSkeletonFromDocUpdate } = require('./skeleton.service');
 const { getClientByEmail } = require('./client.service');
 
 const createDocument = async (user, documentBody) => {
@@ -229,9 +230,13 @@ const updateDocument = async (user, documentId, updateBody) => {
     if (updateBody.validated && updateBody.validated == 'validated') {
       updateBody.validatedBy = user._id;
     }
+    let mbc = updateBody.mbc;
+    updateBody = omit(updateBody, ['mbc']);
     Object.assign(document, updateBody);
     try{
       await document.save();
+      updateSkeletonFromDocUpdate(user, updateBody, mbc);
+      
     } catch(error){
       console.log(error)
     }
