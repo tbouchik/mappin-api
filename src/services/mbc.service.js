@@ -13,11 +13,11 @@ const findSimilarSkeleton = async (skeleton) => {
   let candidate = null;
   let index = 0;
   while(!foundMatch && index < skeletons.length) {
-    candidate = skeletons[i];
-    foundMatch = skeletonsMatch(skeleton, candidate);
+    candidate = skeletons[index];
+    foundMatch = skeletonsMatch(skeleton, candidate.ossature);
     index++;
   }
-  return candidate;
+  return foundMatch === true? candidate : null;
 };
 
 const buildKeysDistanceMatrix = (newTemplateKeys, refTemplateKeys) => {
@@ -126,13 +126,18 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
    */
   let newDocument = Object.assign({}, documentBody);
   const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
-  const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(bboxMappingKey);
+  let tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(bboxMappingKey);
+  tempkeysToBoxMappingReference = new Map(Object.entries(tempkeysToBoxMappingReference));
   const docSkeleton = newDocument.metadata.page_1;
-  filter.keys.map((key, index) => {
+  for (let i = 0; i <filter.keys.length; i++) {
+    let key = filter.keys[i];
     let referenceBbox = tempkeysToBoxMappingReference.get(key.value);
-    let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-    newDocument.osmium[index].Value = bestBbox.Text;
-  })
+    if (referenceBbox) {
+      let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
+      newDocument.osmium[i].Value = bestBbox !== undefined ? bestBbox.bbox.Text : null;
+    }
+  }
+ 
   return newDocument;
 }
 

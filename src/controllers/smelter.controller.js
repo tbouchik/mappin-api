@@ -9,6 +9,7 @@ const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
+const { skeletonHasClientTemplate } = require('../miner/skeletons')
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 AWS.config.update({ region: 'us-east-1' });
@@ -102,12 +103,12 @@ const addFilesToQueue = async (user, files) => {
 
 const saveSmeltedResult = async (user, documentBody, taskId) => {
   try{
-    const skeletonId = '';
+    let skeletonId = '';
     const filter = await getFilterById(user, documentBody.filter);    
     const matchingSkeleton = await findSimilarSkeleton(documentBody.metadata.page_1);
     if (matchingSkeleton) {
       skeletonId = matchingSkeleton._id
-      if (matchingSkeleton.clientTemplateMapping.has(user.id) && matchingSkeleton.clientTemplateMapping.get(user.id).includes(documentBody.filter)) {
+      if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
           documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);  
         } else {
           documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user._id);

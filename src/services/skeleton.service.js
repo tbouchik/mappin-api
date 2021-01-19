@@ -36,7 +36,7 @@ const updateSkeleton = async (skeletonId, updateBody) => {
 
 updateSkeletonFromDocUpdate = async (user, documentBody, mbc) => {
    const skeleton = await getSkeletonById(documentBody.skeleton);
-   if (skeleton._id === ObjectId(documentBody.skeleton)){
+   if (skeleton.id === documentBody.skeleton){
      if (skeletonHasClientTemplate(skeleton, user._id, documentBody.filter)) {
       const clientTempKey = mergeClientTemplateIds(user._id, documentBody.filter)
       let newBboxMappings = skeleton.bboxMappings.get(clientTempKey);

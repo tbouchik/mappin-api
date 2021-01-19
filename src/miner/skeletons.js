@@ -1,6 +1,7 @@
 const fuzz = require('fuzzball');
 const moment = require('moment');
-const turf = require("@turf/turf")
+const turf = require("@turf/turf");
+const { pick } = require('lodash');
 const { RegexType, SignatureMatchRating } = require('../utils/service.util');
 const { mergeClientTemplateIds } = require('../utils/service.util')
 
@@ -27,26 +28,30 @@ const compareTwoSkeletonSignatures = (ske1, ske2) => {
     textIntersections.push(getTextIntersection(ske1[i].Text, ske2[i].Text))
   }
   const areaSum = areaIntersections.reduce((a, b) => a + b, 0);
+  const textSum = textIntersections.reduce((a, b) => a + b, 0);
   const areaAverage = (areaSum / areaIntersections.length) || 0;
-  if (areaAverage > 0.85 && textIntersections > 75) {
+  const textAverage = (textSum / textIntersections.length) || 0;
+  if (areaAverage > 0.85 && textAverage > 75) {
     return SignatureMatchRating.EXCELLENT
   }
-  else if ((areaAverage > 0.85 && textIntersections < 75) || (areaAverage < 0.85 && textIntersections > 75)) {
+  else if ((areaAverage > 0.85 && textAverage < 75) || (areaAverage < 0.85 && textAverage > 75)) {
     return SignatureMatchRating.SHAKY
   }
   return SignatureMatchRating.BAD
 }
 
 const getBboxCoordinates = (bbox) => {
-  const topLeft = [bbox.Left, bbox.Top];
-  const topRight = [bbox.Left + bbox.Width , bbox.Top];
-  const bottomLeft = [bbox.Left, bbox.Top + bbox.Height];
-  const bottomRight = [bbox.Left + bbox.Width, bbox.Top + bbox.Height];
-  return [topLeft, topRight, bottomLeft, bottomRight];
+  const topLeft = [parseFloat(bbox.Left), parseFloat(bbox.Top)];
+  const topRight = [parseFloat(bbox.Left) + parseFloat(bbox.Width) , parseFloat(bbox.Top)];
+  const bottomLeft = [parseFloat(bbox.Left), parseFloat(bbox.Top) + parseFloat(bbox.Height)];
+  const bottomRight = [parseFloat(bbox.Left) + parseFloat(bbox.Width), parseFloat(bbox.Top) + parseFloat(bbox.Height)];
+  return [topLeft, topRight, bottomRight, bottomLeft, topLeft];
 }
 
 const getBBoxArea = (bbox) => {
-  return bbox.Height*bbox.Width;
+  const coords = [getBboxCoordinates(bbox)];
+  const poly = turf.polygon(coords);
+  return turf.area(poly);
 }
 
 const getTextIntersection = (text1, text2) => {
@@ -94,8 +99,10 @@ const isDateRegexPattern = (text) => {
 
 const getGeoIntersection = (bbox1, bbox2) => {
   result = undefined;
-  const poly1 = turf.polygon(getBboxCoordinates(bbox1));
-  const poly2 = turf.polygon(getBboxCoordinates(bbox2));
+  let coor1 = [getBboxCoordinates(bbox1)];
+  let coor2 = [getBboxCoordinates(bbox2)]
+  const poly1 = turf.polygon(coor1);
+  const poly2 = turf.polygon(coor2);
   const intersection = turf.intersect(poly1, poly2);
   if (intersection) {
     const intersectionArea = turf.area(intersection);
@@ -105,12 +112,12 @@ const getGeoIntersection = (bbox1, bbox2) => {
 }
 
 const getSkeletonTopSignature = (skeleton) => {
-  const lastItemIndex = Math.max(skeleton.length, 5)
+  const lastItemIndex = Math.min(skeleton.length, 5)
   return skeleton.slice(0,lastItemIndex+ 1)
 }
 
 const getSkeletonBottomSignature = (skeleton) => {
-  const startIndex = Math.min(0, skeleton.length - 3)
+  const startIndex = Math.max(0, skeleton.length - 3)
   return skeleton.slice(startIndex)
 }
 
@@ -151,20 +158,25 @@ const constructBboxMapppings = (templateKeys) => {
 }
 
 const skeletonHasClientTemplate = (skeleton, clientId, templateId) => {
-  const clientIdStr = typeof clientId === 'string' ? clientId : clientId.toString(); 
+  const clientIdStr = typeof clientId === 'string' ? clientId : clientId.toString();
+  const templateIdStr = typeof templateId === 'string' ? templateId : templateId.toString();
+  skeleton.clientTemplateMapping =  new Map(Object.entries(skeleton.clientTemplateMapping));
+  skeleton.bboxMappings = new Map(Object.entries(skeleton.bboxMappings));
   if (skeleton.clientTemplateMapping.has(clientIdStr)) {
     let templateIds = skeleton.clientTemplateMapping.get(clientIdStr);
-    return templateIds.includes(templateId);
+    return templateIds.includes(templateIdStr);
   }
   return false;
 }
 
 const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKeys) => {
+  skeleton.clientTemplateMapping =  new Map(Object.entries(skeleton.clientTemplateMapping));
+  skeleton.bboxMappings = new Map(Object.entries(skeleton.bboxMappings));
   if (skeleton.clientTemplateMapping.has(clientId)) {
     let templateIds = skeleton.clientTemplateMapping.get(clientId);
     if (!templateIds.includes(templateId)) {
       templateIds = templateIds.push(templateId);
-      skeleton.clientTemplateMapping.set(clientId, templateIds)
+      skeleton.clientTemplateMapping.set(clientId, templateIds);
     }
   } else {
     skeleton.clientTemplateMapping.set(clientId, [templateId])
@@ -175,6 +187,8 @@ const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKey
 }
 
 skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
+  skeleton.clientTemplateMapping =  new Map(Object.entries(skeleton.clientTemplateMapping));
+  skeleton.bboxMappings = new Map(Object.entries(skeleton.bboxMappings));
   const clientTemKey = mergeClientTemplateIds(clientId, templateId);
   if (skeleton.bboxMappings.has(clientTemKey)) {
     let newBboxmappings = skeleton.bboxMappings.get(clientTemKey);

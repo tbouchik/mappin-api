@@ -235,6 +235,8 @@ const updateDocument = async (user, documentId, updateBody) => {
     Object.assign(document, updateBody);
     try{
       await document.save();
+      updateBody.skeleton = document.skeleton.toString();
+      updateBody.filter = updateBody.filter !== undefined ? updateBody.filter: document.filter._id.toString();
       updateSkeletonFromDocUpdate(user, updateBody, mbc);
       
     } catch(error){
