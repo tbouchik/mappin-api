@@ -1,4 +1,6 @@
+const { map } = require('lodash');
 const mongoose = require('mongoose');
+const { prepareSkeletonMappingsForApi, prepareSkeletonMappingsForDB } = require('../miner/skeletons')
 
 const skeletonSchema = mongoose.Schema(
   {
@@ -27,21 +29,19 @@ const skeletonSchema = mongoose.Schema(
 );
 
 skeletonSchema.methods.toJSON = function() {
-  const skeleton = this;
-  skeleton.clientTemplateMapping =  new Map(Object.entries(skeleton.clientTemplateMapping));
-  skeleton.bboxMappings = new Map(Object.entries(skeleton.bboxMappings));
+  let skeleton = this;
+  skeleton = prepareSkeletonMappingsForApi(skeleton);
   return skeleton.toObject();
 };
 
 skeletonSchema.methods.transform = function() {
-  const skeleton = this;
+  let skeleton = this;
   return skeleton.toJSON();
 };
 
 skeletonSchema.pre('save', async function(next) {
-  const skeleton = this;
-  skeleton.clientTemplateMapping = Object.fromEntries(skeleton.clientTemplateMapping);
-  skeleton.bboxMappings = Object.fromEntries(skeleton.bboxMappings);
+  let skeleton = this;
+  skeleton = prepareSkeletonMappingsForDB(skeleton);
   next();
 });
 

@@ -2,7 +2,7 @@ const fuzz = require('fuzzball');
 const moment = require('moment');
 const turf = require("@turf/turf");
 const { pick } = require('lodash');
-const { RegexType, SignatureMatchRating } = require('../utils/service.util');
+const { RegexType, SignatureMatchRating, objectToMap, mapToObject } = require('../utils/service.util');
 const { mergeClientTemplateIds } = require('../utils/service.util')
 
 const skeletonsMatch = (skeleton1, skeleton2) => {
@@ -160,8 +160,7 @@ const constructBboxMapppings = (templateKeys) => {
 const skeletonHasClientTemplate = (skeleton, clientId, templateId) => {
   const clientIdStr = typeof clientId === 'string' ? clientId : clientId.toString();
   const templateIdStr = typeof templateId === 'string' ? templateId : templateId.toString();
-  skeleton.clientTemplateMapping =  new Map(Object.entries(skeleton.clientTemplateMapping));
-  skeleton.bboxMappings = new Map(Object.entries(skeleton.bboxMappings));
+  skeleton = prepareSkeletonMappingsForApi(skeleton);
   if (skeleton.clientTemplateMapping.has(clientIdStr)) {
     let templateIds = skeleton.clientTemplateMapping.get(clientIdStr);
     return templateIds.includes(templateIdStr);
@@ -170,8 +169,7 @@ const skeletonHasClientTemplate = (skeleton, clientId, templateId) => {
 }
 
 const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKeys) => {
-  skeleton.clientTemplateMapping =  new Map(Object.entries(skeleton.clientTemplateMapping));
-  skeleton.bboxMappings = new Map(Object.entries(skeleton.bboxMappings));
+  skeleton = prepareSkeletonMappingsForApi(skeleton);
   if (skeleton.clientTemplateMapping.has(clientId)) {
     let templateIds = skeleton.clientTemplateMapping.get(clientId);
     if (!templateIds.includes(templateId)) {
@@ -186,9 +184,8 @@ const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKey
   return skeleton
 }
 
-skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
-  skeleton.clientTemplateMapping =  new Map(Object.entries(skeleton.clientTemplateMapping));
-  skeleton.bboxMappings = new Map(Object.entries(skeleton.bboxMappings));
+const skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
+  skeleton = prepareSkeletonMappingsForApi(skeleton);
   const clientTemKey = mergeClientTemplateIds(clientId, templateId);
   if (skeleton.bboxMappings.has(clientTemKey)) {
     let newBboxmappings = skeleton.bboxMappings.get(clientTemKey);
@@ -200,12 +197,26 @@ skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
   return skeleton;
 }
 
+const prepareSkeletonMappingsForApi = (skeleton) => {
+  skeleton.clientTemplateMapping =  objectToMap(skeleton.clientTemplateMapping);
+  skeleton.bboxMappings = objectToMap(skeleton.bboxMappings);
+  return skeleton
+}
+
+const prepareSkeletonMappingsForDB = (skeleton) => {
+  skeleton.clientTemplateMapping =  mapToObject(skeleton.clientTemplateMapping);
+  skeleton.bboxMappings = mapToObject(skeleton.bboxMappings);
+  return skeleton
+}
 
 module.exports = {
     skeletonsMatch,
     getGeoClosestBoxScores,
     skeletonHasClientTemplate,
     skeletonStoreClientTemplate,
+    skeletonUpdateBbox,
+    prepareSkeletonMappingsForApi,
+    prepareSkeletonMappingsForDB,
 };
 
 
