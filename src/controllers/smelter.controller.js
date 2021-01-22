@@ -57,7 +57,7 @@ const bulkSmelt = (req, res) => {
     addFilesToQueue(user, body.files)
     res.json({ done: true });
     queue.on('task_finish', (taskId, documentBody) => {
-
+      console.log('----------ACTIVATED-----------');
       saveSmeltedResult(req.user, documentBody, taskId)
     });
     queue.on('empty', () => {
