@@ -235,11 +235,14 @@ const updateDocument = async (user, documentId, updateBody) => {
     Object.assign(document, updateBody);
     try{
       await document.save();
+    } catch(error){
+      console.log(error)
+    }
+    try {
       updateBody.skeleton = document.skeleton.toString();
       updateBody.filter = updateBody.filter !== undefined ? updateBody.filter: document.filter._id.toString();
       updateSkeletonFromDocUpdate(user, updateBody, mbc);
-      
-    } catch(error){
+    } catch (error) {
       console.log(error)
     }
     return document;

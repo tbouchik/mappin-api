@@ -4,7 +4,7 @@ const exec = require('await-exec');
 const fs = require('fs');
 const csv = require('csvtojson');
 const httpStatus = require('http-status');
-const Queue = require('better-queue');
+const queue = require('queue');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { getFilterById } = require('../services/filter.service');
@@ -14,7 +14,13 @@ const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, popul
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 AWS.config.update({ region: 'us-east-1' });
 
-const queue = new Queue(async (payload, cb) => {
+let q = queue({ results: [] })
+// get notified when jobs complete
+q.on('success', function (result, job) {
+  console.log('job finished processing:', job.toString().replace(/\n/g, ''))
+  console.log('The result is:', result)
+})
+const extractOsmium = async (payload, cb) => {
   let finalJson = {};
   let newDocumentBody = Object.assign({}, payload.documentBody)
   const filename = payload.documentBody.alias;
@@ -49,23 +55,13 @@ const queue = new Queue(async (payload, cb) => {
       cb(null, newDocumentBody);
     });
   }
-});
+};
 
 const bulkSmelt = (req, res) => {
   try {
     const { body, user } = req;
     addFilesToQueue(user, body.files)
     res.json({ done: true });
-    queue.on('task_finish', (taskId, documentBody) => {
-
-      saveSmeltedResult(req.user, documentBody, taskId)
-    });
-    queue.on('empty', () => {
-      console.log('EMPTY');
-    });
-    queue.on('drain', () => {
-      console.log('DRAIN');
-    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Caught error' });
@@ -91,10 +87,12 @@ const addFilesToQueue = async (user, files) => {
         status: 'pending',
       };
       let createdDoc = await createDocument(user, documentBody)
-      queue.push({
-        id: createdDoc._id,
-        documentBody,
-      });
+      q.push( extractOsmium({id: createdDoc._id, documentBody}, (err, docBody) => {
+        if (!err) {
+          console.log('----------ACTIVATED-----------');
+          saveSmeltedResult(user, docBody,createdDoc.id)
+        }}) 
+      );
     }  
   } catch (err) {
     console.log(err)
