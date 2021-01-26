@@ -47,6 +47,7 @@
     "prettier"
   ],
   "dependencies": {
+    "@google-cloud/documentai": "^2.3.0",
     "@hapi/joi": "^17.1.0",
     "@turf/turf": "^6.2.0",
     "@uppy/companion": "^2.0.0-alpha.2",

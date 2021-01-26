@@ -122,20 +122,13 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
       const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF');
       const client = await getClientById(user, documentBody.client);
       documentBody.osmium[refFieldIndex].Value = client.reference;
-      updateDocument(user, taskId, {
-        osmium: documentBody.osmium,
-        metadata: documentBody.metadata,
-        status: 'smelted',
-        skeleton: skeletonId,
-      });
-    }else {
-      updateDocument(user, taskId, {
-        osmium: documentBody.osmium,
-        metadata: documentBody.metadata,
-        status: 'smelted',
-        skeleton: skeletonId,
-      });
     }
+    updateDocument(user, taskId, {
+      osmium: documentBody.osmium,
+      metadata: documentBody.metadata,
+      status: 'smelted',
+      skeleton: skeletonId,
+    });
   } catch(err) {
     console.log(err)
   }

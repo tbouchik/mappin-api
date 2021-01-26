@@ -17,7 +17,7 @@ const skeletonSchema = mongoose.Schema(
       ref: 'Document',
       required: true,
     },
-    googleMetadata: {},
+    ggMetadata: {},
     clientTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
     bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>
   },

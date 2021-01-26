@@ -64,6 +64,7 @@ const documentSchema = mongoose.Schema(
       default: '',
     },
     metadata: {},
+    ggMetadata: {},
     osmium: [],
   },
   {
@@ -81,6 +82,7 @@ documentSchema.methods.transform = function() {
     'id',
     'name',
     'metadata',
+    'ggMetadata',
     'uploadedBy',
     'validatedBy',
     'client',
