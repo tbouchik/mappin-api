@@ -16,6 +16,7 @@ const createDocument = {
     status: Joi.string().valid('pending', 'smelted', 'validated'),
     osmium: Joi.array(),
     filter: Joi.array(),
+    ggMetadata: Joi.object(),
   }),
 };
 
@@ -121,6 +122,7 @@ const updateDocument = {
       validatedBy: Joi.string(),
       uploadedBy: Joi.string(),
       filter: Joi.string().custom(objectId),
+      ggMetadata: Joi.object(),
     })
     .min(1),
 };
