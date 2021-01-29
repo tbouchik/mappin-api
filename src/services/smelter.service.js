@@ -4,13 +4,15 @@ const projectId = process.env.GOOGLE_PROJECT_ID;
 const location = process.env.GOOGLE_PROJECT_LOCATION;
 const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai').v1beta2;
 const { mapToObject } = require('../utils/service.util');
+const { munkresMatch } = require('../utils/tinder');
 
 const s3options = {
     bucket: process.env.AWS_BUCKET_NAME,
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   };
-const client = new DocumentUnderstandingServiceClient();
+const keyFilename = process.env.GOOGLE_KEY_FILENAME;
+const client = new DocumentUnderstandingServiceClient({projectId, keyFilename});
 const s3 = new AWS.S3(awsConfig(s3options));
 
 const parseForm = async (pdfContent) => {
@@ -69,32 +71,47 @@ const parseForm = async (pdfContent) => {
     return mapToObject(ggMetadata);
   }
 
-const aixtract = ( bucketKey ) => {
+const aixtract = (bucketKey) => {
     let s3Params = {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: bucketKey
     }
     return new Promise((resolve, reject) => {
-        s3.getObject(s3Params, function(err, data) {
-            if (err) {
-                console.log(err, err.stack);
+      s3.getObject(s3Params, function(err, data) {
+        if (err) {
+            console.log(err, err.stack);
+            reject(err);
+        } // an error occurred
+        else {
+            parseForm(data.Body)
+            .then(data => resolve(data))
+            .catch(err => {
+                console.error(err);
                 reject(err);
-            } // an error occurred
-            else {
-                parseForm(data.Body)
-                .then(data => resolve(data))
-                .catch(err => {
-                    console.error(err);
-                    reject(err);
-                });
-            }
-        })
+            });
+        }
       })
+  })
 }
+
+const populateOsmiumFromGgAI = (documentBody, template) => {
+  let newDocument = Object.assign({}, documentBody);
+  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF').map(x => x.value);
+  const ggMetadataKeys = Object.keys(newDocument.ggMetadata);
+  const treshold = 39;
+  const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
+  for (const [templateKey, ggKey] of Object.entries(keysMatches)) {
+    osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
+    newDocument.osmium[osmiumIndex].Value = newDocument.ggMetadata[ggKey].Text;
+  }
+  return newDocument
+}
+
 /**
  * GGMetadata stores: docKey STRING <-> docValue OBJECT< Text, ...NormalizedCoordinates>
  * GGMappings stores: templateKey STRING<-> docKey STRING
  */
 module.exports = {
     aixtract,
+    populateOsmiumFromGgAI
   };

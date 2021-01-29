@@ -12,7 +12,7 @@ const { getClientById } = require('../services/client.service');
 const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
-const { aixtract } = require('../services/smelter.service')
+const { aixtract, populateOsmiumFromGgAI } = require('../services/smelter.service')
 AWS.config.update({ region: 'us-east-1' });
 
 let q = queue({ results: [] })
@@ -62,7 +62,6 @@ const extractOsmium = async (payload, cb) => {
       });
     }
   })
-  
 };
 
 const bulkSmelt = (req, res) => {
@@ -96,7 +95,7 @@ const addFilesToQueue = async (user, files) => {
         status: 'pending',
       };
       let createdDoc = await createDocument(user, documentBody)
-      q.push( extractOsmium({id: createdDoc._id, documentBody}, (err, docBody) => {
+      q.push(extractOsmium({id: createdDoc._id, documentBody}, (err, docBody) => {
         if (!err) {
           saveSmeltedResult(user, docBody, createdDoc.id)
         }}) 
@@ -121,7 +120,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
           documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user.id);
         }
       } else {
-        // google api to the rescue
+        documentBody = populateOsmiumFromGgAI(documentBody, filter);
         const newSkeleton = await createSkeleton(user, documentBody, taskId);
         skeletonId = newSkeleton._id;
     }

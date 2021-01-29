@@ -27,12 +27,7 @@ const buildKeysDistanceMatrix = (newTemplateKeys, refTemplateKeys) => {
     let newTemplateKey = newTemplateKeys[i];
     let row = refTemplateKeys.map((refTemplateKey) => 100 - fuzz.ratio(newTemplateKey.value, refTemplateKey.value));
     matrix.push(row);
-
   }
-  // newTemplateKeys.forEeach((newTemplateKey) => {
-  //   let row = refTemplateKeys.map((refTemplateKey) => 100 - fuzz.ratio(newTemplateKey.value, refTemplateKey.value));
-  //   matrix.push(row);
-  // })
   return matrix;
 }
 
@@ -101,7 +96,7 @@ const extractTemplateKeysFromBBoxMap = (bboxMap) => {
 }
 
 const createSkeleton = async (user, payload, docId) => {
-  let clientTemplateMapping = new Map(); //used Map instead of Object because the keys of an Object must be either a String or a Symbol.
+  let clientTemplateMapping = new Map();
   clientTemplateMapping.set(user.id,  [payload.filter]);
   let template = await getFilterById(user, payload.filter, true);
   let templateKeyBBoxMappingArr = []
@@ -124,15 +119,6 @@ const createSkeleton = async (user, payload, docId) => {
 };
 
 const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) => {
-  /**
-   * for each key template of the filter
-   *    verify that bbox matched has a good matching area  in the metadata
-   *    if (above verifications work ){
-   *        then update osmium
-   *    } else {
-   *        some guessing work is required
-   *    }
-   */
   let newDocument = Object.assign({}, documentBody);
   const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
   let tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(bboxMappingKey);
@@ -181,15 +167,16 @@ module.exports = {
 };
 
 /** **** ShapeOsmium ****
- *    Extract Metadata
+ *    Extract AWSMetadata
+ *    Extract GCSMetadata
  *    Search for similar (skeleton)                                                         #Algo 1   Done  Tested
  *    if ( skeleton.clientMapping(clientId).templateId exists)
- *      then { populate }                                                                   #Algo 2   Done
+ *      then { populate }                                                                   #Algo 2   Done  Tested
  *    else if (similar skeleton exists but from other client)
  *      then {
- *            do a bestGuessMapping between the 2 templateKeys                              #Algo 3   Done
- *            do populate                                                                   #Algo 2   Done
- *            do update skeletonData with new clientID_templateID mappings
+ *            do a bestGuessMapping between the 2 templateKeys                              #Algo 3   Done  Tested
+ *            do populate                                                                   #Algo 2   Done  Tested
+ *            do update skeletonData with new clientID_templateID mappings                  #Algo 7   Done  Tested
  *           }
  *    else
  *      then {
@@ -204,5 +191,6 @@ module.exports = {
 
  /** **** updateOsmium ****
  * If value is changed
- *    Change Skeleton.HashMap<Client-Template-Tuple; Bbox-TemplateKey-Pair>
+ *    Change Skeleton.BBoxMapings<Client-Template-Tuple; Bbox-TemplateKey-Pair>
+ *    Change Skeleton.GGMappings<Client-Template-Tuple; Bbox-TemplateKey-Pair>
  */
