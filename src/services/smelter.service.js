@@ -3,7 +3,7 @@ const awsConfig = require('aws-config');
 const projectId = process.env.GOOGLE_PROJECT_ID;
 const location = process.env.GOOGLE_PROJECT_LOCATION;
 const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai').v1beta2;
-const { mapToObject } = require('../utils/service.util');
+const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
 
 const s3options = {
@@ -102,7 +102,8 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
   const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
   for (const [templateKey, ggKey] of Object.entries(keysMatches)) {
     osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
-    newDocument.osmium[osmiumIndex].Value = newDocument.ggMetadata[ggKey].Text;
+    templateIndex = template.findIndex(x => x.value === templateKey);
+    newDocument.osmium[osmiumIndex].Value = templateIndex ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type) :  newDocument.ggMetadata[ggKey].Text;
   }
   return newDocument
 }

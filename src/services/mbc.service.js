@@ -149,7 +149,7 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
     let referenceBbox = tempkeysToBoxMappingReference.get(key.value);
     if (referenceBbox) {
       let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-      newDocument.osmium[i].Value = bestBbox !== undefined ? bestBbox.bbox.Text : null;
+      newDocument.osmium[i].Value = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type) : null;
     }
   }
  
@@ -169,7 +169,7 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
       let referenceBbox = tempkeysToBoxMappingReference[matchedKey.value];
       if (referenceBbox) {
         let bestBboxData = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-        newDocument.osmium[index].Value = bestBboxData.bbox.Text;
+        newDocument.osmium[index].Value = formatValue(bestBboxData.bbox.Text, key.type);
         skeletonReference = skeletonUpdateBbox(skeletonReference, clientId, template._id, key.value, bestBboxData.bbox);
       }
     }
