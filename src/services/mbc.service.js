@@ -1,7 +1,7 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
 const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox } = require('../miner/skeletons')
-const { mergeClientTemplateIds } = require('../utils/service.util')
+const { mergeClientTemplateIds, formatValue } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons')
@@ -95,23 +95,43 @@ const extractTemplateKeysFromBBoxMap = (bboxMap) => {
   return result;
 }
 
-const createSkeleton = async (user, payload, docId) => {
+const findGgMappingKey = (templateKey, osmium, ggMetadata) => {
+  let result = null;
+  let osmiumItem = osmium.filter(x => x.Key === templateKey.value);
+  let osmiumItemValue = osmiumItem ? osmiumItem.Value : null;
+  if (osmiumItemValue) {
+    let ggMetadataItem = Object.keys(ggMetadata).find(key => formatValue(ggMetadata[key].Text, templateKey.type)  === osmiumItemValue);
+    let key = Object.keys(ggMetadataItem);
+    result = key.length ? key[0] : null;
+  }
+  return result;
+}
+
+const createSkeleton = async (user, docBody, docId) => {
   let clientTemplateMapping = new Map();
-  clientTemplateMapping.set(user.id,  [payload.filter]);
-  let template = await getFilterById(user, payload.filter, true);
+  clientTemplateMapping.set(user.id,  [docBody.filter]);
+  let template = await getFilterById(user, docBody.filter, true);
   let templateKeyBBoxMappingArr = []
   for (let i=0; i < template.keys.length; i++) {
     templateKeyBBoxMappingArr.push([template.keys[i].value , null])
   }
   let templateKeyBBoxMapping = new Map(templateKeyBBoxMappingArr) // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#relation_with_array_objects
   let bboxMappings = new Map();
-  bboxMappings.set(mergeClientTemplateIds(user.id, payload.filter) , Object.fromEntries(templateKeyBBoxMapping));
+  bboxMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
+  let templateKeyGgMappingArr = [];
+  for (let i=0; i < template.keys.length; i++) {
+    let elementMapped = findGgMappingKey(template.keys[i], osmium, ggMetadata);
+    templateKeyGgMappingArr.push([template.keys[i].value , elementMapped]);
+  }
+  let templateKeyGgMapping = new Map(templateKeyGgMappingArr)
+  let ggMappings = new Map();
+  ggMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyGgMapping));
   const skeletonBody = {
-    ossature: payload.metadata.page_1,
+    ossature: docBody.metadata.page_1,
     accountingNumber: 000000,
     document: docId,
-    googleMetadata: {},
     clientTemplateMapping,
+    ggMappings,
     bboxMappings,
   }
   const skeleton = await Skeleton.create(skeletonBody);
