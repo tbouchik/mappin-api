@@ -2,8 +2,10 @@ const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Skeleton } = require('../models');
-const { getQueryOptions, mergeClientTemplateIds } = require('../utils/service.util');
+const { getQueryOptions, mergeClientTemplateIds, objectToMap, mapToObject } = require('../utils/service.util');
 const { skeletonHasClientTemplate, skeletonStoreClientTemplate} = require('../miner/skeletons')
+const { findGgMappingKey, findGgMappingKeyFromMBC } = require('./mbc.service')
+const { getFilterById } = require('./filter.service');
 let ObjectId = require('mongoose').Types.ObjectId; 
 
 const createSkeleton = async skeletonBody => {
@@ -42,6 +44,11 @@ updateSkeletonFromDocUpdate = async (user, documentBody, mbc) => {
       let newBboxMappings = skeleton.bboxMappings.get(clientTempKey);
       newBboxMappings = Object.assign(newBboxMappings, mbc);
       skeleton.bboxMappings.set(clientTempKey, newBboxMappings);
+      let newGgMappings = objectToMap(skeleton.ggMappings.get(clientTempKey));
+      let template = await getFilterById(user, documentBody.filter, true)
+      let ggMatchedKey = findGgMappingKeyFromMBC(template.keys, documentBody.ggMetadata, mbc);
+      newGgMappings.set(ggMatchedKey, mbc.bbox)
+      skeleton.ggMappings.set(clientTempKey, mapToObject(newGgMappings));
       updateSkeleton(skeleton._id, skeleton);
      }
    }

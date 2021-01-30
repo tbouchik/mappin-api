@@ -107,6 +107,21 @@ const findGgMappingKey = (templateKey, osmium, ggMetadata) => {
   return result;
 }
 
+const findGgMappingKeyFromMBC = (templateKeys, ggMetadata, mbc) => {
+  let result = null;
+  let templateKeytext = Object.keys(mbc)[0];
+  const templateKey = templateKeys.find(x => x.value === templateKeytext);
+  if (templateKey) {
+  for (let [ggKey, ggValue] of ggMetadata) {
+      if (mbc.box.Text === formatValue(ggValue.Text, templateKey.type)) {
+        result = ggKey;
+        break;
+      }
+    }  
+  }
+  return result;
+}
+
 const createSkeleton = async (user, docBody, docId) => {
   let clientTemplateMapping = new Map();
   clientTemplateMapping.set(user.id,  [docBody.filter]);
@@ -184,6 +199,7 @@ module.exports = {
   findSimilarSkeleton,
   populateOsmiumFromExactPrior,
   populateOsmiumFromFuzzyPrior,
+  findGgMappingKeyFromMBC,
 };
 
 /** **** ShapeOsmium ****

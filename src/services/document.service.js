@@ -243,7 +243,7 @@ const updateDocument = async (user, documentId, updateBody) => {
       updateBody.filter = updateBody.filter !== undefined ? updateBody.filter: document.filter._id.toString();
       updateSkeletonFromDocUpdate(user, updateBody, mbc);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
     return document;
   }
