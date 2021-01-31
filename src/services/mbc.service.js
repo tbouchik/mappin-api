@@ -178,15 +178,21 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
      *    if that matchedKey exists in ggMetadata
      *        populate with value from ggMetadata
      */
-    let referenceBbox = bboxMappings.get(key.value);
-    if (referenceBbox) {
-      let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-      newDocument.osmium[i].Value = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type) : null;
+   
+    let ggKey = ggMappings.get(key.value);
+    if (ggKey in documentBody.ggMetadata) {
+      newDocument.osmium[i].Value =formatValue(documentBody.ggMetadata[ggKey].Text, key.type);
+    } else{
+      let referenceBbox = bboxMappings.get(key.value);
+      if (referenceBbox) {
+        let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
+        newDocument.osmium[i].Value = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type) : null;
+      }
     }
   }
- 
   return newDocument;
 }
+
 
 const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template, clientId) => {
   const mostResemblantTemplateData = getMostResemblantTemplate(template, skeletonReference);
