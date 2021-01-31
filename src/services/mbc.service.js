@@ -1,7 +1,7 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
 const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox } = require('../miner/skeletons')
-const { mergeClientTemplateIds, formatValue, mapToObject } = require('../utils/service.util')
+const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons')
@@ -166,12 +166,19 @@ const createSkeleton = async (user, docBody, docId) => {
 const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) => {
   let newDocument = Object.assign({}, documentBody);
   const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
-  let tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(bboxMappingKey);
-  tempkeysToBoxMappingReference = new Map(Object.entries(tempkeysToBoxMappingReference));
+  let bboxMappings = skeletonReference.bboxMappings.get(bboxMappingKey);
+  let ggMappings = skeletonReference.ggMappings.get(bboxMappingKey);
+  bboxMappings = objectToMap(bboxMappings);
+  ggMappings = objectToMap(ggMappings);
   const docSkeleton = newDocument.metadata.page_1;
   for (let i = 0; i <filter.keys.length; i++) {
     let key = filter.keys[i];
-    let referenceBbox = tempkeysToBoxMappingReference.get(key.value);
+    /**
+     * if key has a matched key in ggMappings
+     *    if that matchedKey exists in ggMetadata
+     *        populate with value from ggMetadata
+     */
+    let referenceBbox = bboxMappings.get(key.value);
     if (referenceBbox) {
       let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
       newDocument.osmium[i].Value = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type) : null;
@@ -191,6 +198,11 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
     let matchedIndex = mostResemblantTemplateData.indices[index]
     if (matchedIndex !== undefined) {
       let matchedKey = mostResemblantTemplateData.template[matchedIndex]
+      /**
+       * if matchedKey has a matched key1 in ggMappingsOfMostresemblantTemplate
+       *    if that key1 exists in ggMetadataOfCurrentDocument
+       *        populate with value from ggMetadataOfCurrentDocument
+       */
       let referenceBbox = tempkeysToBoxMappingReference[matchedKey.value];
       if (referenceBbox) {
         let bestBboxData = getGeoClosestBoxScores(docSkeleton, referenceBbox);
