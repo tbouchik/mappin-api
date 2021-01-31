@@ -48,6 +48,14 @@ const getBboxCoordinates = (bbox) => {
   return [topLeft, topRight, bottomRight, bottomLeft, topLeft];
 }
 
+const getGgBboxCoordinates = (bbox) => {
+  const topLeft = {x:parseFloat(bbox.Left), y: parseFloat(bbox.Top)};
+  const topRight = {x:parseFloat(bbox.Left) + parseFloat(bbox.Width), y: parseFloat(bbox.Top)};
+  const bottomLeft = {x:parseFloat(bbox.Left), y: parseFloat(bbox.Top) + parseFloat(bbox.Height)};
+  const bottomRight = {x:parseFloat(bbox.Left) + parseFloat(bbox.Width), y: parseFloat(bbox.Top) + parseFloat(bbox.Height)};
+  return [topLeft, topRight, bottomRight, bottomLeft];
+}
+
 const getBBoxArea = (bbox) => {
   const coords = [getBboxCoordinates(bbox)];
   const poly = turf.polygon(coords);
@@ -200,13 +208,23 @@ const skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
 const prepareSkeletonMappingsForApi = (skeleton) => {
   skeleton.clientTemplateMapping =  objectToMap(skeleton.clientTemplateMapping);
   skeleton.bboxMappings = objectToMap(skeleton.bboxMappings);
+  skeleton.ggMappings = objectToMap(skeleton.ggMappings);
   return skeleton
 }
 
 const prepareSkeletonMappingsForDB = (skeleton) => {
   skeleton.clientTemplateMapping =  mapToObject(skeleton.clientTemplateMapping);
   skeleton.bboxMappings = mapToObject(skeleton.bboxMappings);
+  skeleton.ggMappings = mapToObject(skeleton.ggMappings);
   return skeleton
+}
+
+const gcpCoordParse = (bbox) => {
+  let result = {
+    Text : '',
+    Coords: getGgBboxCoordinates(bbox)
+  }
+  return result;
 }
 
 module.exports = {
@@ -217,6 +235,7 @@ module.exports = {
     skeletonUpdateBbox,
     prepareSkeletonMappingsForApi,
     prepareSkeletonMappingsForDB,
+    gcpCoordParse,
 };
 
 

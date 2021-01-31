@@ -44,7 +44,7 @@ function parseDate (value) {
     moment.locale('en-GB')
     parsedInput = moment(value, ['DD/MM/YYYY', 'DD-MM-YYYY', 'dddd, MMMM Do YYYY', 'dddd [the] Do [of] MMMM', 'YYYY-MM-DD', 'MMM DD, YYYY']).format('DD/MM/YYYY')
   } catch (error) {
-    console.log('erroe', error)
+    console.log('Moment Library Error', error)
   }
   return parsedInput
 }

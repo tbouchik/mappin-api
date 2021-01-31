@@ -102,8 +102,8 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
   const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
   for (const [templateKey, ggKey] of Object.entries(keysMatches)) {
     osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
-    templateIndex = template.findIndex(x => x.value === templateKey);
-    newDocument.osmium[osmiumIndex].Value = templateIndex ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type) :  newDocument.ggMetadata[ggKey].Text;
+    templateIndex = template.keys.findIndex(x => x.value === templateKey);
+    newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type) :  newDocument.ggMetadata[ggKey].Text;
   }
   return newDocument
 }

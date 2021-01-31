@@ -1,7 +1,7 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
 const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox } = require('../miner/skeletons')
-const { mergeClientTemplateIds, formatValue } = require('../utils/service.util')
+const { mergeClientTemplateIds, formatValue, mapToObject } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons')
@@ -97,12 +97,17 @@ const extractTemplateKeysFromBBoxMap = (bboxMap) => {
 
 const findGgMappingKey = (templateKey, osmium, ggMetadata) => {
   let result = null;
-  let osmiumItem = osmium.filter(x => x.Key === templateKey.value);
+  let osmiumItem = osmium.find(x => x.Key === templateKey.value);
   let osmiumItemValue = osmiumItem ? osmiumItem.Value : null;
   if (osmiumItemValue) {
-    let ggMetadataItem = Object.keys(ggMetadata).find(key => formatValue(ggMetadata[key].Text, templateKey.type)  === osmiumItemValue);
-    let key = Object.keys(ggMetadataItem);
-    result = key.length ? key[0] : null;
+    let ggMetadataKeys = Object.keys(ggMetadata)
+    for (let i = 0; i < ggMetadataKeys.length; i++) {
+      let key = ggMetadataKeys[i];
+      if( formatValue(ggMetadata[key].Text, templateKey.type)=== formatValue(osmiumItemValue, templateKey.type)) {
+        result = key;
+        break;
+      }
+    }
   }
   return result;
 }
@@ -112,9 +117,14 @@ const findGgMappingKeyFromMBC = (templateKeys, ggMetadata, mbc) => {
   let templateKeytext = Object.keys(mbc)[0];
   const templateKey = templateKeys.find(x => x.value === templateKeytext);
   if (templateKey) {
-  for (let [ggKey, ggValue] of ggMetadata) {
-      if (mbc.box.Text === formatValue(ggValue.Text, templateKey.type)) {
-        result = ggKey;
+    for (let ggKey in ggMetadata) {
+      let ggValue = ggMetadata[ggKey];
+      let formattedtemplateKeyValue = formatValue(Object.values(mbc)[0].Text, templateKey.type);
+      let formattedGgValue = formatValue(ggValue.Text, templateKey.type);
+      if (formattedtemplateKeyValue ===formattedGgValue) {
+        let tmpresult = new Map()
+        tmpresult.set(templateKey.value, ggKey)
+        result = mapToObject(tmpresult);
         break;
       }
     }  
@@ -134,8 +144,8 @@ const createSkeleton = async (user, docBody, docId) => {
   let bboxMappings = new Map();
   bboxMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   let templateKeyGgMappingArr = [];
-  for (let i=0; i < template.keys.length; i++) {
-    let elementMapped = findGgMappingKey(template.keys[i], osmium, ggMetadata);
+  for (let i= 0; i < template.keys.length; i++) {
+    let elementMapped = findGgMappingKey(template.keys[i], docBody.osmium, docBody.ggMetadata);
     templateKeyGgMappingArr.push([template.keys[i].value , elementMapped]);
   }
   let templateKeyGgMapping = new Map(templateKeyGgMappingArr)
