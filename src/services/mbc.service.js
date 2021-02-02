@@ -173,12 +173,6 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
   const docSkeleton = newDocument.metadata.page_1;
   for (let i = 0; i <filter.keys.length; i++) {
     let key = filter.keys[i];
-    /**
-     * if key has a matched key in ggMappings
-     *    if that matchedKey exists in ggMetadata
-     *        populate with value from ggMetadata
-     */
-   
     let ggKey = ggMappings.get(key.value);
     if (ggKey in documentBody.ggMetadata) {
       newDocument.osmium[i].Value =formatValue(documentBody.ggMetadata[ggKey].Text, key.type);

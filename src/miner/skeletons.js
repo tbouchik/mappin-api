@@ -3,9 +3,12 @@ const moment = require('moment');
 const turf = require("@turf/turf");
 const { pick } = require('lodash');
 const { RegexType, SignatureMatchRating, objectToMap, mapToObject } = require('../utils/service.util');
-const { mergeClientTemplateIds } = require('../utils/service.util')
+const { mergeClientTemplateIds } = require('../utils/service.util');
+const munkres = require('munkres-js');
 
 const skeletonsMatch = (skeleton1, skeleton2) => {
+  skeleton1 = skeleton1.sort((a, b) => (a.Top > b.Top) ? 1 : (a.Top === b.Top) ? ((a.size > b.size) ? 1 : -1) : -1  )
+  skeleton2 = skeleton2.sort((a, b) => (a.Top > b.Top) ? 1 : (a.Top === b.Top) ? ((a.size > b.size) ? 1 : -1) : -1  )
   const topSignature1 = getSkeletonTopSignature(skeleton1);
   const topSignature2 = getSkeletonTopSignature(skeleton2);
   const topSignaturesMatchRating = compareTwoSkeletonSignatures(topSignature1, topSignature2)
@@ -21,20 +24,17 @@ const skeletonsMatch = (skeleton1, skeleton2) => {
 }
 
 const compareTwoSkeletonSignatures = (ske1, ske2) => {
-  let areaIntersections = [];
-  let textIntersections = [];
+  let textSig1 = [];
+  let textSig2 = [];
   for (let i = 0; i< Math.min(ske1.length, ske2.length); i++ ) {
-    areaIntersections.push(getGeoIntersection(ske1[i], ske2[i]))
-    textIntersections.push(getTextIntersection(ske1[i].Text, ske2[i].Text))
+    textSig1.push(ske1[i].Text);
+    textSig2.push(ske2[i].Text);
   }
-  const areaSum = areaIntersections.reduce((a, b) => a + b, 0);
-  const textSum = textIntersections.reduce((a, b) => a + b, 0);
-  const areaAverage = (areaSum / areaIntersections.length) || 0;
-  const textAverage = (textSum / textIntersections.length) || 0;
-  if (areaAverage > 0.85 && textAverage > 75) {
+  let grade = gradeTextSimilitude(textSig1, textSig2);
+  if (grade > 75) {
     return SignatureMatchRating.EXCELLENT
   }
-  else if ((areaAverage > 0.85 && textAverage < 75) || (areaAverage < 0.85 && textAverage > 75)) {
+  else if (grade <= 75 && grade > 45) {
     return SignatureMatchRating.SHAKY
   }
   return SignatureMatchRating.BAD
@@ -64,14 +64,14 @@ const getBBoxArea = (bbox) => {
 
 const getTextIntersection = (text1, text2) => {
   if (text1 === text2) {
-    return 100
+    return 0
   } 
   const regType1 = getRegexType(text1);
   const regType2 = getRegexType(text2);
   if (regType1 === regType2 && regType1 !== RegexType.OTHER ) {
-    return 100
+    return 0
   } else {
-    return fuzz.ratio(text1, text2)
+    return 100 - fuzz.ratio(text1, text2)
   }
 }
 
@@ -91,16 +91,17 @@ const isEmailRegexPattern = (text) => {
 
 const isDateRegexPattern = (text) => {
   try {
+    moment.locale('en-GB')
     let startDate = moment('01/01/1980', 'DD/MM/YYYY');
     let endDate = moment('01/01/2030', 'DD/MM/YYYY');
-    let date = moment(text, 'DD/MM/YYYY');
+    let date = moment(text, ['DD/MM/YYYY', 'DD-MM-YYYY', 'dddd, MMMM Do YYYY', 'dddd [the] Do [of] MMMM', 'YYYY-MM-DD', 'MMM DD, YYYY']);
     if (date._isValid && date.isBefore(endDate) && date.isAfter(startDate)) {
       return true;
     }
     return false;
   }
   catch(err) {
-    console.log(error);
+    console.log(err);
     return false;
   }
 }
@@ -125,7 +126,7 @@ const getSkeletonTopSignature = (skeleton) => {
 }
 
 const getSkeletonBottomSignature = (skeleton) => {
-  const startIndex = Math.max(0, skeleton.length - 3)
+  const startIndex = Math.max(0, skeleton.length - 5)
   return skeleton.slice(startIndex)
 }
 
@@ -227,6 +228,31 @@ const gcpCoordParse = (bbox) => {
   return result;
 }
 
+const gradeTextSimilitude = (textsSke1, textsSke2) => {
+  let textSimMatrix = buildTextSimilitudeMatrix(textsSke1, textsSke2);
+  let munkresDistance = munkres(textSimMatrix);
+  let grade = computeSignaturesTextSimilitude(textSimMatrix, munkresDistance);
+  return grade;
+}
+
+const buildTextSimilitudeMatrix = (textsSke1, textsSke2) => {
+  let matrix = [];
+  for (let i = 0; i < textsSke1.length; i++) {
+    let newTextSke1 = textsSke1[i];
+    let row = textsSke2.map((newTextSke2) => getTextIntersection(newTextSke1, newTextSke2) ); // 100 - fuzz.ratio(newTextSke1.value, newTextSke2.value)
+    matrix.push(row);
+  }
+  return matrix;
+}
+
+const computeSignaturesTextSimilitude = (templatesDistanceMatrix, munkresCombination) => {
+  let result = 0;
+  let totalItems = munkresCombination.length
+  munkresCombination.forEach((pair) => {
+    result += (100 - templatesDistanceMatrix[pair[0]][pair[1]]);
+  })
+  return parseFloat(result / totalItems);
+}
 module.exports = {
     skeletonsMatch,
     getGeoClosestBoxScores,
@@ -237,28 +263,3 @@ module.exports = {
     prepareSkeletonMappingsForDB,
     gcpCoordParse,
 };
-
-
-/** **** ShapeOsmium ****
- *    Extract Metadata
- *    Search for similar (skeleton)                                                         #Algo 1        
- *    if ( skeleton.clientTemplateMapping(clientId).templateId exists)
- *      then { populate }                                                                   #Algo 2
- *    else if (similar skeleton exists but from other client)
- *      then {
- *            do a bestGuessMapping between the 2 templateKeys                              #Algo 3
- *            do populate                                                                   #Algo 2
- *           }
- *    else
- *      then {
- *              do bestGuessMapping between templateKeys and keysBoundingBoxes              #Algo 4
- *              do bestGuessMapping between keysBoundingBoxes and valuesBoundingBoxes       #Algo 5
- *              do populate                                                                 #Algo 2
- *              do register the new Skeleton                                                #Algo 6
- *          } 
- */
-
- /** **** updateOsmium ****
- * If value is changed
- *    Change Skeleton.HashMap<Client-Template-Tuple; Bbox-TemplateKey-Pair>
- */

@@ -33,7 +33,7 @@ const extractOsmium = async (payload, cb) => {
   
   Promise.allSettled([
     exec(command, {
-      timeout: 200000,
+      timeout: 2000000,
     }),
     aixtract(filename)
   ]).then((results) => {
@@ -98,7 +98,10 @@ const addFilesToQueue = async (user, files) => {
       q.push(extractOsmium({id: createdDoc._id, documentBody}, (err, docBody) => {
         if (!err) {
           saveSmeltedResult(user, docBody, createdDoc.id)
-        }}) 
+        }else {
+          console.log(err)
+        }
+      }) 
       );
     }  
   } catch (err) {
