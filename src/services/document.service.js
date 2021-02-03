@@ -4,7 +4,7 @@ const AppError = require('../utils/AppError');
 const { Document } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const { getFilterById, getDefaultFilterId } = require('./filter.service');
-const { updateSkeletonFromDocUpdate } = require('./skeleton.service');
+const { updateSkeletonFromDocUpdate } = require('./mbc.service');
 const { getClientByEmail } = require('./client.service');
 
 const createDocument = async (user, documentBody) => {

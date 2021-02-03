@@ -157,7 +157,7 @@ const getGeoClosestBoxScores = (skeleton, bbox) => {
  * check skeleton has client/template (clientId, templateId)
  * add new client/template map (clientId, templateId, templateKeys)
  */
-const constructBboxMapppings = (templateKeys) => {
+const constructMapppings = (templateKeys) => {
   let templateKeyBBoxMappingArr = []
   for (let i=0; i < templateKeys.length; i++) {
     templateKeyBBoxMappingArr.push([templateKeys[i].value , null])
@@ -182,14 +182,15 @@ const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKey
   if (skeleton.clientTemplateMapping.has(clientId)) {
     let templateIds = skeleton.clientTemplateMapping.get(clientId);
     if (!templateIds.includes(templateId)) {
-      templateIds = templateIds.push(templateId);
+      templateIds.push(templateId);
       skeleton.clientTemplateMapping.set(clientId, templateIds);
     }
   } else {
     skeleton.clientTemplateMapping.set(clientId, [templateId])
   }
-  let bboxMapps = constructBboxMapppings(templateKeys);
+  let bboxMapps = constructMapppings(templateKeys);
   skeleton.bboxMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
+  skeleton.ggMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
   return skeleton
 }
 

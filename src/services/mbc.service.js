@@ -3,7 +3,7 @@ const { Skeleton } = require('../models');
 const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox } = require('../miner/skeletons')
 const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
-const { updateSkeleton } = require('../services/skeleton.service');
+const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons')
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
@@ -190,24 +190,27 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
 
 const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template, clientId) => {
   const mostResemblantTemplateData = getMostResemblantTemplate(template, skeletonReference);
-  skeletonReference = skeletonStoreClientTemplate(skeletonReference,clientId, template.id, template.keys)
+  skeletonReference = skeletonStoreClientTemplate(skeletonReference,clientId, template.id, template.keys);
   let newDocument = Object.assign({}, documentBody);
   const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(mostResemblantTemplateData.key);
+  const tempkeysToGGMappingReference = skeletonReference.ggMappings.get(mostResemblantTemplateData.key);
   const docSkeleton = newDocument.metadata.page_1;
   template.keys.map((key, index) => {
-    let matchedIndex = mostResemblantTemplateData.indices[index]
+    let matchedIndex = mostResemblantTemplateData.indices[index];
     if (matchedIndex !== undefined) {
-      let matchedKey = mostResemblantTemplateData.template[matchedIndex]
-      /**
-       * if matchedKey has a matched key1 in ggMappingsOfMostresemblantTemplate
-       *    if that key1 exists in ggMetadataOfCurrentDocument
-       *        populate with value from ggMetadataOfCurrentDocument
-       */
-      let referenceBbox = tempkeysToBoxMappingReference[matchedKey.value];
-      if (referenceBbox) {
-        let bestBboxData = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-        newDocument.osmium[index].Value = formatValue(bestBboxData.bbox.Text, key.type);
-        skeletonReference = skeletonUpdateBbox(skeletonReference, clientId, template._id, key.value, bestBboxData.bbox);
+      if (!newDocument.osmium[index].Value){
+        let matchedKey = mostResemblantTemplateData.template[matchedIndex];
+        let referenceGGKey = tempkeysToGGMappingReference[matchedKey.value];
+        if (referenceGGKey in newDocument.ggMetadata) {
+          newDocument.osmium[index].Value =formatValue(newDocument.ggMetadata[referenceGGKey].Text, key.type);
+        } else {
+          let referenceBbox = tempkeysToBoxMappingReference[matchedKey.value];
+          if (referenceBbox) {
+            let bestBboxData = getGeoClosestBoxScores(docSkeleton, referenceBbox);
+            newDocument.osmium[index].Value = formatValue(bestBboxData.bbox.Text, key.type);
+            skeletonReference = skeletonUpdateBbox(skeletonReference, clientId, template._id, key.value, bestBboxData.bbox);
+          }
+        }
       }
     }
   });
@@ -215,6 +218,25 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
   return newDocument;
 }
 
+updateSkeletonFromDocUpdate = async (user, documentBody, mbc) => {
+  if (mbc){
+    const skeleton = await getSkeletonById(documentBody.skeleton);
+    if (skeleton.id === documentBody.skeleton){
+      if (skeletonHasClientTemplate(skeleton, user._id, documentBody.filter)) {
+       const clientTempKey = mergeClientTemplateIds(user._id, documentBody.filter)
+       let newBboxMappings = skeleton.bboxMappings.get(clientTempKey);
+       newBboxMappings = Object.assign(newBboxMappings, mbc);
+       skeleton.bboxMappings.set(clientTempKey, newBboxMappings);
+       let newGgMappings = skeleton.ggMappings.get(clientTempKey);
+       let template = await getFilterById(user, documentBody.filter, true);
+       let ggMatchedResult = findGgMappingKeyFromMBC(template.keys, documentBody.ggMetadata, mbc);
+       newGgMappings = Object.assign(newGgMappings, ggMatchedResult)
+       skeleton.ggMappings.set(clientTempKey, mapToObject(newGgMappings));
+       updateSkeleton(skeleton._id, skeleton);
+      }
+    }
+  }
+};
 
 module.exports = {
   createSkeleton,
@@ -222,6 +244,7 @@ module.exports = {
   populateOsmiumFromExactPrior,
   populateOsmiumFromFuzzyPrior,
   findGgMappingKeyFromMBC,
+  updateSkeletonFromDocUpdate,
 };
 
 /** **** ShapeOsmium ****

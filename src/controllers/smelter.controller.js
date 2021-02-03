@@ -120,6 +120,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
       if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
           documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);  
         } else {
+          documentBody = populateOsmiumFromGgAI(documentBody, filter);
           documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user.id);
         }
       } else {
