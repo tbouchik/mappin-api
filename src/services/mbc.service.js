@@ -4,7 +4,8 @@ const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, ske
 const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
-const { skeletonHasClientTemplate } = require('../miner/skeletons')
+const { skeletonHasClientTemplate } = require('../miner/skeletons');
+const { ggMetadataHasSimilarKey } = require('../utils/tinder');
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
 
@@ -174,7 +175,7 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
   for (let i = 0; i <filter.keys.length; i++) {
     let key = filter.keys[i];
     let ggKey = ggMappings.get(key.value);
-    if (ggKey in documentBody.ggMetadata) {
+    if (ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)) {
       newDocument.osmium[i].Value =formatValue(documentBody.ggMetadata[ggKey].Text, key.type);
     } else{
       let referenceBbox = bboxMappings.get(key.value);
@@ -201,7 +202,7 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
       if (!newDocument.osmium[index].Value){
         let matchedKey = mostResemblantTemplateData.template[matchedIndex];
         let referenceGGKey = tempkeysToGGMappingReference[matchedKey.value];
-        if (referenceGGKey in newDocument.ggMetadata) {
+        if (ggMetadataHasSimilarKey(newDocument.ggMetadata, referenceGGKey)) {
           newDocument.osmium[index].Value =formatValue(newDocument.ggMetadata[referenceGGKey].Text, key.type);
         } else {
           let referenceBbox = tempkeysToBoxMappingReference[matchedKey.value];

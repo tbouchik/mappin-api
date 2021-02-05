@@ -22,8 +22,28 @@ const munkresMatch = (primaryKeys, candidateKeys, treshold) => {
     })
     return mapToObject(result);
 }
+
+const ggMetadataHasSimilarKey = (ggMetadata, ggKey) => {
+  let isIn = false;
+  if (ggMetadata && ggMetadata.length && ggKey) {
+    if (ggKey in ggMetadata) {
+      isIn = true;
+    } else {
+      let idx = 0;
+      while(idx < ggMetadata.length && isIn === false) {
+        let currentTextSimilitude = fuzz.ratio(ggKey, ggMetadata[idx]);
+        if (currentTextSimilitude && currentTextSimilitude > 90) {
+          isIn = true;
+        }
+        idx++;
+      }
+    }
+  }
+  return isIn;
+}
   
   module.exports = {
     munkresMatch,
+    ggMetadataHasSimilarKey,
   };
   

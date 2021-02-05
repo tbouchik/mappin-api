@@ -160,10 +160,10 @@ const getGeoClosestBoxScores = (skeleton, bbox) => {
 const constructMapppings = (templateKeys) => {
   let templateKeyBBoxMappingArr = []
   for (let i=0; i < templateKeys.length; i++) {
-    templateKeyBBoxMappingArr.push([templateKeys[i].value , null])
+    templateKeyBBoxMappingArr.push([templateKeys[i].value , null]);
   }
-  let templateKeyBBoxMapping = new Map(templateKeyBBoxMappingArr)
-  return Object.fromEntries(templateKeyBBoxMapping)
+  let templateKeyBBoxMapping = new Map(templateKeyBBoxMappingArr);
+  return Object.fromEntries(templateKeyBBoxMapping);
 }
 
 const skeletonHasClientTemplate = (skeleton, clientId, templateId) => {
