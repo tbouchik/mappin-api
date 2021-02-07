@@ -118,17 +118,21 @@ const findGgMappingKeyFromMBC = (templateKeys, ggMetadata, mbc) => {
   let templateKeytext = Object.keys(mbc)[0];
   const templateKey = templateKeys.find(x => x.value === templateKeytext);
   if (templateKey) {
-    for (let ggKey in ggMetadata) {
-      let ggValue = ggMetadata[ggKey];
-      let formattedtemplateKeyValue = formatValue(Object.values(mbc)[0].Text, templateKey.type);
-      let formattedGgValue = formatValue(ggValue.Text, templateKey.type);
-      if (formattedtemplateKeyValue ===formattedGgValue) {
-        let tmpresult = new Map()
-        tmpresult.set(templateKey.value, ggKey)
-        result = mapToObject(tmpresult);
-        break;
+    let ggMetadataEntries = Object.entries(ggMetadata).map(x => {return {key: x[0], value:x[1]? x[1].Text:null}});
+    let formattedtemplateKeyValue = formatValue(Object.values(mbc)[0].Text, templateKey.type);
+    let tinderScores = ggMetadataEntries.map(x => {return {...x, score: fuzz.ratio(x.value, formattedtemplateKeyValue)}})
+    tinderScores.sort((a,b) => {
+      if ( a.score < b.score ){
+        return +1;
       }
-    }  
+      if ( a.score > b.score ){
+        return -1;
+      }
+      return 0;
+    })
+    let tmpresult = new Map()
+    tmpresult.set(templateKey.value, tinderScores[0].score > 50 ? tinderScores[0].key: null);
+    result = mapToObject(tmpresult);  
   }
   return result;
 }

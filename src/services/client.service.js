@@ -2,6 +2,7 @@ const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Client } = require('../models');
+const stdClients = require('../utils/stdClient');
 
 const checkDuplicateEmail = async (email, userId) => {
   if (email !== process.env.GENERIC_EMAIL) {
@@ -24,6 +25,7 @@ const createClient = async (user, clientBody) => {
 };
 
 const createDefaultClient = async (userId, company) => {
+  let defaultClients = stdClients.map(x => {x.user = userId; return x});
   const genericClientBody = {
     user: userId,
     email: process.env.GENERIC_EMAIL,
@@ -32,7 +34,8 @@ const createDefaultClient = async (userId, company) => {
     reference:'N/A',
     company,
   };
-  const client = await Client.create(genericClientBody);
+  defaultClients.push(genericClientBody)
+  const client = await Client.insertMany(defaultClients);
   return client;
 };
 

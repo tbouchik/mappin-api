@@ -51,6 +51,7 @@ const loginClient = async (email, password) => {
     await checkPassword(password, client.password);
     return client;
   } catch (error) {
+    console.log(error)
     throw new AppError(httpStatus.BAD_REQUEST, 'Incorrect email or password');
   }
 };

@@ -62,11 +62,11 @@ const parseForm = async (pdfContent) => {
     for (const field of formFields) {
         
       const fieldName = getText(field.fieldName.textAnchor);
-      const fieldValue = getText(field.fieldValue.textAnchor);
+      const fieldValue = getText(field.fieldValue.textAnchor).replace(/\r?\n|\r/g, ' ');
       let valueData = { Text: fieldValue, Coords: field.fieldValue.boundingPoly.normalizedVertices };
       ggMetadata.set(fieldName, valueData);
-      console.log('Extracted key value pair:');
-      console.log(`\t(${fieldName}, ${fieldValue})`);
+      console.log('-------------------------------');
+      console.log(`\t(${fieldName} =====>>> ${fieldValue})`);
     }
     return mapToObject(ggMetadata);
   }

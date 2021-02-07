@@ -4,6 +4,7 @@ const AppError = require('../utils/AppError');
 const { Filter } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const defaultFilter = require('../utils/defaultFilter');
+const stdFilterFr = require('../utils/stdFilterFr');
 let ObjectId = require('mongoose').Types.ObjectId;
 
 const createFilter = async (user, filterBody) => {
@@ -13,12 +14,17 @@ const createFilter = async (user, filterBody) => {
 };
 
 const createDefaultFilter = async userId => {
-  const filterBody = {
+  const filterBodyEng = {
     user: userId,
     keys: defaultFilter,
-    name: 'Smart Template',
+    name: 'Standard Template (EN)',
   };
-  const filter = await Filter.create(filterBody);
+  const filterBodyFr = {
+    user: userId,
+    keys: stdFilterFr,
+    name: 'Template Standard (FR)',
+  };
+  const filter = await Filter.insertMany([filterBodyEng, filterBodyFr]);
   return filter;
 };
 
@@ -70,17 +76,17 @@ const deleteFilter = async (user, filterId) => {
 };
 
 const getDefaultFilterId = async (user) => {
-  const filter = await Filter.findOne({ user: user._id, name: 'Smart Template' })
+  let nameArray = ['Standard Template (EN)', 'Template Standard (FR)'];
+  const filter = await Filter.find({ user: user._id, 'name': { $in: nameArray } })
   if (!filter) {
     throw new AppError(httpStatus.NOT_FOUND, 'Filter ID not found');
-  } else if (parseInt(filter.user) !== parseInt(user._id)) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this filter information');
   }
   return filter._id;
 };
 
 const getDefaultFilter = async (user) => {
-  const filter = await Filter.findOne({ user: user._id, name: 'Smart Template' })
+  let nameArray = ['Standard Template (EN)', 'Template Standard (FR)']
+  const filter = await Filter.find({ user: user._id, 'name': { $in: nameArray } })
   if (!filter) {
     throw new AppError(httpStatus.NOT_FOUND, 'Filter ID not found');
   } else if (parseInt(filter.user) !== parseInt(user._id)) {

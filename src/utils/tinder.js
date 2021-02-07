@@ -1,6 +1,7 @@
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
 const { mapToObject } = require('./service.util')
+const { isEmpty } = require('lodash');
 
 const buildKeysDistanceMatrix = (newTemplateKeys, refTemplateKeys) => {
     let matrix = [];
@@ -25,7 +26,7 @@ const munkresMatch = (primaryKeys, candidateKeys, treshold) => {
 
 const ggMetadataHasSimilarKey = (ggMetadata, ggKey) => {
   let isIn = false;
-  if (ggMetadata && ggMetadata.length && ggKey) {
+  if (ggMetadata && !isEmpty(ggMetadata) && ggKey) {
     if (ggKey in ggMetadata) {
       isIn = true;
     } else {

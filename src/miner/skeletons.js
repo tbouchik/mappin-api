@@ -91,7 +91,7 @@ const isEmailRegexPattern = (text) => {
 
 const isDateRegexPattern = (text) => {
   try {
-    moment.locale('en-GB')
+    moment.locale('fr')
     let startDate = moment('01/01/1980', 'DD/MM/YYYY');
     let endDate = moment('01/01/2030', 'DD/MM/YYYY');
     let date = moment(text, ['DD/MM/YYYY', 'DD-MM-YYYY', 'dddd, MMMM Do YYYY', 'dddd [the] Do [of] MMMM', 'YYYY-MM-DD', 'MMM DD, YYYY']);
