@@ -211,6 +211,7 @@ const prepareSkeletonMappingsForApi = (skeleton) => {
   skeleton.clientTemplateMapping =  objectToMap(skeleton.clientTemplateMapping);
   skeleton.bboxMappings = objectToMap(skeleton.bboxMappings);
   skeleton.ggMappings = objectToMap(skeleton.ggMappings);
+  skeleton.imputations = objectToMap(skeleton.imputations);
   return skeleton
 }
 
@@ -218,6 +219,7 @@ const prepareSkeletonMappingsForDB = (skeleton) => {
   skeleton.clientTemplateMapping =  mapToObject(skeleton.clientTemplateMapping);
   skeleton.bboxMappings = mapToObject(skeleton.bboxMappings);
   skeleton.ggMappings = mapToObject(skeleton.ggMappings);
+  skeleton.imputations = mapToObject(skeleton.imputations);
   return skeleton
 }
 

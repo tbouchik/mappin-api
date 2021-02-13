@@ -114,6 +114,7 @@ const updateDocument = {
       alias: Joi.string(),
       osmium: Joi.array(),
       mbc: Joi.object(),
+      imput:Joi.string().allow(null),
       businessPurpose: Joi.string(),
       extractionType: Joi.string().valid('FORMS', 'TABLES', 'TEXT'),
       status: Joi.string().valid('pending', 'smelted', 'validated'),

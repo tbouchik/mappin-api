@@ -96,7 +96,7 @@ const aixtract = (bucketKey) => {
 
 const populateOsmiumFromGgAI = (documentBody, template) => {
   let newDocument = Object.assign({}, documentBody);
-  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF').map(x => x.value);
+  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF' || x.type !== 'IMPUT').map(x => x.value);
   const ggMetadataKeys = Object.keys(newDocument.ggMetadata);
   const treshold = 39;
   const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);

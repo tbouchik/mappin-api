@@ -23,10 +23,12 @@ const RegexType = Object.freeze({'EMAIL':1, 'DATE':2, 'OTHER':3})
 const SignatureMatchRating = Object.freeze({'EXCELLENT':1, 'SHAKY':2, 'BAD':3})
 
 const objectToMap = (objOrMap) => {
+  if (objOrMap=== null || objOrMap=== undefined) return objOrMap
   return objOrMap instanceof Map ? objOrMap : new Map( Object.entries(objOrMap));
 }
 
 const mapToObject = (objOrMap) => {
+  if (objOrMap=== null || objOrMap=== undefined) return objOrMap
   return objOrMap instanceof Map ? Object.fromEntries(objOrMap) : objOrMap;
 }
 
