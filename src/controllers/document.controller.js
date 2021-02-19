@@ -1,6 +1,8 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { documentService } = require('../services');
+const { updateSkeletonFromDocUpdate } = require('../services/mbc.service');
+const { getFilterById } = require('../services/filter.service');
 
 const createDocument = catchAsync(async (req, res) => {
   const document = await documentService.createDocument(req.user, req.body);
@@ -45,7 +47,10 @@ const getDocument = catchAsync(async (req, res) => {
 });
 
 const updateDocument = catchAsync(async (req, res) => {
-  const document = await documentService.updateDocument(req.user, req.params.documentId, req.body);
+  const mbc = req.body.mbc || null;
+  let document = await documentService.updateDocument(req.user, req.params.documentId, req.body);
+  let template = await getFilterById(req.user, document.filter, true);
+  const skeleton = await updateSkeletonFromDocUpdate (req.user, document, template, mbc);
   res.send(document.transform());
 });
 

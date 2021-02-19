@@ -3,6 +3,8 @@ const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Skeleton } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
+const { prepareSkeletonMappingsForApi, prepareSkeletonMappingsForDB } = require('../miner/skeletons')
+
 
 const createSkeleton = async skeletonBody => {
   skeletonBody.user = user._id;
@@ -26,8 +28,9 @@ const getSkeletonById = async skeletonId => {
 };
 
 const updateSkeleton = async (skeletonId, updateBody) => {
-  const skeleton = await getSkeletonById(skeletonId);
+  let skeleton = await getSkeletonById(skeletonId);
   Object.assign(skeleton, updateBody);
+  skeleton = prepareSkeletonMappingsForDB(skeleton);
   await skeleton.save();
   return skeleton;
 };

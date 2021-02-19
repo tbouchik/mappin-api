@@ -81,6 +81,7 @@ documentSchema.methods.transform = function() {
   return pick(user.toJSON(), [
     'id',
     'name',
+    'user',
     'metadata',
     'ggMetadata',
     'uploadedBy',

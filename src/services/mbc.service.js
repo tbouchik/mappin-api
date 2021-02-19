@@ -132,8 +132,8 @@ const findGgMappingKeyFromMBC = (templateKeys, ggMetadata, mbc) => {
       }
       return 0;
     })
-    let tmpresult = new Map()
-    tmpresult.set(templateKey.value, tinderScores[0].score > 50 ? tinderScores[0].key: null);
+    let tmpresult =       new Map()
+    tmpresult.set(templateKey.value, tinderScores[0].score > 65 ? tinderScores[0].key: null);
     result = mapToObject(tmpresult);  
   }
   return result;
@@ -212,7 +212,7 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
     let matchedIndex = mostResemblantTemplateData.indices[index];
     if (matchedIndex !== undefined) {
       if (key.type === 'IMPUT') {
-        newDocument.osmium[i].Value = skeletonReference.imputations.get(mostResemblantTemplateData.key);
+        newDocument.osmium[index].Value = skeletonReference.imputations.get(mostResemblantTemplateData.key);
       } else if (!newDocument.osmium[index].Value){
         let matchedKey = mostResemblantTemplateData.template[matchedIndex];
         let referenceGGKey = tempkeysToGGMappingReference[matchedKey.value];
@@ -233,30 +233,29 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
   return newDocument;
 }
 
-updateSkeletonFromDocUpdate = async (user, updateBody, mbc) => {
+updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
   if (mbc && !isEmpty(mbc)){
     const skeleton = await getSkeletonById(updateBody.skeleton);
-    if (skeleton.id === updateBody.skeleton){
-      if (skeletonHasClientTemplate(skeleton, user._id, updateBody.filter)) {
-       const clientTempKey = mergeClientTemplateIds(user._id, updateBody.filter);
+    if (skeleton._id.equals(updateBody.skeleton)){
+      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
+       const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
        let newBboxMappings = skeleton.bboxMappings.get(clientTempKey);
        newBboxMappings = Object.assign(newBboxMappings, mbc);
        skeleton.bboxMappings.set(clientTempKey, newBboxMappings);
        let newGgMappings = skeleton.ggMappings.get(clientTempKey);
-       let template = await getFilterById(user, updateBody.filter, true);
        let ggMatchedResult = findGgMappingKeyFromMBC(template.keys, updateBody.ggMetadata, mbc);
        newGgMappings = Object.assign(newGgMappings, ggMatchedResult);
        skeleton.ggMappings.set(clientTempKey, mapToObject(newGgMappings));
-       updateSkeleton(skeleton._id, skeleton);
+       await updateSkeleton(skeleton._id, skeleton);
       }
     }
   } else if(updateBody.imput){
     const skeleton = await getSkeletonById(updateBody.skeleton);
-    if (skeleton.id === updateBody.skeleton){
-      if (skeletonHasClientTemplate(skeleton, user._id, updateBody.filter)) {
-        const clientTempKey = mergeClientTemplateIds(user._id, updateBody.filter);
+    if (skeleton._id.equals(updateBody.skeleton)){
+      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
+        const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
         skeleton.imputations.set(clientTempKey, updateBody.imput);
-        updateSkeleton(skeleton._id, skeleton);
+        await updateSkeleton(skeleton._id, skeleton);
       }
     }
   }

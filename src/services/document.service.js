@@ -238,13 +238,13 @@ const updateDocument = async (user, documentId, updateBody) => {
     } catch(error){
       console.log(error)
     }
-    try {
-      updateBody.skeleton = document.skeleton.toString();
-      updateBody.filter = updateBody.filter !== undefined ? updateBody.filter: document.filter._id.toString();
-      updateSkeletonFromDocUpdate(user, updateBody, mbc);
-    } catch (error) {
-      console.log(error);
-    }
+    // try {
+    //   updateBody.skeleton = document.skeleton.toString();
+    //   updateBody.filter = updateBody.filter !== undefined ? updateBody.filter: document.filter._id.toString();
+    //   updateSkeletonFromDocUpdate(user, updateBody, mbc);
+    // } catch (error) {
+    //   console.log(error);
+    // }
     return document;
   }
 };
