@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { documentService } = require('../services');
-const { updateSkeletonFromDocUpdate } = require('../services/mbc.service');
+const { updateSkeletonFromDocUpdate, populateOsmiumFromExactPrior } = require('../services/mbc.service');
 const { getFilterById } = require('../services/filter.service');
 
 const createDocument = catchAsync(async (req, res) => {
@@ -51,7 +51,10 @@ const updateDocument = catchAsync(async (req, res) => {
   let document = await documentService.updateDocument(req.user, req.params.documentId, req.body);
   let template = await getFilterById(req.user, document.filter, true);
   const skeleton = await updateSkeletonFromDocUpdate (req.user, document, template, mbc);
-  res.send(document.transform());
+  let collateralQuery = {status: 'smelted', skeleton: skeleton._id }
+  let collateralDocs = await documentService.getDocuments(req.user, collateralQuery);
+  let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(x.transform(), skeleton, template));
+  res.  send(document.transform());
 });
 
 const deleteDocument = catchAsync(async (req, res) => {

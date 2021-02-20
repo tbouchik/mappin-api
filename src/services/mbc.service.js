@@ -1,6 +1,6 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
-const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox } = require('../miner/skeletons')
+const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
@@ -174,10 +174,11 @@ const createSkeleton = async (user, docBody, docId) => {
 };
 
 const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) => {
+  let skeletonRef = prepareSkeletonMappingsForApi(skeletonReference)
   let newDocument = Object.assign({}, documentBody);
   const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
-  let bboxMappings = skeletonReference.bboxMappings.get(bboxMappingKey);
-  let ggMappings = skeletonReference.ggMappings.get(bboxMappingKey);
+  let bboxMappings = skeletonRef.bboxMappings.get(bboxMappingKey);
+  let ggMappings = skeletonRef.ggMappings.get(bboxMappingKey);
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
   const docSkeleton = newDocument.metadata.page_1;
@@ -185,7 +186,7 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) =
     let key = filter.keys[i];
     let ggKey = ggMappings.get(key.value);
     if (key.type === 'IMPUT') {
-      newDocument.osmium[i].Value = skeletonReference.imputations.get(bboxMappingKey);
+      newDocument.osmium[i].Value = skeletonRef.imputations.get(bboxMappingKey);
     } else if (ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)) {
       newDocument.osmium[i].Value =formatValue(documentBody.ggMetadata[ggKey].Text, key.type);
     } else{
@@ -234,8 +235,8 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
 }
 
 updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
+  const skeleton = await getSkeletonById(updateBody.skeleton);
   if (mbc && !isEmpty(mbc)){
-    const skeleton = await getSkeletonById(updateBody.skeleton);
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
        const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
@@ -246,7 +247,8 @@ updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
        let ggMatchedResult = findGgMappingKeyFromMBC(template.keys, updateBody.ggMetadata, mbc);
        newGgMappings = Object.assign(newGgMappings, ggMatchedResult);
        skeleton.ggMappings.set(clientTempKey, mapToObject(newGgMappings));
-       await updateSkeleton(skeleton._id, skeleton);
+       let result = await updateSkeleton(skeleton._id, skeleton);
+       return result;
       }
     }
   } else if(updateBody.imput){
@@ -255,9 +257,12 @@ updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
         const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
         skeleton.imputations.set(clientTempKey, updateBody.imput);
-        await updateSkeleton(skeleton._id, skeleton);
+        let result = await updateSkeleton(skeleton._id, skeleton);
+        return result;
       }
     }
+  } else {
+    return skeleton;
   }
 };
 

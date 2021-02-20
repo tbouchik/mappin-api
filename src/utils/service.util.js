@@ -15,7 +15,9 @@ const getQueryOptions = query => {
 };
 
 const mergeClientTemplateIds = (client, template) => {
-  return `${client}_${template}`;
+  let clientId = client._id ? client.id :client;
+  let templateId = template._id ? template.id : template;
+  return `${clientId}_${templateId}`;
 }
 
 const RegexType = Object.freeze({'EMAIL':1, 'DATE':2, 'OTHER':3})
