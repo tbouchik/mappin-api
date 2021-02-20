@@ -15,8 +15,8 @@ const getQueryOptions = query => {
 };
 
 const mergeClientTemplateIds = (client, template) => {
-  let clientId = client._id ? client.id :client;
-  let templateId = template._id ? template.id : template;
+  let clientId = client._id ? client._id.toString() :client;
+  let templateId = template._id ? template._id.toString() : template;
   return `${clientId}_${templateId}`;
 }
 

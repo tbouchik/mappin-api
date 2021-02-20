@@ -68,6 +68,7 @@ const documentSchema = mongoose.Schema(
     osmium: [],
   },
   {
+    versionKey: false,
     timestamps: true,
     toObject: { getters: true },
     toJSON: { getters: true },

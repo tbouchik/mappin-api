@@ -54,7 +54,15 @@ const updateDocument = catchAsync(async (req, res) => {
   let collateralQuery = {status: 'smelted', skeleton: skeleton._id }
   let collateralDocs = await documentService.getDocuments(req.user, collateralQuery);
   let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(x.transform(), skeleton, template));
-  res.  send(document.transform());
+  collateralDocs.forEach((document, idx) => {
+    Object.assign(document, updatedCollateralDocs[idx]);
+    try{
+      document.save();
+    } catch(error) {
+      console.log(error);
+    }
+  })
+  res.send(document.transform());
 });
 
 const deleteDocument = catchAsync(async (req, res) => {
