@@ -66,56 +66,13 @@ const listDirectory = async (dirPath) => {
   }
 }
 
-const extractOsmium = async (payload) => {
-  let finalJson = {};
-  let newDocumentBody = Object.assign({}, payload.documentBody)
-  const filename = payload.documentBody.alias;
-  const fileName = filename.split('.')[0];
-  const fileExtension = filename.split('.')[1];
-  const outputDirName = `${fileName}-${fileExtension}`;
-  const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${filename} --text --output ${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
-  console.log(command);
-  
-  Promise.allSettled([
-    exec(command, {
-      timeout: 2000000,
-    }),
-    aixtract(filename)
-  ]).then((results) => {
-    console.log('Python Done');
-    if (fs.existsSync(`${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}/${outputDirName}-page-1-text-inreadingorder.csv`)) {
-      // joining path of directory
-      const directoryPath = `${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
-      // passing directoryPath and callback function
-      fs.readdir(directoryPath, async (err, files) => {
-        // handling error
-        if (err) {
-          throw new AppError(httpStatus.NOT_FOUND, err);
-        }
-        let pageNumber = 0;
-        // listing all files using forEach
-        for (let i = 0; i < files.length; i++) {
-          if (files[i].split('.')[1] === 'csv' && files[i].includes('inreadingorder')) {
-            pageNumber += 1;
-            const jsonArray = await csv().fromFile(path.join(directoryPath, files[i]));
-            finalJson[`page_${pageNumber}`] = jsonArray;
-          }
-        }
-        newDocumentBody.metadata = {...finalJson};
-        newDocumentBody.ggMetadata = results[1].status === 'fulfilled' ? results[1].value : {}
-        return newDocumentBody
-      });
-    }
-  })
-};
-
 const bulkSmelt = async(req, res) => {
   try {
     const { body, user } = req;
-    let createdDocs = await addFilesToQueue(user, body.files)
     res.json({ done: true });
+    let createdDocs = await addFilesToQueue(user, body.files)
     for (let i= 0; i< createdDocs.length; i ++) {
-      await saveSmeltedResult(user, createdDocs[i].body, createdDocs[i].id)
+      await saveSmeltedResult(user, createdDocs[i], createdDocs[i].id)
     }
   } catch (err) {
     console.error(err);
@@ -125,32 +82,45 @@ const bulkSmelt = async(req, res) => {
 
 const addFilesToQueue = async (user, files) => {
   try{
-    let batch = []
     const trimedFiles = await trimUnauthorizedDocuments(user._id, files);
     updateUserCounter(user._id, {counter: trimedFiles.length})
-    for (const file of trimedFiles) {
-      let documentBody = {
-        link: `${process.env.AWS_BUCKET}/${file.alias}`,
-        name: file.name,
-        metadata: {},
-        ggMetadata: {},
-        osmium: [],
-        client: file.client,
-        filter: file.filter,
-        mimeType: file.mimeType,
-        alias: file.alias,
-        businessPurpose: file.businessPurpose,
-        extractionType: file.extractionType,
-        status: 'pending',
-      };
-      let createdDoc = await createDocument(user, documentBody)
-      let moldedDoc = await moldOsmiumInDocument({id: createdDoc._id, documentBody})
-      batch.push({id: createdDoc._id, body: moldedDoc})
-    }
-    return batch
+    let emptyDocsBatch = await createBatchMolds(user, trimedFiles);
+    let filledDocsBatch = await injectOsmiumInBatchMolds(emptyDocsBatch);
+    return filledDocsBatch;
   } catch (err) {
     console.log(err)
   }
+}
+
+const createBatchMolds = async (user, files) => {
+  let xy = files.map((file) => {
+    let documentBody = {
+      link: `${process.env.AWS_BUCKET}/${file.alias}`,
+      name: file.name,
+      metadata: {},
+      ggMetadata: {},
+      osmium: [],
+      client: file.client,
+      filter: file.filter,
+      mimeType: file.mimeType,
+      alias: file.alias,
+      businessPurpose: file.businessPurpose,
+      extractionType: file.extractionType,
+      status: 'pending',
+    };
+    return createDocument(user, documentBody)
+  });
+    return Promise.allSettled(xy).then((createdDocsData)=> {
+        let createdDocs = createdDocsData.filter(x => x.status === 'fulfilled').map(x => x.value.transform());
+        return createdDocs;
+      })
+}
+
+const injectOsmiumInBatchMolds = async (documents) => {
+  return Promise.allSettled(documents.map(x => moldOsmiumInDocument({id:x._id, documentBody:x })))//TODO remove the need for two args in moldOsmiumInDOcument: x is present in both
+    .then(moldedDocs => {
+    return moldedDocs.filter(x => x.status === 'fulfilled').map(x => x.value);
+    })
 }
 
 const saveSmeltedResult = async (user, documentBody, taskId) => {
