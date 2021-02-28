@@ -162,6 +162,9 @@ const getNextDocuments = async (user, query) => {
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
+  if(filter.status === undefined ) {
+    filter.status  = { $ne: 'pending' }
+  }
   
   // OPTIONS
   let sort = { createdAt: -1 };
