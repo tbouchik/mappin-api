@@ -5,6 +5,8 @@ const location = process.env.GOOGLE_PROJECT_LOCATION;
 const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai').v1beta2;
 const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
+const { getS3PdfAlias } = require('../utils/pdf.util');
+const path = require('path');
 
 const s3options = {
     bucket: process.env.AWS_BUCKET_NAME,
@@ -71,26 +73,31 @@ const parseForm = async (pdfContent) => {
     return mapToObject(ggMetadata);
   }
 
-const aixtract = (bucketKey) => {
-    let s3Params = {
-        Bucket: process.env.AWS_BUCKET_NAME,
-        Key: bucketKey
-    }
-    return new Promise((resolve, reject) => {
-      s3.getObject(s3Params, function(err, data) {
-        if (err) {
-            console.log(err, err.stack);
+const aixtract = async (bucketKey, mimeType) => {
+  let s3Params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: bucketKey
+  }
+  return new Promise((resolve, reject) => {
+    s3.getObject(s3Params, async (err, data) =>{
+      if (err) {
+          console.log(err, err.stack);
+          reject(err);
+      } // an error occurred
+      else {
+        if(mimeType !== 'application/pdf') {
+          let pdfAlias = await getS3PdfAlias(data.Body, path.join(process.env.TEXTRACTOR_OUTPUT, bucketKey))
+          resolve( aixtract(pdfAlias, 'application/pdf'))
+        }else{
+          parseForm(data.Body)
+          .then(data => resolve(data))
+          .catch(err => {
+            console.error(err);
             reject(err);
-        } // an error occurred
-        else {
-            parseForm(data.Body)
-            .then(data => resolve(data))
-            .catch(err => {
-                console.error(err);
-                reject(err);
-            });
+          })
         }
-      })
+      }
+    })
   })
 }
 

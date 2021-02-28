@@ -78,6 +78,7 @@
     "nodemailer": "^6.3.1",
     "passport": "^0.4.0",
     "passport-jwt": "^4.0.0",
+    "pdfkit": "^0.11.0",
     "pm2": "^4.1.2",
     "queue": "^6.0.2",
     "s3-proxy": "^1.2.1",

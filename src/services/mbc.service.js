@@ -141,7 +141,7 @@ const findGgMappingKeyFromMBC = (templateKeys, ggMetadata, mbc) => {
 
 const createSkeleton = async (user, docBody, docId) => {
   let clientTemplateMapping = new Map();
-  clientTemplateMapping.set(user.id,  [docBody.filter]);
+  clientTemplateMapping.set(user.id,  [docBody.filter.toString()]);
   let template = await getFilterById(user, docBody.filter, true);
   let templateKeyBBoxMappingArr = []
   for (let i=0; i < template.keys.length; i++) {

@@ -13,11 +13,13 @@ const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('..
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { aixtract, populateOsmiumFromGgAI } = require('../services/smelter.service')
+const { omitBy } = require('lodash');
 AWS.config.update({ region: 'us-east-1' });
 
 
 const startSmelterEngine = async (payload) => {
   const filename = payload.documentBody.alias;
+  const mimeType = payload.documentBody.mimeType;
   const fileName = filename.split('.')[0];
   const fileExtension = filename.split('.')[1];
   const outputDirName = `${fileName}-${fileExtension}`;
@@ -25,7 +27,7 @@ const startSmelterEngine = async (payload) => {
   console.log(command);  
   return Promise.allSettled([
     exec(command, { timeout: 2000000,}),
-    aixtract(filename)
+    aixtract(filename, mimeType)
   ]).then((metadata) => {
     return {
       metadata: metadata[1],
@@ -53,7 +55,7 @@ const moldOsmiumInDocument = async (payload) => {
     }
   }
   newDocumentBody.metadata = {...finalJson};
-  newDocumentBody.ggMetadata = metadata.status === 'fulfilled' ? metadata.value : {}
+  newDocumentBody.ggMetadata = metadata.status === 'fulfilled' ? omitBy(metadata.value, (v,k) => k[0]=='$') : {}
   return newDocumentBody
 }
 
