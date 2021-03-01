@@ -52,8 +52,10 @@ const moldOsmiumInDocument = async (payload) => {
       pageNumber += 1;
       const jsonArray = await csv().fromFile(path.join(directoryPath, files[i]));
       finalJson[`page_${pageNumber}`] = jsonArray;
+      console.log('final json -------------------:\n', finalJson);
     }
   }
+  console.log('metadata :  ---------------:',metadata )
   newDocumentBody.metadata = {...finalJson};
   newDocumentBody.ggMetadata = metadata.status === 'fulfilled' ? omitBy(metadata.value, (v,k) => k[0]=='$') : {}
   return newDocumentBody
