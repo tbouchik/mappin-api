@@ -29,6 +29,7 @@ const startSmelterEngine = async (payload) => {
     exec(command, { timeout: 2000000, log:true}),
     aixtract(filename, mimeType)
   ]).then((metadata) => {
+    console.log('OUUUUUTTT', outputDirName)
     return {
       metadata: metadata[1],
       outputDirName,
