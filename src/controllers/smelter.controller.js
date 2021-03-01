@@ -26,7 +26,7 @@ const startSmelterEngine = async (payload) => {
   const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${filename} --text --output ${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
   console.log(command);  
   return Promise.allSettled([
-    exec(command, { timeout: 2000000,}),
+    exec(command, { timeout: 2000000, log:true}),
     aixtract(filename, mimeType)
   ]).then((metadata) => {
     return {
