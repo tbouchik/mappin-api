@@ -45,6 +45,7 @@ const moldOsmiumInDocument = async (payload) => {
   const directoryPath = `${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
   // passing directoryPath and callback function
   const files = await listDirectory(directoryPath)
+  console.log('OUTPUT PATH--------------------------------\n', directoryPath);
   let pageNumber = 0;
   // listing all files using forEach
   for (let i = 0; i < files.length; i++) {
@@ -55,7 +56,7 @@ const moldOsmiumInDocument = async (payload) => {
       console.log('final json -------------------:\n', finalJson);
     }
   }
-  console.log('metadata :  ---------------:',metadata )
+  console.log('metadata :  ---------------:',metadata)
   newDocumentBody.metadata = {...finalJson};
   newDocumentBody.ggMetadata = metadata.status === 'fulfilled' ? omitBy(metadata.value, (v,k) => k[0]=='$') : {}
   return newDocumentBody
