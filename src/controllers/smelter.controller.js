@@ -18,7 +18,7 @@ const cp = require('child_process')
 
 AWS.config.update({ region: 'us-east-1' });
 
-const runScript =  (command, options = { log: true, cwd: process.cwd() }) => {
+const runScript =  (command, options = { log: false, cwd: process.cwd() }) => {
   if (options.log) console.log(command)
 
   return new Promise((done, failed) => {
@@ -30,8 +30,6 @@ const runScript =  (command, options = { log: true, cwd: process.cwd() }) => {
         failed(err)
         return
       }
-      console.log('==================stdout==================')
-      console.log(stdout)
       done({ stdout, stderr })
     })
   })
@@ -49,7 +47,6 @@ const startSmelterEngine = async (payload) => {
     runScript(command, { timeout: 2000000}),
     aixtract(filename, mimeType)
   ]).then((metadata) => {
-    console.log('OUUUUUTTT', outputDirName)
     return {
       metadata: metadata[1],
       outputDirName,
@@ -66,7 +63,6 @@ const moldOsmiumInDocument = async (payload) => {
   const directoryPath = `${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
   // passing directoryPath and callback function
   const files = await listDirectory(directoryPath)
-  console.log('OUTPUT PATH--------------------------------\n', directoryPath);
   let pageNumber = 0;
   // listing all files using forEach
   for (let i = 0; i < files.length; i++) {
@@ -74,10 +70,8 @@ const moldOsmiumInDocument = async (payload) => {
       pageNumber += 1;
       const jsonArray = await csv().fromFile(path.join(directoryPath, files[i]));
       finalJson[`page_${pageNumber}`] = jsonArray;
-      console.log('final json -------------------:\n', finalJson);
     }
   }
-  console.log('metadata :  ---------------:',metadata)
   newDocumentBody.metadata = {...finalJson};
   newDocumentBody.ggMetadata = metadata.status === 'fulfilled' ? omitBy(metadata.value, (v,k) => k[0]=='$') : {}
   return newDocumentBody
@@ -190,7 +184,6 @@ const trimUnauthorizedDocuments = async (user, files) => {
   const creditsRemaining = await userCreditsRemaining(user._id);
     if (files.length > creditsRemaining){
       files = files.slice(0,creditsRemaining)
-      console.log('BREACH TENTATIVE: changed files length to : ',creditsRemaining )
     }
   return files
 }
