@@ -14,8 +14,28 @@ const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, popul
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { aixtract, populateOsmiumFromGgAI } = require('../services/smelter.service')
 const { omitBy } = require('lodash');
+const cp = require('child_process')
+
 AWS.config.update({ region: 'us-east-1' });
 
+const runScript =  (command, options = { log: true, cwd: process.cwd() }) => {
+  if (options.log) console.log(command)
+
+  return new Promise((done, failed) => {
+    
+    cp.exec(command, { ...options }, (err, stdout, stderr) => {
+      if (err) {
+        err.stdout = stdout
+        err.stderr = stderr
+        failed(err)
+        return
+      }
+      console.log('==================stdout==================')
+      console.log(stdout)
+      done({ stdout, stderr })
+    })
+  })
+}
 
 const startSmelterEngine = async (payload) => {
   const filename = payload.documentBody.alias;
@@ -26,7 +46,7 @@ const startSmelterEngine = async (payload) => {
   const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${filename} --text --output ${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
   console.log(command);  
   return Promise.allSettled([
-    exec(command, { timeout: 2000000, log:true}),
+    runScript(command, { timeout: 2000000}),
     aixtract(filename, mimeType)
   ]).then((metadata) => {
     console.log('OUUUUUTTT', outputDirName)
