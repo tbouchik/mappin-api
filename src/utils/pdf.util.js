@@ -48,8 +48,22 @@ const streamImageToFile = async (stream, filePath) => {
         });
     })
 }
-
+const ensureDirectoryExistence = async (filePath) => {
+    var dirname = path.dirname(filePath);
+    if (!fs.existsSync(dirname)) {
+        return new Promise((resolve)=> {
+            ensureDirectoryExistence(dirname);
+            fs.mkdir(dirname, { recursive: true }, (err) => {
+                if (err) throw err;
+                else resolve(true)
+              });
+        })
+    } else{
+        return;
+    }
+  }
 const getS3PdfAlias = async (stream, filePath) => {
+    await ensureDirectoryExistence(filePath);
     const imagePath = await streamImageToFile(stream, filePath);
     let pdfAlias = await streamAndSendStream(imagePath);
     return pdfAlias;
