@@ -1,8 +1,5 @@
 const AWS = require('aws-sdk');
-const path = require('path');
 const fs = require('fs');
-const fsPromises = fs.promises;
-const csv = require('csvtojson');
 const httpStatus = require('http-status');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
@@ -11,78 +8,32 @@ const { getClientById } = require('../services/client.service');
 const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
-const { aixtract, populateOsmiumFromGgAI } = require('../services/smelter.service')
+const { aixtract, populateOsmiumFromGgAI, fetchMetada } = require('../services/smelter.service')
 const { omitBy } = require('lodash');
-const cp = require('child_process');
 
 AWS.config.update({ region: 'us-east-1' });
 
-const runScript =  (command, options = { log: false, cwd: process.cwd() }) => {
-  if (options.log) console.log(command)
-
-  return new Promise((done, failed) => {
-    
-    cp.exec(command, { ...options }, (err, stdout, stderr) => {
-      if (err) {
-        err.stdout = stdout
-        err.stderr = stderr
-        failed(err)
-        return
-      }
-      done({ stdout, stderr })
-    })
-  })
-}
 
 const startSmelterEngine = async (payload) => {
   const filename = payload.documentBody.alias;
   const mimeType = payload.documentBody.mimeType;
-  const fileName = filename.split('.')[0];
-  const fileExtension = filename.split('.')[1];
-  const outputDirName = `${fileName}-${fileExtension}`;
-  const command = `${process.env.PYTHONV} ${process.env.TEXTRACTOR_PATH} --documents ${process.env.AWS_BUCKET}/${filename} --text --output ${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
-  console.log(command);  
   return Promise.allSettled([
-    runScript(command, { timeout: 2000000}),
+    fetchMetada(filename),
     aixtract(filename, mimeType)
   ]).then((metadata) => {
     return {
-      metadata: metadata[1],
-      outputDirName,
+      awsMetadata: metadata[0],
+      gcpMetadata: metadata[1],
     }
   })
 }
 
 const moldOsmiumInDocument = async (payload) => {
-  let finalJson = {};
   let newDocumentBody = Object.assign({}, payload.documentBody)
-  let { metadata, outputDirName } = await startSmelterEngine(payload);
-  console.log('Python Done');
-  // joining path of directory
-  const directoryPath = `${process.env.TEXTRACTOR_OUTPUT}/${outputDirName}`;
-  // passing directoryPath and callback function
-  const files = await listDirectory(directoryPath)
-  let pageNumber = 0;
-  // listing all files using forEach
-  for (let i = 0; i < files.length; i++) {
-    if (files[i].split('.')[1] === 'csv' && files[i].includes('inreadingorder')) {
-      pageNumber += 1;
-      const jsonArray = await csv().fromFile(path.join(directoryPath, files[i]));
-      finalJson[`page_${pageNumber}`] = jsonArray;
-    }
-  }
-  newDocumentBody.metadata = {...finalJson};
-  newDocumentBody.ggMetadata = metadata.status === 'fulfilled' ? omitBy(metadata.value, (v,k) => k[0]=='$') : {}
+  let { awsMetadata, gcpMetadata } = await startSmelterEngine(payload);
+  newDocumentBody.metadata = awsMetadata.status === 'fulfilled' ? awsMetadata.value : {};
+  newDocumentBody.ggMetadata = gcpMetadata.status === 'fulfilled' ? omitBy(gcpMetadata.value, (v,k) => k[0]=='$') : {}
   return newDocumentBody
-}
-
-const listDirectory = async (dirPath) => {
-  try {
-    return fsPromises.readdir(dirPath);
-  } catch (err) {
-    console.error('Error occured while reading directory!');
-    throw new AppError(httpStatus.NOT_FOUND, err);
-  }
 }
 
 const bulkSmelt = async(req, res) => {
@@ -188,5 +139,5 @@ const trimUnauthorizedDocuments = async (user, files) => {
 }
 
 module.exports = {
-  bulkSmelt
+  bulkSmelt,
 };

@@ -7,6 +7,7 @@ const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
 const { getS3PdfAlias } = require('../utils/pdf.util');
 const path = require('path');
+var apigClientFactory = require('aws-api-gateway-client').default;
 
 const s3options = {
     bucket: process.env.AWS_BUCKET_NAME,
@@ -115,7 +116,34 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
   return newDocument
 }
 
+const fetchMetada = async (filename) => {
+  let apigClient = apigClientFactory.newClient({
+    invokeUrl: process.env.INVOKE_URL,
+    region: process.env.AWS_REGION,
+    accessKey: process.env.API_GATE_ACCESS_KEY,
+    secretKey: process.env.API_GATE_SECRET_KEY,
+    systemClockOffset: 0, // OPTIONAL: An offset value in milliseconds to apply to signing time
+    retries: 4,
+  });
+  let pathParams = {};
+  let pathTemplate = '';
+  let additionalParams = {};
+  let method = 'POST';
+  let body = {
+    bucketName: process.env.AWS_BUCKET_NAME,
+    document: filename,
+    region: process.env.AWS_REGION
+  };
+  return new Promise((resolve, reject) => {
+    apigClient.invokeApi(pathParams, pathTemplate, method, additionalParams, body)
+      .then(response => resolve(response.data))
+      .catch(err => reject(err));
+  });
+  
+}
+
 module.exports = {
     aixtract,
+    fetchMetada,
     populateOsmiumFromGgAI
   };
