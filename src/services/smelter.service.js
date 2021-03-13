@@ -67,8 +67,6 @@ const parseForm = async (pdfContent) => {
       const fieldValue = getText(field.fieldValue.textAnchor).replace(/\r?\n|\r/g, ' ');
       let valueData = { Text: fieldValue, Coords: field.fieldValue.boundingPoly.normalizedVertices };
       ggMetadata.set(fieldName, valueData);
-      console.log('-------------------------------');
-      console.log(`\t(${fieldName} =====>>> ${fieldValue})`);
     }
     return mapToObject(ggMetadata);
   }
@@ -126,7 +124,6 @@ const fetchMetada = async (filename) => {
     FunctionName: process.env.LAMBDA_NAME, /* required */
     Payload: JSON.stringify(payload)
   };
-  console.log("params:: --->", params);
   return new Promise((resolve, reject) => {
     lambda.invoke(params, function(err, data) {
       if (err) reject(err); // an error occurred

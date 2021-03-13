@@ -20,7 +20,6 @@ const startSmelterEngine = async (payload) => {
     fetchMetada(filename),
     aixtract(filename, mimeType)
   ]).then((metadata) => {
-    console.log(metadata[0])
     return {
       awsMetadata: metadata[0],
       gcpMetadata: metadata[1],
