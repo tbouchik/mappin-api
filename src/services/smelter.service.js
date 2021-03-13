@@ -126,6 +126,7 @@ const fetchMetada = async (filename) => {
     FunctionName: process.env.LAMBDA_NAME, /* required */
     Payload: JSON.stringify(payload)
   };
+  console.log("params:: --->", params);
   return new Promise((resolve, reject) => {
     lambda.invoke(params, function(err, data) {
       if (err) reject(err); // an error occurred
