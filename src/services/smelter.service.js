@@ -87,7 +87,7 @@ const aixtract = async (bucketKey, mimeType) => {
       else {
         if(mimeType !== 'application/pdf') {
           let pdfAlias = await getS3PdfAlias(data.Body, path.join(process.env.TEXTRACTOR_OUTPUT, bucketKey))
-          resolve( aixtract(pdfAlias, 'application/pdf'))
+          resolve(aixtract(pdfAlias, 'application/pdf'))
         }else{
           parseForm(data.Body)
           .then(data => resolve(data))
@@ -115,10 +115,6 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
   return newDocument
 }
 
-/**
- * GGMetadata stores: docKey STRING <-> docValue OBJECT< Text, ...NormalizedCoordinates>
- * GGMappings stores: templateKey STRING<-> docKey STRING
- */
 module.exports = {
     aixtract,
     populateOsmiumFromGgAI

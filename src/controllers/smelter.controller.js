@@ -1,6 +1,5 @@
 const AWS = require('aws-sdk');
 const path = require('path');
-const exec = require('await-exec');
 const fs = require('fs');
 const fsPromises = fs.promises;
 const csv = require('csvtojson');
@@ -14,7 +13,7 @@ const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, popul
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { aixtract, populateOsmiumFromGgAI } = require('../services/smelter.service')
 const { omitBy } = require('lodash');
-const cp = require('child_process')
+const cp = require('child_process');
 
 AWS.config.update({ region: 'us-east-1' });
 
