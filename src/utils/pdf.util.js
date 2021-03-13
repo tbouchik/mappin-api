@@ -14,11 +14,7 @@ const streamAndSendStream = (inputPath) => {
     let writeStream = fs.createWriteStream(pdfPath);
     doc.pipe(writeStream);
     //Add an image, constrain it to a given size, and center it vertically and horizontally 
-    doc.image(inputPath, {
-        fit: [500, 400],
-        align: 'center',
-        valign: 'center'
-    });
+    doc.image(inputPath,5, 5, {width: 590});
     doc.end();
     let fileUploadedToS3Promise = new Promise ((resolve) =>{       
         writeStream.on('finish', async ()=> {
