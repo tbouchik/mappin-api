@@ -1,5 +1,4 @@
 const AWS = require('aws-sdk');
-const fs = require('fs');
 const httpStatus = require('http-status');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
