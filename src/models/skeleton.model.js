@@ -8,10 +8,6 @@ const skeletonSchema = mongoose.Schema(
       type: Array,
       required: true,
     },
-    accountingNumber: {
-      type: Number,
-      required: false,
-    },
     document: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Document',

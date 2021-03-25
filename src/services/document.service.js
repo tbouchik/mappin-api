@@ -22,7 +22,7 @@ const createDocument = async (user, documentBody) => {
   }
   // Assign smart filter if no filter is specified
   const smartFilterId = await getDefaultFilterId(user);
-  if (!documentBody.filter || documentBody.filter === smartFilterId) {
+  if (!documentBody.filter || documentBody.filter === smartFilterId) { // TODO remove deprecated logic
     let smartFilter = await getFilterById(user, smartFilterId);
     if (smartFilter) {
       smartFilter = smartFilter[0];
@@ -273,7 +273,7 @@ const shapeOsmiumFromFilterId = async (user, filterId) => {
   const filterArr = await getFilterById(user, filterId);
   // Shape Osmium according to filter
   osmium = filterArr.keys.map(filterKey => {
-    return { Key: filterKey.value, Value: null };
+    return { Key: filterKey.value, Value: null, Imputation: filterKey.isImputable ? '' : null };
   });
   return osmium;
 };

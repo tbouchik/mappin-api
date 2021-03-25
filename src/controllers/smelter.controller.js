@@ -86,7 +86,7 @@ const createBatchMolds = async (user, files) => {
 }
 
 const injectOsmiumInBatchMolds = async (documents) => {
-  return Promise.allSettled(documents.map(x => moldOsmiumInDocument({id:x._id, documentBody:x })))//TODO remove the need for two args in moldOsmiumInDOcument: x is present in both
+  return Promise.allSettled(documents.map(x => moldOsmiumInDocument({id:x._id, documentBody:x }))) // TODO remove the need for two args in moldOsmiumInDOcument: x is present in both
     .then(moldedDocs => {
     return moldedDocs.filter(x => x.status === 'fulfilled').map(x => x.value);
     })

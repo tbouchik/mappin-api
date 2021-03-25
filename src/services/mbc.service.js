@@ -9,6 +9,7 @@ const { ggMetadataHasSimilarKey } = require('../utils/tinder');
 const { isEmpty } = require('lodash');
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
+const labels = require('./../../ressources/labels');
 
 const findSimilarSkeleton = async (skeleton) => {
   const skeletons = await Skeleton.find();
@@ -155,14 +156,13 @@ const createSkeleton = async (user, docBody, docId) => {
     let elementMapped = findGgMappingKey(template.keys[i], docBody.osmium, docBody.ggMetadata);
     templateKeyGgMappingArr.push([template.keys[i].value , elementMapped]);
   }
-  let templateKeyGgMapping = new Map(templateKeyGgMappingArr)
+  let templateKeyGgMapping = new Map(templateKeyGgMappingArr);
   let ggMappings = new Map();
   ggMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyGgMapping));
   let imputations = new Map ();
-  imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , null);
+  imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   const skeletonBody = {
     ossature: docBody.metadata.page_1,
-    accountingNumber: 000000,
     document: docId,
     imputations,
     clientTemplateMapping,
@@ -173,21 +173,26 @@ const createSkeleton = async (user, docBody, docId) => {
   return skeleton;
 };
 
-const populateOsmiumFromExactPrior = (documentBody, skeletonReference, filter) => {
+const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template) => {
   let skeletonRef = prepareSkeletonMappingsForApi(skeletonReference)
   let newDocument = Object.assign({}, documentBody);
   const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
   let bboxMappings = skeletonRef.bboxMappings.get(bboxMappingKey);
   let ggMappings = skeletonRef.ggMappings.get(bboxMappingKey);
+  let imputations = skeletonRef.imputations.get(bboxMappingKey);
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
+  imputations = objectToMap(imputations);
   const docSkeleton = newDocument.metadata.page_1;
-  for (let i = 0; i <filter.keys.length; i++) {
-    let key = filter.keys[i];
+  for (let i = 0; i <template.keys.length; i++) {
+    let key = template.keys[i];
     let ggKey = ggMappings.get(key.value);
-    if (key.type === 'IMPUT') {
-      newDocument.osmium[i].Value = skeletonRef.imputations.get(bboxMappingKey);
-    } else if (ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)) {
+    let a = imputations.get(key.value)
+    if (imputations.get(key.value)!== undefined && imputations.get(key.value)!== null) {
+      newDocument.osmium[i].Imputation = imputations.get(key.value)
+      newDocument.osmium[i].Libelle = labels[parseInt(imputations.get(key.value))]
+    }
+    if (ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)) {
       newDocument.osmium[i].Value =formatValue(documentBody.ggMetadata[ggKey].Text, key.type);
     } else{
       let referenceBbox = bboxMappings.get(key.value);
@@ -236,10 +241,10 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
 
 updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
   const skeleton = await getSkeletonById(updateBody.skeleton);
+  const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
   if (mbc && !isEmpty(mbc)){
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
-       const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
        let newBboxMappings = skeleton.bboxMappings.get(clientTempKey);
        newBboxMappings = Object.assign(newBboxMappings, mbc);
        skeleton.bboxMappings.set(clientTempKey, newBboxMappings);
@@ -251,12 +256,18 @@ updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
        return result;
       }
     }
-  } else if(updateBody.imput){
+  } else if(updateBody.imput && updateBody.osmium !== undefined){
     const skeleton = await getSkeletonById(updateBody.skeleton);
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
-        const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
-        skeleton.imputations.set(clientTempKey, updateBody.imput);
+        let newImputationMappings = skeleton.imputations.get(clientTempKey);
+        let imputableTemplateKeysIndices = template.keys
+                                            .map((x, i) => {if (x.isImputable) return i})
+                                            .filter(x => x!== undefined)
+        imputableTemplateKeysIndices.forEach(idx => {
+          newImputationMappings[template.keys[idx].value] = updateBody.osmium[idx].Imputation;
+        })
+        skeleton.imputations.set(clientTempKey, mapToObject(newImputationMappings));
         let result = await updateSkeleton(skeleton._id, skeleton);
         return result;
       }
