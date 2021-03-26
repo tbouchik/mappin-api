@@ -137,11 +137,27 @@ const exportBulkCSV = async (user, query) => {
     let aggregate = Object.assign({}, templateIdObj)
     filter.filter = templateIdObj._id
     let docs = await getDocuments(user, filter)
-    const osmiumKeys = docs[0].filter.keys.map((keyObj) => keyObj.value)
-    aggregate.template = docs[0].filter.name
+    let template = docs[0].filter;
+    let nonImputableOsmiumKeysIndices = template.keys.map((x,i) => {if (x.isImputable === true)return i})
+                                          .filter(x => x !== undefined)
+    let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i})
+                                          .filter(x => x !== undefined)
+    let fixedKeys = ['N° Compte', 'Libellé', 'Valeur'] // TODO change logic once real requirements come in
+    const osmiumKeys = nonImputableOsmiumKeysIndices.map((keyIdx) => template.keys[keyIdx].value).concat(fixedKeys)
+    aggregate.template = template.name
     aggregate.header = osmiumKeys
-    aggregate.osmiums = docs.map((doc) => {
-        return doc.osmium.map((osmiumItem) => { return osmiumItem.Value })
+    aggregate.osmiums = []
+    docs.forEach(doc => {
+      let documentSerialization = []
+      let nonImputableEntrySegment = nonImputableOsmiumKeysIndices.map(nonImputableIdx => doc.osmium[nonImputableIdx].Value)
+      imputableOsmiumKeysIndices.forEach((imputableOsmiumKey) => {
+        let imputableEntrySegment = [doc.osmium[imputableOsmiumKey].Imputation,
+                                  doc.osmium[imputableOsmiumKey].Libelle,
+                                  doc.osmium[imputableOsmiumKey].Value];
+        let entrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
+        documentSerialization.push(entrySegment)
+      })
+      aggregate.osmiums.push(documentSerialization)
     })
     return aggregate
   }));
