@@ -187,7 +187,6 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template)
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
     let ggKey = ggMappings.get(key.value);
-    let a = imputations.get(key.value)
     if (imputations.get(key.value)!== undefined && imputations.get(key.value)!== null) {
       newDocument.osmium[i].Imputation = imputations.get(key.value)
       newDocument.osmium[i].Libelle = labels[parseInt(imputations.get(key.value))]
