@@ -41,10 +41,11 @@ const createDocument = async (user, documentBody) => {
 
 const getDocuments = async (user, query) => {
   // FILTER
+  console.log(query);
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter', 'skeleton']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'filter', 'skeleton', 'isArchived']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
@@ -114,7 +115,7 @@ const exportBulkCSV = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'filter', 'isArchived']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
     let ObjectId = require('mongoose').Types.ObjectId; 
     filter.client = filter.client? ObjectId(filter.client): null
@@ -133,10 +134,12 @@ const exportBulkCSV = async (user, query) => {
       }
     }
   ]);
-  let result = Promise.all(templateIds.map( async  (templateIdObj) => {
+  let docIds = []
+  let result = await Promise.all(templateIds.map( async  (templateIdObj) => {
     let aggregate = Object.assign({}, templateIdObj)
     filter.filter = templateIdObj._id
     let docs = await getDocuments(user, filter)
+    docIds = docIds.concat(docs.map(x => x._id));
     let template = docs[0].filter;
     let nonImputableOsmiumKeysIndices = template.keys.map((x,i) => {if (x.isImputable === true)return i})
                                           .filter(x => x !== undefined)
@@ -161,7 +164,11 @@ const exportBulkCSV = async (user, query) => {
     })
     return aggregate
   }));
-  return result
+  return {aggregate:result, ids:docIds}
+};
+
+const archive = async (docIds) => {
+  await Document.updateMany({'_id': { $in: docIds }}, {isArchived: true})
 };
 
 const getNextDocuments = async (user, query) => {
@@ -169,7 +176,7 @@ const getNextDocuments = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'filter', 'status']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'filter', 'status', 'isArchived']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
@@ -203,7 +210,7 @@ const getDocumentsCount = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'filter', 'isArchived']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
@@ -312,5 +319,6 @@ module.exports = {
   getDocumentsCount,
   getNextSmeltedDocuments,
   getNextDocuments,
-  exportBulkCSV
+  exportBulkCSV,
+  archive,
 };

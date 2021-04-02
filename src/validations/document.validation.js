@@ -17,6 +17,7 @@ const createDocument = {
     osmium: Joi.array(),
     filter: Joi.array(),
     ggMetadata: Joi.object(),
+    isArchived: Joi.boolean(),
   }),
 };
 
@@ -32,6 +33,7 @@ const getDocuments = {
     name: Joi.string(),
     status: Joi.string().valid('pending', 'smelted', 'validated'),
     filter: Joi.string().custom(objectId),
+    isArchived: Joi.boolean(),
   }),
 };
 
@@ -47,6 +49,7 @@ const exportBulkCSV = {
     name: Joi.string(),
     status: Joi.string().valid('pending', 'smelted', 'validated'),
     filter: Joi.string().custom(objectId),
+    isArchived: Joi.boolean(),
   }),
 };
 
@@ -65,6 +68,7 @@ const getNextSmeltedDocumentIds = {
     name: Joi.string(),
     status: Joi.string().valid('pending', 'smelted', 'validated'),
     filter: Joi.string().custom(objectId),
+    isArchived: Joi.boolean(),
   }),
 };
 
@@ -83,6 +87,7 @@ const getNextDocumentIds = {
     current: Joi.string(),
     status: Joi.string().valid('pending', 'smelted', 'validated'),
     filter: Joi.string().custom(objectId),
+    isArchived: Joi.boolean(),
   }),
 };
 
@@ -93,6 +98,7 @@ const getDocumentsByClient = {
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
+    isArchived: Joi.boolean(),
   }),
 };
 
@@ -124,6 +130,7 @@ const updateDocument = {
       uploadedBy: Joi.string(),
       filter: Joi.string().custom(objectId),
       ggMetadata: Joi.object(),
+      isArchived: Joi.boolean(),
     })
     .min(1),
 };

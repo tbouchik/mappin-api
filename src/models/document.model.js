@@ -27,6 +27,10 @@ const documentSchema = mongoose.Schema(
       ref: 'Skeleton',
       required: false,
     },
+    isArchived: {
+      type: Boolean,
+      default:false,
+    },
     mimeType: {
       type: String,
       enum: ['image/png', 'image/jpeg', 'application/pdf'],

@@ -16,21 +16,25 @@ const getDocuments = catchAsync(async (req, res) => {
 });
 
 const exportBulkCSV = catchAsync(async (req, res) => {
-  const documents = await documentService.exportBulkCSV(req.user, req.query);
-  res.send(documents);
+  const {aggregate, ids} = await documentService.exportBulkCSV(req.user, req.query);
+  documentService.archive(ids);
+  res.send(aggregate);
 });
 
 const getDocumentsCount = catchAsync(async (req, res) => {
+  console.log('count' , req.query)
   const documentsCount = await documentService.getDocumentsCount(req.user, req.query);
   res.send(documentsCount);
 });
 
 const getNextSmeltedDocumentIds = catchAsync(async (req, res) => {
+  console.log('Next Smelted ids' , req.query)
   const smeltedIds = await documentService.getNextSmeltedDocuments(req.user, req.query);
   res.send(smeltedIds);
 });
 
 const getNextDocumentIds = catchAsync(async (req, res) => {
+  console.log('Next doc ids' , req.query)
   const nextIds = await documentService.getNextDocuments(req.user, req.query);
   res.send(nextIds);
 });
