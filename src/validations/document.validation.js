@@ -1,5 +1,8 @@
 const Joi = require('@hapi/joi');
 const { objectId } = require('./custom.validation');
+const status = require('./../enums/status');
+const mimeType = require('./../enums/mimeType');
+const extraction = require('./../enums/extraction');
 
 const createDocument = {
   body: Joi.object().keys({
@@ -9,11 +12,11 @@ const createDocument = {
     metadata: Joi.object().required(),
     mimeType: Joi.string()
       .required()
-      .valid('image/png', 'image/jpeg', 'application/pdf'),
+      .valid(mimeType.PNG, mimeType.JPG, mimeType.PDF),
     alias: Joi.string().required(),
     businessPurpose: Joi.string(),
-    extractionType: Joi.string().valid('FORMS', 'TABLES', 'TEXT'),
-    status: Joi.string().valid('pending', 'smelted', 'validated'),
+    extractionType: Joi.string().valid(extraction.FORMS, extraction.TABLES, extraction.TEXT),
+    status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     osmium: Joi.array(),
     filter: Joi.array(),
     ggMetadata: Joi.object(),
@@ -31,7 +34,7 @@ const getDocuments = {
     client:Joi.string(),
     sort: Joi.any(),
     name: Joi.string(),
-    status: Joi.string().valid('pending', 'smelted', 'validated'),
+    status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     filter: Joi.string().custom(objectId),
     isArchived: Joi.boolean(),
   }),
@@ -47,7 +50,7 @@ const exportBulkCSV = {
     client:Joi.string(),
     sort: Joi.any(),
     name: Joi.string(),
-    status: Joi.string().valid('pending', 'smelted', 'validated'),
+    status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     filter: Joi.string().custom(objectId),
     isArchived: Joi.boolean(),
   }),
@@ -66,7 +69,7 @@ const getNextSmeltedDocumentIds = {
     side: Joi.string(),
     current: Joi.string(),
     name: Joi.string(),
-    status: Joi.string().valid('pending', 'smelted', 'validated'),
+    status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     filter: Joi.string().custom(objectId),
     isArchived: Joi.boolean(),
   }),
@@ -85,7 +88,7 @@ const getNextDocumentIds = {
     name: Joi.string(),
     side: Joi.string(),
     current: Joi.string(),
-    status: Joi.string().valid('pending', 'smelted', 'validated'),
+    status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     filter: Joi.string().custom(objectId),
     isArchived: Joi.boolean(),
   }),
@@ -116,14 +119,14 @@ const updateDocument = {
     .keys({
       name: Joi.string(),
       metadata: Joi.array(),
-      mimeType: Joi.string().valid('image/png', 'image/jpeg', 'application/pdf'),
+      mimeType: Joi.string().valid(mimeType.PNG, mimeType.JPG, mimeType.PDF),
       alias: Joi.string(),
       osmium: Joi.array(),
       mbc: Joi.object(),
       imput:Joi.boolean().allow(null),
       businessPurpose: Joi.string(),
-      extractionType: Joi.string().valid('FORMS', 'TABLES', 'TEXT'),
-      status: Joi.string().valid('pending', 'smelted', 'validated'),
+      extractionType: Joi.string().valid(extraction.FORMS, extraction.TABLES, extraction.TEXT),
+      status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
       client: Joi.string(),
       skeleton: Joi.string(),
       validatedBy: Joi.string(),

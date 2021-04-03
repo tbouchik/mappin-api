@@ -6,6 +6,7 @@ const { getQueryOptions } = require('../utils/service.util');
 const { getFilterById, getDefaultFilterId } = require('./filter.service');
 const { updateSkeletonFromDocUpdate } = require('./mbc.service');
 const { getClientByEmail } = require('./client.service');
+const status = require('./../enums/status')
 
 const createDocument = async (user, documentBody) => {
   if (!user.isClient) {
@@ -88,8 +89,8 @@ const getNextSmeltedDocuments = async (user, query) => {
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
-  filter.status = filter.status ? filter.status : 'smelted'
-  if (filter.status !== 'smelted'){
+  filter.status = filter.status ? filter.status : status.SMELTED
+  if (filter.status !== status.SMELTED){
     return []
   }
   // OPTIONS
@@ -168,7 +169,7 @@ const exportBulkCSV = async (user, query) => {
 };
 
 const archive = async (docIds) => {
-  await Document.updateMany({'_id': { $in: docIds }}, {isArchived: true})
+  await Document.updateMany({'_id': { $in: docIds }}, {isArchived: true, status: status.ARCHIVED})
 };
 
 const getNextDocuments = async (user, query) => {
@@ -186,7 +187,7 @@ const getNextDocuments = async (user, query) => {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
   if(filter.status === undefined ) {
-    filter.status  = { $ne: 'pending' }
+    filter.status  = { $ne: status.PENDING }
   }
   
   // OPTIONS
@@ -251,9 +252,9 @@ const updateDocument = async (user, documentId, updateBody) => {
     if (updateBody.filter && document.filter !== updateBody.filter) {
       // User chose to change filter
       updateBody.osmium = await shapeOsmiumFromFilterId(user, updateBody.filter); // Osmium must follow
-      updateBody.status = 'smelted';
+      updateBody.status = status.SMELTED;
     }
-    if (updateBody.validated && updateBody.validated == 'validated') {
+    if (updateBody.validated && updateBody.validated == status.VALIDATED) {
       updateBody.validatedBy = user._id;
     }
     let mbc = updateBody.mbc;

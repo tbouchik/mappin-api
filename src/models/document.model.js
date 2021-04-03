@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 const { pick } = require('lodash');
+const status = require('./../enums/status');
+const mimeType = require('./../enums/mimeType');
+const extraction = require('./../enums/extraction')
 
 const documentSchema = mongoose.Schema(
   {
@@ -33,7 +36,7 @@ const documentSchema = mongoose.Schema(
     },
     mimeType: {
       type: String,
-      enum: ['image/png', 'image/jpeg', 'application/pdf'],
+      enum: [mimeType.PNG, mimeType.JPG, mimeType.PDF],
       required: true,
     },
     alias: {
@@ -46,13 +49,13 @@ const documentSchema = mongoose.Schema(
     },
     extractionType: {
       type: String,
-      enum: ['FORMS', 'TABLES', 'TEXT'],
-      default: 'FORMS',
+      enum: [extraction.FORMS, extraction.TABLES, extraction.TEXT],
+      default: extraction.TEXT,
     },
     status: {
       type: String,
-      enum: ['pending', 'smelted', 'validated'],
-      default: 'pending',
+      enum: [status.PENDING, status.SMELTED, status.VALIDATED, status.ARCHIVED, status.ERROR],
+      default: status.PENDING,
     },
     name: {
       type: String,

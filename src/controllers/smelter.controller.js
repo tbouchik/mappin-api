@@ -9,6 +9,7 @@ const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, popul
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { aixtract, populateOsmiumFromGgAI, fetchMetada } = require('../services/smelter.service')
 const { omitBy } = require('lodash');
+const status = require('./../enums/status')
 
 AWS.config.update({ region: 'us-east-1' });
 
@@ -75,7 +76,7 @@ const createBatchMolds = async (user, files) => {
       alias: file.alias,
       businessPurpose: file.businessPurpose,
       extractionType: file.extractionType,
-      status: 'pending',
+      status: status.PENDING,
     };
     return createDocument(user, documentBody)
   });
@@ -121,7 +122,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
       osmium: documentBody.osmium,
       metadata: documentBody.metadata,
       ggMetadata: documentBody.ggMetadata,
-      status: 'smelted',
+      status: status.SMELTED,
       skeleton: skeletonId,
     });
   } catch(err) {
