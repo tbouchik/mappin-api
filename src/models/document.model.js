@@ -92,6 +92,7 @@ documentSchema.methods.transform = function() {
     'uploadedBy',
     'validatedBy',
     'client',
+    'isArchived',
     'filter',
     'skeleton',
     'mimeType',
