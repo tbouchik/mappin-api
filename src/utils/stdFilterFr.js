@@ -1,11 +1,11 @@
 const stdFilterFr = [
-    {value:'Référence Client', type:'REF', isImputable: false},
-    {value:'Date', type:'DATE', isImputable: false},
-    {value:'Adresse', type:'TEXT', isImputable: false},
-    {value:'Nom du Client', type:'TEXT', isImputable: true},
-    {value:'Sous-total', type:'NUMBER', isImputable: true},
-    {value:'Taxes', type:'NUMBER', isImputable: true},
-    {value:'Total facturé', type:'NUMBER', isImputable: true},
+    {value:'Référence Client', type:'REF', isImputable: false, tags:[]},
+    {value:'Date', type:'DATE', isImputable: false, tags:[]},
+    {value:'Adresse', type:'TEXT', isImputable: false, tags:[]},
+    {value:'Nom du Client', type:'TEXT', isImputable: true, tags:[]},
+    {value:'Sous-total', type:'NUMBER', isImputable: true, tags:[]},
+    {value:'Taxes', type:'NUMBER', isImputable: true, tags:[]},
+    {value:'Total facturé', type:'NUMBER', isImputable: true, tags:[]},
   ];
   
   module.exports = stdFilterFr;

@@ -1,12 +1,12 @@
 const defaultFilter = [
-  {value:'Seller Reference', type:'REF'},
-  {value:'Date', type:'DATE'},
-  {value:'Order Id', type:'TEXT'},
-  {value:'Seller Name', type:'TEXT'},
-  {value:'Seller Address', type:'TEXT', isImputable: true},
-  {value:'Subtotal', type:'NUMBER', isImputable: true},
-  {value:'Tax', type:'NUMBER', isImputable: true},
-  {value:'Total Due', type:'NUMBER', isImputable: true},
+  {value:'Seller Reference', type:'REF', tags:[]},
+  {value:'Date', type:'DATE', tags:[]},
+  {value:'Order Id', type:'TEXT', tags:[]},
+  {value:'Seller Name', type:'TEXT', tags:[]},
+  {value:'Seller Address', type:'TEXT', isImputable: true, tags:[]},
+  {value:'Subtotal', type:'NUMBER', isImputable: true, tags:[]},
+  {value:'Tax', type:'NUMBER', isImputable: true, tags:[]},
+  {value:'Total Due', type:'NUMBER', isImputable: true, tags:[]},
 ];
 
 module.exports = defaultFilter;

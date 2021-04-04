@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path')
 const AWS = require('aws-sdk');
 const awsConfig = require('aws-config');
-
+const mimeType = require('./../enums/mimeType')
 
 const streamAndSendStream = (inputPath) => {
     const pdfAlias = inputPath.split('.')[0].split('/').pop() + '.pdf'
@@ -28,7 +28,7 @@ const streamAndSendStream = (inputPath) => {
                 Key : pdfAlias,
                 Body : fs.createReadStream(pdfPath),
                 Bucket : process.env.AWS_BUCKET_NAME,
-                ContentType : 'application/pdf'
+                ContentType : mimeType.PDF
             }
             let data = await s3.upload(params).promise()
             resolve(pdfAlias);
