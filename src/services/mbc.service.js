@@ -191,8 +191,9 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template)
       newDocument.osmium[i].Imputation = imputations.get(key.value)
       newDocument.osmium[i].Libelle = labels[parseInt(imputations.get(key.value))]
     }
-    if (ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)) {
-      newDocument.osmium[i].Value =formatValue(documentBody.ggMetadata[ggKey].Text, key.type);
+    let matchedGgKey =  ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)
+    if (matchedGgKey !== null && matchedGgKey !== undefined) {
+      newDocument.osmium[i].Value =formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type);
     } else{
       let referenceBbox = bboxMappings.get(key.value);
       if (referenceBbox) {
@@ -221,7 +222,8 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
       } else if (!newDocument.osmium[index].Value){
         let matchedKey = mostResemblantTemplateData.template[matchedIndex];
         let referenceGGKey = tempkeysToGGMappingReference[matchedKey.value];
-        if (ggMetadataHasSimilarKey(newDocument.ggMetadata, referenceGGKey)) {
+        let matchedGgKey = ggMetadataHasSimilarKey(newDocument.ggMetadata, referenceGGKey)
+        if (matchedGgKey !== null && matchedGgKey!== undefined ) {
           newDocument.osmium[index].Value =formatValue(newDocument.ggMetadata[referenceGGKey].Text, key.type);
         } else {
           let referenceBbox = tempkeysToBoxMappingReference[matchedKey.value];

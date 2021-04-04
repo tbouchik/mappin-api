@@ -101,11 +101,12 @@ const aixtract = async (bucketKey, mimeType) => {
 
 const populateOsmiumFromGgAI = (documentBody, template) => {
   let newDocument = Object.assign({}, documentBody);
-  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF' && x.type !== 'IMPUT').map(x => x.value);
+  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF').map(x => [x.value].concat(x.tags)).flat();
   const ggMetadataKeys = Object.keys(newDocument.ggMetadata);
   const treshold = 39;
   const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
-  for (const [templateKey, ggKey] of Object.entries(keysMatches)) {
+  for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
+    let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag)
     osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
     templateIndex = template.keys.findIndex(x => x.value === templateKey);
     newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type) :  newDocument.ggMetadata[ggKey].Text;
@@ -130,6 +131,12 @@ const fetchMetada = async (filename) => {
       else     resolve(JSON.parse(data.Payload));           // successful response
     });
   })
+}
+
+const findTemplateKeyFromTag = (template, templateKeyOrTag) => {
+  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF')
+  let result = nonRefTemplateKeys.find(x => x.value === templateKeyOrTag || x.tags.includes(templateKeyOrTag))
+  return result.value
 }
 
 module.exports = {

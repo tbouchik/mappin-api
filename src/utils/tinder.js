@@ -28,19 +28,21 @@ const ggMetadataHasSimilarKey = (ggMetadata, ggKey) => {
   let isIn = false;
   if (ggMetadata && !isEmpty(ggMetadata) && ggKey) {
     if (ggKey in ggMetadata) {
-      isIn = true;
+      return ggKey
     } else {
       let idx = 0;
-      while(idx < ggMetadata.length && isIn === false) {
-        let currentTextSimilitude = fuzz.ratio(ggKey, ggMetadata[idx]);
+      let ggMetadataKeys = Object.keys(ggMetadata)
+      while(idx < ggMetadataKeys.length && isIn === false) {
+        let ggMetadataItem = ggMetadataKeys[idx]
+        let currentTextSimilitude = fuzz.ratio(ggKey, ggMetadataItem);
         if (currentTextSimilitude && currentTextSimilitude > 90) {
-          isIn = true;
+          return ggMetadataItem
         }
         idx++;
       }
     }
   }
-  return isIn;
+  return null;
 }
   
   module.exports = {
