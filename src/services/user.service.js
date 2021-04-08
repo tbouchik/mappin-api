@@ -48,7 +48,7 @@ const getUsers = async query => {
 };
 
 const getUserById = async userId => {
-  const user = await User.findById(userId).populate('subscription');
+  const user = await User.findById(userId).populate('subscription', 'credits');
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
@@ -56,7 +56,7 @@ const getUserById = async userId => {
 };
 
 const getUserByEmail = async email => {
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).populate('subscription', 'credits');
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'No user found with this email');
   }
