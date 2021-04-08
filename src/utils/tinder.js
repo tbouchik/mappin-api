@@ -37,9 +37,28 @@ const ggMetadataHasSimilarKey = (ggMetadata, ggKey) => {
   }
   return null;
 }
+
+const ggMetadataHasSimilarTag = (ggMetadata, tags) => {
+  let result = null;
+  if (ggMetadata && !isEmpty(ggMetadata) && tags.length >0) {
+    tags.forEach((tag) => {
+      if (tag in ggMetadata) {
+        return tag
+      } else {
+        let ggMetadataKeys = Object.keys(ggMetadata)
+        let similitudeArray = ggMetadataKeys.map(x => {return {key:x, score:fuzz.ratio(tag, x)}})
+        .filter(x => x.score >= 65) // TODO make treshold parametrable
+        .sort((a,b) => a.score > b.score? -1 : (b.score > a.score ? 1 : 0))
+        result = similitudeArray.length > 0 ? similitudeArray[0].key : null
+      }
+    })
+  }
+  return result;
+}
   
   module.exports = {
     munkresMatch,
     ggMetadataHasSimilarKey,
+    ggMetadataHasSimilarTag
   };
   

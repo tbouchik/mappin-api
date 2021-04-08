@@ -5,6 +5,7 @@ const location = process.env.GOOGLE_PROJECT_LOCATION;
 const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai').v1beta2;
 const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
+const { findTemplateKeyFromTag } = require('./../miner/template');
 const { getS3PdfAlias } = require('../utils/pdf.util');
 const path = require('path');
 
@@ -133,11 +134,7 @@ const fetchMetada = async (filename) => {
   })
 }
 
-const findTemplateKeyFromTag = (template, templateKeyOrTag) => {
-  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF')
-  let result = nonRefTemplateKeys.find(x => x.value === templateKeyOrTag || x.tags.includes(templateKeyOrTag))
-  return result.value
-}
+
 
 module.exports = {
     aixtract,

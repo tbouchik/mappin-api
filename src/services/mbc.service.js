@@ -5,7 +5,8 @@ const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = requir
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons');
-const { ggMetadataHasSimilarKey } = require('../utils/tinder');
+const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag } = require('../utils/tinder');
+const { findTemplateKeyFromTag } = require('./../miner/template');
 const { isEmpty } = require('lodash');
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
@@ -193,12 +194,17 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template)
     }
     let matchedGgKey =  ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)
     if (matchedGgKey !== null && matchedGgKey !== undefined) {
-      newDocument.osmium[i].Value =formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type);
+      newDocument.osmium[i].Value = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type);
     } else{
       let referenceBbox = bboxMappings.get(key.value);
       if (referenceBbox) {
         let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
         newDocument.osmium[i].Value = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type) : null;
+      } else {
+        const bestGgKeyMatch = ggMetadataHasSimilarTag(documentBody.ggMetadata, key.tags);
+        if (bestGgKeyMatch){
+          newDocument.osmium[i].Value = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type);
+        }
       }
     }
   }
