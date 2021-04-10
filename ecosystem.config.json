@@ -15,7 +15,7 @@
   "deploy" : {
     "production" : {
       "user" : "root",
-      "host" : ["46.101.36.92"],
+      "host" : ["165.227.228.172"],
       "ref"  : "origin/master",
       "repo" : "git@github.com:tbouchik/mappin-api.git",
       "path" : "/root/code/mappin-api",
