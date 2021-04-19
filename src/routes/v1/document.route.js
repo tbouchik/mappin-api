@@ -11,6 +11,10 @@ const router = express.Router();
     .get(auth('manageDocuments'), validate(documentValidation.exportBulkCSV), documentController.exportBulkCSV);
 
   router
+    .route('/updateMany/')
+    .put(auth('manageDocuments'), validate(documentValidation.updateManyDocuments), documentController.updateManyDocuments);
+
+  router
     .route('/next/')
     .get(auth('manageDocuments'), validate(documentValidation.getNextDocumentIds), documentController.getNextDocumentIds);
 

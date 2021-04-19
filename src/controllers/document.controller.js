@@ -28,6 +28,11 @@ const getDocumentsCount = catchAsync(async (req, res) => {
   res.send(documentsCount);
 });
 
+const updateManyDocuments = catchAsync(async (req, res) => {
+  await documentService.updateManyDocuments(req.user, req.body);
+  res.send({"ok": true});
+});
+
 const getNextSmeltedDocumentIds = catchAsync(async (req, res) => {
   console.log('Next Smelted ids' , req.query)
   const smeltedIds = await documentService.getNextSmeltedDocuments(req.user, req.query);
@@ -86,4 +91,5 @@ module.exports = {
   getNextSmeltedDocumentIds,
   getNextDocumentIds,
   exportBulkCSV,
+  updateManyDocuments,
 };

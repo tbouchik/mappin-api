@@ -138,6 +138,15 @@ const updateDocument = {
     .min(1),
 };
 
+const updateManyDocuments = {
+  body: Joi.object()
+    .keys({
+      idsArray: Joi.array(), 
+      body: Joi.object(),
+    })
+    .min(1),
+};
+
 const deleteDocument = {
   params: Joi.object().keys({
     documentId: Joi.string().custom(objectId),
@@ -154,4 +163,5 @@ module.exports = {
   getNextSmeltedDocumentIds,
   getNextDocumentIds,
   exportBulkCSV,
+  updateManyDocuments,
 };

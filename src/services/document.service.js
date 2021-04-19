@@ -276,6 +276,15 @@ const updateDocument = async (user, documentId, updateBody) => {
   }
 };
 
+const updateManyDocuments = async (user, reqBody) => {
+    const { idsArray, body } = reqBody;
+    const response = await Document.updateMany({'_id': { $in: idsArray }}, {...body});
+    if (response.nModified !== idsArray.length){
+      throw new AppError(httpStatus.INTERNAL_SERVER_ERROR , 'Error during Documents bulk update'); 
+    }
+    return true;
+};
+
 const deleteDocument = async (user, documentId) => {
   const document = await getDocumentById(user, documentId);
   if (!document) {
@@ -289,6 +298,10 @@ const deleteDocument = async (user, documentId) => {
     await document.remove();
     return document;
   }
+};
+
+const deleteManyDocuments = async (user, idsArray, body) => {
+
 };
 
 const shapeOsmiumFromFilterId = async (user, filterId) => {
@@ -316,7 +329,9 @@ module.exports = {
   getDocuments,
   getDocumentById,
   updateDocument,
+  updateManyDocuments,
   deleteDocument,
+  deleteManyDocuments,
   getDocumentsCount,
   getNextSmeltedDocuments,
   getNextDocuments,
