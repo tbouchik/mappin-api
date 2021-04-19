@@ -300,8 +300,13 @@ const deleteDocument = async (user, documentId) => {
   }
 };
 
-const deleteManyDocuments = async (user, idsArray, body) => {
-
+const deleteManyDocuments = async (user, body) => {
+  const { idsArray } = body;
+  const response = await Document.deleteMany({'_id': { $in: idsArray }});
+  if (response.deletedCount !== idsArray.length){
+    throw new AppError(httpStatus.INTERNAL_SERVER_ERROR , 'Error during Documents bulk delete'); 
+  }
+  return true; 
 };
 
 const shapeOsmiumFromFilterId = async (user, filterId) => {

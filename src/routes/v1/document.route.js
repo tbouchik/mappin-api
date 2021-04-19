@@ -15,6 +15,10 @@ const router = express.Router();
     .put(auth('manageDocuments'), validate(documentValidation.updateManyDocuments), documentController.updateManyDocuments);
 
   router
+    .route('/deleteMany/')
+    .delete(auth('manageDocuments'), validate(documentValidation.updateManyDocuments), documentController.deleteManyDocuments);
+  
+  router
     .route('/next/')
     .get(auth('manageDocuments'), validate(documentValidation.getNextDocumentIds), documentController.getNextDocumentIds);
 
