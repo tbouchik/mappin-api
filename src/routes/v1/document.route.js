@@ -16,7 +16,7 @@ const router = express.Router();
 
   router
     .route('/deleteMany/')
-    .delete(auth('manageDocuments'), validate(documentValidation.updateManyDocuments), documentController.deleteManyDocuments);
+    .post(auth('manageDocuments'), validate(documentValidation.updateManyDocuments), documentController.deleteManyDocuments);
   
   router
     .route('/next/')
