@@ -8,7 +8,7 @@ const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('..
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { aixtract, populateOsmiumFromGgAI, fetchMetada } = require('../services/smelter.service')
-const { omitBy } = require('lodash');
+const { omitBy, get } = require('lodash');
 const status = require('./../enums/status')
 
 AWS.config.update({ region: 'us-east-1' });
@@ -17,8 +17,9 @@ AWS.config.update({ region: 'us-east-1' });
 const startSmelterEngine = async (payload) => {
   const filename = payload.documentBody.alias;
   const mimeType = payload.documentBody.mimeType;
+  const isBankStatement = payload.documentBody.isBankStatement;
   return Promise.allSettled([
-    fetchMetada(filename),
+    fetchMetada(filename, isBankStatement),
     aixtract(filename, mimeType)
   ]).then((metadata) => {
     return {
@@ -97,7 +98,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
   try{
     let skeletonId = '';
     const filter = await getFilterById(user, documentBody.filter);
-    let matchingSkeleton = await findSimilarSkeleton(documentBody.metadata.page_1);
+    let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.words.page_1', {}));
     if (matchingSkeleton) {
       matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
       skeletonId = matchingSkeleton._id;

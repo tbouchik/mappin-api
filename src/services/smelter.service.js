@@ -115,21 +115,22 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
   return newDocument
 }
 
-const fetchMetada = async (filename) => {
+const fetchMetada = async (filename, isBankStatement) => {
   let lambda = new AWS.Lambda();
   let payload = {
     bucketName: process.env.AWS_BUCKET_NAME,
     document: filename,
-    region: process.env.AWS_REGION
+    region: process.env.AWS_REGION,
+    tables: isBankStatement || false,
   };
   let params = {
-    FunctionName: process.env.LAMBDA_NAME, /* required */
+    FunctionName: process.env.LAMBDA_NAME, 
     Payload: JSON.stringify(payload)
   };
   return new Promise((resolve, reject) => {
     lambda.invoke(params, function(err, data) {
-      if (err) reject(err); // an error occurred
-      else     resolve(JSON.parse(data.Payload));           // successful response
+      if (err) reject(err);
+      else     resolve(JSON.parse(data.Payload));
     });
   })
 }

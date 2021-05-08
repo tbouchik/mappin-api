@@ -7,7 +7,7 @@ const { updateSkeleton, getSkeletonById } = require('../services/skeleton.servic
 const { skeletonHasClientTemplate } = require('../miner/skeletons');
 const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag } = require('../utils/tinder');
 const { findTemplateKeyFromTag } = require('./../miner/template');
-const { isEmpty } = require('lodash');
+const { isEmpty, get } = require('lodash');
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
 const labels = require('./../../ressources/labels');
@@ -163,7 +163,7 @@ const createSkeleton = async (user, docBody, docId) => {
   let imputations = new Map ();
   imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   const skeletonBody = {
-    ossature: docBody.metadata.page_1,
+    ossature: get(docBody, 'metadata.words.page_1', {}),
     document: docId,
     imputations,
     clientTemplateMapping,
@@ -184,7 +184,7 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template)
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
   imputations = objectToMap(imputations);
-  const docSkeleton = newDocument.metadata.page_1;
+  const docSkeleton = get(newDocument, 'metadata.words.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
     let ggKey = ggMappings.get(key.value);
@@ -218,7 +218,7 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
   let newDocument = Object.assign({}, documentBody);
   const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(mostResemblantTemplateData.key);
   const tempkeysToGGMappingReference = skeletonReference.ggMappings.get(mostResemblantTemplateData.key);
-  const docSkeleton = newDocument.metadata.page_1;
+  const docSkeleton = get(newDocument, 'words.page_1', {});
   template.keys.map((key, index) => {
 
     let matchedIndex = mostResemblantTemplateData.indices[index];
