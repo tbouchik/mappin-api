@@ -23,7 +23,10 @@ const documentSchema = mongoose.Schema(
     filter: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Filter',
-      required: true,
+      required: [
+        function() { return this.isBankStatement === false; },
+        'filter (or template) is required if document is not a bank statement'
+      ],
     },
     skeleton: {
       type: mongoose.SchemaTypes.ObjectId,
@@ -33,6 +36,10 @@ const documentSchema = mongoose.Schema(
     isArchived: {
       type: Boolean,
       default:false,
+    },
+    isBankStatement: {
+      type: Boolean,
+      required: true,
     },
     mimeType: {
       type: String,
@@ -96,6 +103,7 @@ documentSchema.methods.transform = function() {
     'validatedBy',
     'client',
     'isArchived',
+    'isBankStatement',
     'filter',
     'skeleton',
     'mimeType',

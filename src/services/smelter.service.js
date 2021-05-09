@@ -3,6 +3,10 @@ const awsConfig = require('aws-config');
 const projectId = process.env.GOOGLE_PROJECT_ID;
 const location = process.env.GOOGLE_PROJECT_LOCATION;
 const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai').v1beta2;
+const { getFilterById } = require('../services/filter.service');
+const { getClientById } = require('../services/client.service');
+const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
+const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
 const { findTemplateKeyFromTag } = require('./../miner/template');
@@ -135,10 +139,37 @@ const fetchMetada = async (filename, isBankStatement) => {
   })
 }
 
+const populateInvoiceOsmium = async (user, documentBody, taskId) => {
+  let skeletonId = '';
+    const filter = await getFilterById(user, documentBody.filter);
+    let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.words.page_1', {}));
+    if (matchingSkeleton) {
+      matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
+      skeletonId = matchingSkeleton._id;
+      if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
+          documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);
+        } else {
+          documentBody = populateOsmiumFromGgAI(documentBody, filter);
+          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user.id);
+        }
+      } else {
+        documentBody = populateOsmiumFromGgAI(documentBody, filter);
+        const newSkeleton = await createSkeleton(user, documentBody, taskId);
+        skeletonId = newSkeleton._id;
+    }
+    const hasRefField = filter.keys.some((key) => key.type === 'REF');
+    if (hasRefField) {
+      const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF');
+      const client = await getClientById(user, documentBody.client);
+      documentBody.osmium[refFieldIndex].Value = client.reference;
+    }
+  return {skeletonId, document: documentBody };
+}
 
 
 module.exports = {
     aixtract,
     fetchMetada,
-    populateOsmiumFromGgAI
+    populateOsmiumFromGgAI,
+    populateInvoiceOsmium,
   };

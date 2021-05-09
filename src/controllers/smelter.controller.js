@@ -2,12 +2,8 @@ const AWS = require('aws-sdk');
 const httpStatus = require('http-status');
 const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
-const { getFilterById } = require('../services/filter.service');
-const { getClientById } = require('../services/client.service');
-const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
-const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
-const { aixtract, populateOsmiumFromGgAI, fetchMetada } = require('../services/smelter.service')
+const { aixtract, fetchMetada, populateInvoiceOsmium } = require('../services/smelter.service')
 const { omitBy, get } = require('lodash');
 const status = require('./../enums/status')
 
@@ -25,25 +21,27 @@ const startSmelterEngine = async (payload) => {
     return {
       awsMetadata: metadata[0],
       gcpMetadata: metadata[1],
-    }
+    };
   })
 }
 
 const moldOsmiumInDocument = async (payload) => {
-  let newDocumentBody = Object.assign({}, payload.documentBody)
+  let newDocumentBody = Object.assign({}, payload.documentBody);
   let { awsMetadata, gcpMetadata } = await startSmelterEngine(payload);
   newDocumentBody.metadata = awsMetadata.status === 'fulfilled' ? awsMetadata.value : {};
-  newDocumentBody.ggMetadata = gcpMetadata.status === 'fulfilled' ? omitBy(gcpMetadata.value, (v,k) => k[0]=='$') : {}
-  return newDocumentBody
+  newDocumentBody.ggMetadata = gcpMetadata.status === 'fulfilled' ? omitBy(gcpMetadata.value, (v,k) => k[0]=='$') : {};
+  return newDocumentBody;
 }
 
 const bulkSmelt = async(req, res) => {
   try {
     const { body, user } = req;
     res.json({ done: true });
-    let createdDocs = await addFilesToQueue(user, body.files)
+    let createdDocs = await addFilesToQueue(user, body.files);
     for (let i= 0; i< createdDocs.length; i ++) {
-      await saveSmeltedResult(user, createdDocs[i], createdDocs[i].id)
+      if (createdDocs[i].isBankStatement){
+        await saveSmeltedResult(user, createdDocs[i], createdDocs[i].id);
+      }
     }
   } catch (err) {
     console.error(err);
@@ -72,6 +70,7 @@ const createBatchMolds = async (user, files) => {
       ggMetadata: {},
       osmium: [],
       client: file.client,
+      isBankStatement: file.isBankStatement,
       filter: file.filter,
       mimeType: file.mimeType,
       alias: file.alias,
@@ -84,50 +83,32 @@ const createBatchMolds = async (user, files) => {
     return Promise.allSettled(xy).then((createdDocsData)=> {
         let createdDocs = createdDocsData.filter(x => x.status === 'fulfilled').map(x => x.value.transform());
         return createdDocs;
-      })
+      });
 }
 
 const injectOsmiumInBatchMolds = async (documents) => {
-  return Promise.allSettled(documents.map(x => moldOsmiumInDocument({id:x._id, documentBody:x }))) // TODO remove the need for two args in moldOsmiumInDOcument: x is present in both
+  return Promise.allSettled(documents.map(x => moldOsmiumInDocument({id:x._id, documentBody:x })))
     .then(moldedDocs => {
     return moldedDocs.filter(x => x.status === 'fulfilled').map(x => x.value);
-    })
+    });
 }
 
 const saveSmeltedResult = async (user, documentBody, taskId) => {
   try{
-    let skeletonId = '';
-    const filter = await getFilterById(user, documentBody.filter);
-    let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.words.page_1', {}));
-    if (matchingSkeleton) {
-      matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
-      skeletonId = matchingSkeleton._id;
-      if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
-          documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);
-        } else {
-          documentBody = populateOsmiumFromGgAI(documentBody, filter);
-          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user.id);
-        }
-      } else {
-        documentBody = populateOsmiumFromGgAI(documentBody, filter);
-        const newSkeleton = await createSkeleton(user, documentBody, taskId);
-        skeletonId = newSkeleton._id;
-    }
-    const hasRefField = filter.keys.some((key) => key.type === 'REF');
-    if (hasRefField) {
-      const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF');
-      const client = await getClientById(user, documentBody.client);
-      documentBody.osmium[refFieldIndex].Value = client.reference;
+    let skeletonId = null;
+    let document = documentBody;
+    if (!documentBody.isBankStatement){
+      ({ skeletonId, document } = await populateInvoiceOsmium(user, documentBody, taskId));
     }
     await updateDocument(user, taskId, {
-      osmium: documentBody.osmium,
-      metadata: documentBody.metadata,
-      ggMetadata: documentBody.ggMetadata,
+      osmium: document.osmium,
+      metadata: document.metadata,
+      ggMetadata: document.ggMetadata,
       status: status.SMELTED,
       skeleton: skeletonId,
     });
   } catch(err) {
-    console.log(err)
+    console.log(err);
   }
 }
 
@@ -136,7 +117,7 @@ const trimUnauthorizedDocuments = async (user, files) => {
     if (files.length > creditsRemaining){
       files = files.slice(0,creditsRemaining)
     }
-  return files
+  return files;
 }
 
 module.exports = {
