@@ -4,7 +4,7 @@ const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { aixtract, fetchMetada, populateInvoiceOsmium } = require('../services/smelter.service')
-const { omitBy, get } = require('lodash');
+const { omitBy } = require('lodash');
 const status = require('./../enums/status')
 
 AWS.config.update({ region: 'us-east-1' });
@@ -28,8 +28,11 @@ const startSmelterEngine = async (payload) => {
 const moldOsmiumInDocument = async (payload) => {
   let newDocumentBody = Object.assign({}, payload.documentBody);
   let { awsMetadata, gcpMetadata } = await startSmelterEngine(payload);
-  newDocumentBody.metadata = awsMetadata.status === 'fulfilled' ? awsMetadata.value : {};
+  newDocumentBody.metadata = awsMetadata.status === 'fulfilled' ? awsMetadata.value.words : {};
   newDocumentBody.ggMetadata = gcpMetadata.status === 'fulfilled' ? omitBy(gcpMetadata.value, (v,k) => k[0]=='$') : {};
+  if (newDocumentBody.isBankStatement) {
+    newDocumentBody.bankOsmium = awsMetadata.status === 'fulfilled' ? awsMetadata.value.tables : {};
+  }
   return newDocumentBody;
 }
 
@@ -39,9 +42,7 @@ const bulkSmelt = async(req, res) => {
     res.json({ done: true });
     let createdDocs = await addFilesToQueue(user, body.files);
     for (let i= 0; i< createdDocs.length; i ++) {
-      if (createdDocs[i].isBankStatement){
-        await saveSmeltedResult(user, createdDocs[i], createdDocs[i].id);
-      }
+      await saveSmeltedResult(user, createdDocs[i], createdDocs[i].id);
     }
   } catch (err) {
     console.error(err);
@@ -102,6 +103,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
     }
     await updateDocument(user, taskId, {
       osmium: document.osmium,
+      bankOsmium: document.bankOsmium,
       metadata: document.metadata,
       ggMetadata: document.ggMetadata,
       status: status.SMELTED,

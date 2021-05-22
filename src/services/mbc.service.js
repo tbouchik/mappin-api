@@ -163,7 +163,7 @@ const createSkeleton = async (user, docBody, docId) => {
   let imputations = new Map ();
   imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   const skeletonBody = {
-    ossature: get(docBody, 'metadata.words.page_1', {}),
+    ossature: get(docBody, 'metadata.page_1', {}),
     document: docId,
     imputations,
     clientTemplateMapping,
@@ -184,7 +184,7 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template)
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
   imputations = objectToMap(imputations);
-  const docSkeleton = get(newDocument, 'metadata.words.page_1', {});
+  const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
     let ggKey = ggMappings.get(key.value);

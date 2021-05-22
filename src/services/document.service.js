@@ -48,7 +48,7 @@ const getDocuments = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter', 'skeleton', 'isArchived']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'filter', 'skeleton', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
@@ -118,7 +118,7 @@ const exportBulkCSV = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter', 'isArchived']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'filter', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
     let ObjectId = require('mongoose').Types.ObjectId; 
     filter.client = filter.client? ObjectId(filter.client): null
@@ -179,7 +179,7 @@ const getNextDocuments = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'filter', 'status', 'isArchived']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'filter', 'status', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
@@ -213,7 +213,7 @@ const getDocumentsCount = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter', 'isArchived']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'status', 'filter', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client

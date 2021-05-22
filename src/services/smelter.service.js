@@ -9,6 +9,7 @@ const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('..
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
 const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
+const {  get } = require('lodash');
 const { findTemplateKeyFromTag } = require('./../miner/template');
 const { getS3PdfAlias } = require('../utils/pdf.util');
 const path = require('path');
@@ -142,7 +143,7 @@ const fetchMetada = async (filename, isBankStatement) => {
 const populateInvoiceOsmium = async (user, documentBody, taskId) => {
   let skeletonId = '';
     const filter = await getFilterById(user, documentBody.filter);
-    let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.words.page_1', {}));
+    let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.page_1', {}));
     if (matchingSkeleton) {
       matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
       skeletonId = matchingSkeleton._id;

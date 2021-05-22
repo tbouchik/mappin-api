@@ -80,6 +80,7 @@ const documentSchema = mongoose.Schema(
     metadata: {},
     ggMetadata: {},
     osmium: [],
+    bankOsmium: {},
   },
   {
     versionKey: false,
@@ -114,6 +115,7 @@ documentSchema.methods.transform = function() {
     'updatedAt',
     'alias',
     'osmium',
+    'bankOsmium'
   ]);
 };
 
