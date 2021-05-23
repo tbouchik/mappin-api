@@ -2,12 +2,12 @@ const fuzz = require('fuzzball');
 const moment = require('moment');
 
   /**
-   * populateOsmium_V1 IS DEPRECATED
+   * populateOsmium_V0 IS DEPRECATED
    */
-const populateOsmium_V1 = (document, template) => {
+const populateOsmium_V0 = (document, template) => {
     let newDocument = Object.assign({}, document);
     // Detect boxes that correspond to template keys
-    const metadata = newDocument.metadata.words.page_1;
+    const metadata = newDocument.metadata.page_1;
     const indexesMapper = pullReadableBoxesIndexes(template, metadata)
     // Mapp each "KEY" box with a "VALUE" box
     indexesMapper.map((idxMapper) =>  {
@@ -77,5 +77,5 @@ const pullMirrorBoxText = (metadata, index) => {
 }
 
 module.exports = {
-  populateOsmium_V1
+  populateOsmium_V0
 };

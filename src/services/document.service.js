@@ -82,7 +82,7 @@ const getNextSmeltedDocuments = async (user, query) => {
   let filter = {};
   if (!user.isClient) {
     // requestor is an accountant
-    filter = pick(query, ['client', 'filter', 'status']); // filter by client if specified in query by accountant
+    filter = pick(query, ['client', 'filter', 'status', 'isBankStatement']); // filter by client if specified in query by accountant
     filter.user = user._id; // filter by accountant
   } else {
     // requestor is a client
