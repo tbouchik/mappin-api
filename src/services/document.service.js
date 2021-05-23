@@ -4,9 +4,8 @@ const AppError = require('../utils/AppError');
 const { Document } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const { getFilterById, getDefaultFilterId } = require('./filter.service');
-const { updateSkeletonFromDocUpdate } = require('./mbc.service');
 const { getClientByEmail } = require('./client.service');
-const status = require('./../enums/status')
+const status = require('./../enums/status');
 
 const createDocument = async (user, documentBody) => {
   if (!user.isClient) {
@@ -267,13 +266,6 @@ const updateDocument = async (user, documentId, updateBody) => {
     } catch(error){
       console.log(error)
     }
-    // try {
-    //   updateBody.skeleton = document.skeleton.toString();
-    //   updateBody.filter = updateBody.filter !== undefined ? updateBody.filter: document.filter._id.toString();
-    //   updateSkeletonFromDocUpdate(user, updateBody, mbc);
-    // } catch (error) {
-    //   console.log(error);
-    // }
     return document;
   }
 };
