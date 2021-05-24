@@ -23,7 +23,7 @@ const exportBulkCSV = catchAsync(async (req, res) => {
 });
 
 const getDocumentsCount = catchAsync(async (req, res) => {
-  console.log('count' , req.query)
+  console.log('count' , req.query);
   const documentsCount = await documentService.getDocumentsCount(req.user, req.query);
   res.send(documentsCount);
 });
@@ -39,13 +39,13 @@ const deleteManyDocuments = catchAsync(async (req, res) => {
 });
 
 const getNextSmeltedDocumentIds = catchAsync(async (req, res) => {
-  console.log('Next Smelted ids' , req.query)
+  console.log('Next Smelted ids' , req.query);
   const smeltedIds = await documentService.getNextSmeltedDocuments(req.user, req.query);
   res.send(smeltedIds);
 });
 
 const getNextDocumentIds = catchAsync(async (req, res) => {
-  console.log('Next doc ids' , req.query)
+  console.log('Next doc ids' , req.query);
   const nextIds = await documentService.getNextDocuments(req.user, req.query);
   res.send(nextIds);
 });
@@ -64,19 +64,21 @@ const getDocument = catchAsync(async (req, res) => {
 const updateDocument = catchAsync(async (req, res) => {
   const mbc = req.body.mbc || null;
   let document = await documentService.updateDocument(req.user, req.params.documentId, req.body);
-  let template = await getFilterById(req.user, document.filter, true);
-  const skeleton = await updateSkeletonFromDocUpdate (req.user, document, template, mbc);
-  let collateralQuery = {status: status.SMELTED, skeleton: skeleton._id }
-  let collateralDocs = await documentService.getDocuments(req.user, collateralQuery);
-  let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(x.transform(), skeleton, template));
-  collateralDocs.forEach((document, idx) => {
-    Object.assign(document, updatedCollateralDocs[idx]);
-    try{
-      document.save();
-    } catch(error) {
-      console.log(error);
-    }
-  })
+  if (!document.isBankStatement) {
+    let template = await getFilterById(req.user, document.filter, true);
+    const skeleton = await updateSkeletonFromDocUpdate (req.user, document, template, mbc);
+    let collateralQuery = {status: status.SMELTED, skeleton: skeleton._id };
+    let collateralDocs = await documentService.getDocuments(req.user, collateralQuery);
+    let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(x.transform(), skeleton, template));
+    collateralDocs.forEach((document, idx) => {
+      Object.assign(document, updatedCollateralDocs[idx]);
+      try{
+        document.save();
+      } catch(error) {
+        console.log(error);
+      }
+    })
+  }
   res.send(document.transform());
 });
 
