@@ -64,21 +64,19 @@ const getDocument = catchAsync(async (req, res) => {
 const updateDocument = catchAsync(async (req, res) => {
   const mbc = req.body.mbc || null;
   let document = await documentService.updateDocument(req.user, req.params.documentId, req.body);
-  if (!document.isBankStatement) {
-    let template = await getFilterById(req.user, document.filter, true);
-    const skeleton = await updateSkeletonFromDocUpdate (req.user, document, template, mbc);
-    let collateralQuery = {status: status.SMELTED, skeleton: skeleton._id };
-    let collateralDocs = await documentService.getDocuments(req.user, collateralQuery);
-    let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(x.transform(), skeleton, template));
-    collateralDocs.forEach((document, idx) => {
-      Object.assign(document, updatedCollateralDocs[idx]);
-      try{
-        document.save();
-      } catch(error) {
-        console.log(error);
-      }
-    })
-  }
+  let template = await getFilterById(req.user, document.filter, true);
+  const skeleton = await updateSkeletonFromDocUpdate (req.user, document, template, mbc);
+  let collateralQuery = {status: status.SMELTED, skeleton: skeleton._id };
+  let collateralDocs = await documentService.getDocuments(req.user, collateralQuery);
+  let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(x.transform(), skeleton, template));
+  collateralDocs.forEach((document, idx) => {
+    Object.assign(document, updatedCollateralDocs[idx]);
+    try{
+      document.save();
+    } catch(error) {
+      console.log(error);
+    }
+  })
   res.send(document.transform());
 });
 

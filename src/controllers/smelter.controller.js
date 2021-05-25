@@ -98,9 +98,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
   try{
     let skeletonId = null;
     let document = documentBody;
-    if (!documentBody.isBankStatement){
-      ({ skeletonId, document } = await populateInvoiceOsmium(user, documentBody, taskId));
-    }
+    ({ skeletonId, document } = await populateInvoiceOsmium(user, documentBody, taskId));
     await updateDocument(user, taskId, {
       osmium: document.osmium,
       bankOsmium: document.bankOsmium,

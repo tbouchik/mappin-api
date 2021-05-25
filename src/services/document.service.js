@@ -20,21 +20,8 @@ const createDocument = async (user, documentBody) => {
     documentBody.client = user._id;
     documentBody.user = client.user;
   }
-  if (!documentBody.isBankStatement) {
-    // Assign smart filter if no filter is specified
-    const smartFilterId = await getDefaultFilterId(user);
-    if (!documentBody.filter || documentBody.filter === smartFilterId) { // TODO remove deprecated logic
-    let smartFilter = await getFilterById(user, smartFilterId);
-    if (smartFilter) {
-      smartFilter = smartFilter[0];
-      documentBody.filter = smartFilter._id;
-      documentBody.osmium = shapeOsmiumForSmartFilter(smartFilter);
-    }
-    } else {
-      // Shape Osmium according to filter
-      documentBody.osmium = await shapeOsmiumFromFilterId(user, documentBody.filter);
-    }
-  }
+  // Shape Osmium according to filter
+  documentBody.osmium = await shapeOsmiumFromFilterId(user, documentBody.filter);
   // Populate uploader
   documentBody.uploadedBy = user._id;
   const document = await Document.create(documentBody);
