@@ -22,6 +22,12 @@ const exportBulkCSV = catchAsync(async (req, res) => {
   res.send(aggregate);
 });
 
+const exportStatementsBulkCSV = catchAsync(async (req, res) => {
+  const {aggregate, ids} = await documentService.exportBankStatementsBulkCSV(req.user, req.query);
+  documentService.archive(ids);
+  res.send(aggregate);
+});
+
 const getDocumentsCount = catchAsync(async (req, res) => {
   console.log('count' , req.query);
   const documentsCount = await documentService.getDocumentsCount(req.user, req.query);
@@ -96,6 +102,7 @@ module.exports = {
   getNextSmeltedDocumentIds,
   getNextDocumentIds,
   exportBulkCSV,
+  exportStatementsBulkCSV,
   updateManyDocuments,
   deleteManyDocuments,
 };

@@ -13,6 +13,10 @@ const skeletonSchema = mongoose.Schema(
       ref: 'Document',
       required: true,
     },
+    isBankSkeleton: {
+      type: Boolean,
+      required:true,
+    },
     ggMappings: {},
     clientTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
     bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>

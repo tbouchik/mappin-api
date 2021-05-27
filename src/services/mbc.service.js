@@ -165,6 +165,7 @@ const createSkeleton = async (user, docBody, docId) => {
   const skeletonBody = {
     ossature: get(docBody, 'metadata.page_1', {}),
     document: docId,
+    isBankSkeleton: docBody.isBankStatement,
     imputations,
     clientTemplateMapping,
     ggMappings,

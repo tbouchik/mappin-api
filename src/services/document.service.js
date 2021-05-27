@@ -130,7 +130,7 @@ const exportBulkCSV = async (user, query) => {
     let docs = await getDocuments(user, filter)
     docIds = docIds.concat(docs.map(x => x._id));
     let template = docs[0].filter;
-    let nonImputableOsmiumKeysIndices = template.keys.map((x,i) => {if (x.isImputable === true)return i})
+    let nonImputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable !== true)return i})
                                           .filter(x => x !== undefined)
     let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i})
                                           .filter(x => x !== undefined)
@@ -143,9 +143,9 @@ const exportBulkCSV = async (user, query) => {
       let documentSerialization = []
       let nonImputableEntrySegment = nonImputableOsmiumKeysIndices.map(nonImputableIdx => doc.osmium[nonImputableIdx].Value)
       imputableOsmiumKeysIndices.forEach((imputableOsmiumKey) => {
-        let imputableEntrySegment = [doc.osmium[imputableOsmiumKey].Imputation,
-                                  doc.osmium[imputableOsmiumKey].Libelle,
-                                  doc.osmium[imputableOsmiumKey].Value];
+        let imputableEntrySegment = [ doc.osmium[imputableOsmiumKey].Imputation,
+                                      doc.osmium[imputableOsmiumKey].Libelle,
+                                      doc.osmium[imputableOsmiumKey].Value];
         let entrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
         documentSerialization.push(entrySegment)
       })
@@ -155,6 +155,65 @@ const exportBulkCSV = async (user, query) => {
   }));
   return {aggregate:result, ids:docIds}
 };
+
+const exportBankStatementsBulkCSV = async (user, query) => {
+  // FILTER
+  let filter = {};
+  if (!user.isClient) {
+    // requestor is an accountant
+    filter = pick(query, ['client', 'status', 'isBankStatement']); // filter by client if specified in query by accountant
+    filter.user = user._id; // filter by accountant
+    let ObjectId = require('mongoose').Types.ObjectId; 
+    filter.client = filter.client? ObjectId(filter.client): null
+  } else {
+    // requestor is a client
+    filter.client = user._id; // clients should only view their own files
+  }
+  if (query.name) {
+    filter.name = { $regex: `(?i)${query.name}` } 
+  }
+  let docIds = []
+  let docs = await getDocuments(user, filter);
+  docIds = docIds.concat(docs.map(x => x._id));
+  let fixedKeys = ['Date Opération', 'Désignation', 'Compte', 'Débit', 'Crédit']; // TODO change logic once real requirements come in
+  let csvData = [];
+  let names = {}
+  docs.forEach((document) =>  {
+    let currentName = getTitleForBankStatementDocument(document);
+    if (names.hasOwnProperty(currentName)){
+      names[currentName] += 1
+      let currentNameCount = names[currentName]
+      currentName = currentName.concat('_').concat(currentNameCount)
+    } else {
+      names[currentName] = 0
+    }
+    let currentDocument = {
+      header: fixedKeys,
+      title: currentName
+    };
+    let docContent = [];
+    Object.keys(document.bankOsmium).forEach((docPage) => {
+      const pageStatements = document.bankOsmium[docPage];
+      pageStatements.forEach((statement) => {
+        let entrySegment = [statement.Date, statement.Designation, statement.Compte, statement.Debit, statement.Credit];
+        docContent.push(entrySegment);
+      })
+    })
+    currentDocument.content = docContent;
+    csvData.push(currentDocument);
+  })
+  return {aggregate:csvData, ids:docIds};
+};
+
+const getTitleForBankStatementDocument = (document) => {
+  const bankNameObj = document.osmium.find((x) => x.Role === 'BANK_NAME');
+  const bankName = bankNameObj ? '_'.concat(bankNameObj.Value) : undefined;
+  const dateFromObj = document.osmium.find((x) => x.Role === 'DATE_FROM');
+  const dateFrom = dateFromObj ? '_'.concat(dateFromObj.Value).replace(/\//g, '_') : undefined;
+  const clientName = document.client.name.replace(/\s/g, '_').toUpperCase();
+  return clientName
+  // .concat(bankName || '').concat(dateFrom || '');
+}
 
 const archive = async (docIds) => {
   await Document.updateMany({'_id': { $in: docIds }}, {isArchived: true, status: status.ARCHIVED})
@@ -296,19 +355,11 @@ const shapeOsmiumFromFilterId = async (user, filterId) => {
   const filterArr = await getFilterById(user, filterId);
   // Shape Osmium according to filter
   osmium = filterArr.keys.map(filterKey => {
-    return { Key: filterKey.value, Value: null, Imputation: filterKey.isImputable ? '' : null };
+    return { Key: filterKey.value, Value: null, Imputation: filterKey.isImputable ? '' : null, Role: filterKey.role || null };
   });
   return osmium;
 };
 
-const shapeOsmiumForSmartFilter = smartFilter => {
-  let osmium = [];
-  // Shape Osmium according to filter
-  osmium = smartFilter.keys.map(filterKey => {
-    return { Key: filterKey.value, Value: null };
-  });
-  return osmium;
-};
 
 module.exports = {
   createDocument,
@@ -321,6 +372,7 @@ module.exports = {
   getDocumentsCount,
   getNextSmeltedDocuments,
   getNextDocuments,
+  exportBankStatementsBulkCSV,
   exportBulkCSV,
   archive,
 };

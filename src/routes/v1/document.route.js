@@ -11,6 +11,10 @@ const router = express.Router();
     .get(auth('manageDocuments'), validate(documentValidation.exportBulkCSV), documentController.exportBulkCSV);
 
   router
+    .route('/statementsdownload/')
+    .get(auth('manageDocuments'), validate(documentValidation.exportBulkCSV), documentController.exportStatementsBulkCSV);
+
+  router
     .route('/updateMany/')
     .put(auth('manageDocuments'), validate(documentValidation.updateManyDocuments), documentController.updateManyDocuments);
 
