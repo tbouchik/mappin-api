@@ -206,9 +206,9 @@ const exportBankStatementsBulkCSV = async (user, query) => {
 };
 
 const getTitleForBankStatementDocument = (document) => {
-  const bankNameObj = document.osmium.find((x) => x.Role === 'BANK_NAME');
+  const bankNameObj = document.osmium.find((x) => x.Role[x.Role.length -1] === 'BANK_NAME');
   const bankName = bankNameObj ? '_'.concat(bankNameObj.Value) : undefined;
-  const dateFromObj = document.osmium.find((x) => x.Role === 'DATE_FROM');
+  const dateFromObj = document.osmium.find((x) => x.Role[x.Role.length -1] === 'DATE_FROM');
   const dateFrom = dateFromObj ? '_'.concat(dateFromObj.Value).replace(/\//g, '_') : undefined;
   const clientName = document.client.name.replace(/\s/g, '_').toUpperCase();
   return clientName
