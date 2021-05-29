@@ -77,6 +77,34 @@ const documentSchema = mongoose.Schema(
       type: String,
       default: '',
     },
+    totalHt: {
+      type: Number,
+      default: '',
+    },
+    totalTtc: {
+      type: Number,
+      default: '',
+    },
+    vat: {
+      type: String,
+      default: '',
+    },
+    vendor: {
+      type: String,
+      default: '',
+    },
+    dateBeg: {
+      type: String,
+      default: '',
+    },
+    dateEnd: {
+      type: String,
+      default: '',
+    },
+    bankEntity: {
+      type: String,
+      default: '',
+    },
     metadata: {},
     ggMetadata: {},
     osmium: [],
@@ -115,7 +143,14 @@ documentSchema.methods.transform = function() {
     'updatedAt',
     'alias',
     'osmium',
-    'bankOsmium'
+    'bankOsmium',
+    'totalHt',
+    'totalTtc',
+    'vendor',
+    'vat',
+    'dateBeg',
+    'dateEnd',
+    'bankEntity',
   ]);
 };
 

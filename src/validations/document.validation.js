@@ -23,6 +23,13 @@ const createDocument = {
     filter: Joi.array(),
     ggMetadata: Joi.object(),
     isArchived: Joi.boolean(),
+    totalHt:Joi.number(),
+    totalTtc:Joi.number(),
+    vat:Joi.string(),
+    vendor:Joi.string(),
+    dateBeg:Joi.string(),
+    dateEnd:Joi.string(),
+    bankEntity:Joi.string(),
   }),
 };
 
@@ -40,6 +47,13 @@ const getDocuments = {
     status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     filter: Joi.string().custom(objectId),
     isArchived: Joi.boolean(),
+    totalHt:Joi.number(),
+    totalTtc:Joi.number(),
+    vat:Joi.string(),
+    vendor:Joi.string(),
+    dateBeg:Joi.string(),
+    dateEnd:Joi.string(),
+    bankEntity:Joi.string(),
   }),
 };
 
@@ -57,6 +71,13 @@ const exportBulkCSV = {
     status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     filter: Joi.string().custom(objectId),
     isArchived: Joi.boolean(),
+    totalHt:Joi.number(),
+    totalTtc:Joi.number(),
+    vat:Joi.string(),
+    vendor:Joi.string(),
+    dateBeg:Joi.string(),
+    dateEnd:Joi.string(),
+    bankEntity:Joi.string(),
   }),
 };
 
@@ -77,6 +98,13 @@ const getNextSmeltedDocumentIds = {
     status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     filter: Joi.string().custom(objectId),
     isArchived: Joi.boolean(),
+    totalHt:Joi.number(),
+    totalTtc:Joi.number(),
+    vat:Joi.string(),
+    vendor:Joi.string(),
+    dateBeg:Joi.string(),
+    dateEnd:Joi.string(),
+    bankEntity:Joi.string(),
   }),
 };
 
@@ -97,18 +125,13 @@ const getNextDocumentIds = {
     status: Joi.string().valid(status.PENDING, status.SMELTED, status.VALIDATED, status.ERROR, status.ARCHIVED),
     filter: Joi.string().custom(objectId),
     isArchived: Joi.boolean(),
-  }),
-};
-
-const getDocumentsByClient = {
-  query: Joi.object().keys({
-    userId: Joi.string().custom(objectId),
-    client: Joi.string().custom(objectId),
-    sortBy: Joi.string(),
-    limit: Joi.number().integer(),
-    isBankStatement: Joi.boolean(),
-    page: Joi.number().integer(),
-    isArchived: Joi.boolean(),
+    totalHt:Joi.number(),
+    totalTtc:Joi.number(),
+    vat:Joi.string(),
+    vendor:Joi.string(),
+    dateBeg:Joi.string(),
+    dateEnd:Joi.string(),
+    bankEntity:Joi.string(),
   }),
 };
 
@@ -143,6 +166,13 @@ const updateDocument = {
       filter: Joi.string().custom(objectId),
       ggMetadata: Joi.object(),
       isArchived: Joi.boolean(),
+      totalHt:Joi.number(),
+      totalTtc:Joi.number(),
+      vat:Joi.string(),
+      vendor:Joi.string(),
+      dateBeg:Joi.string(),
+      dateEnd:Joi.string(),
+      bankEntity:Joi.string(),
     })
     .min(1),
 };
@@ -168,7 +198,6 @@ module.exports = {
   getDocument,
   updateDocument,
   deleteDocument,
-  getDocumentsByClient,
   getNextSmeltedDocumentIds,
   getNextDocumentIds,
   exportBulkCSV,
