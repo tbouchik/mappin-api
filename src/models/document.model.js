@@ -94,12 +94,10 @@ const documentSchema = mongoose.Schema(
       default: '',
     },
     dateBeg: {
-      type: String,
-      default: '',
+      type: Date,
     },
     dateEnd: {
-      type: String,
-      default: '',
+      type: Date,
     },
     bankEntity: {
       type: String,
