@@ -148,7 +148,7 @@ const populateInvoiceOsmium = async (user, documentBody, taskId) => {
       matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
       skeletonId = matchingSkeleton._id;
       if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
-          documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter);
+          documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter, null);
         } else {
           documentBody = populateOsmiumFromGgAI(documentBody, filter);
           documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user.id);

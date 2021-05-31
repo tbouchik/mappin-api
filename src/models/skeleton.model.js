@@ -17,6 +17,14 @@ const skeletonSchema = mongoose.Schema(
       type: Boolean,
       required:true,
     },
+    bankEntity: {
+      type: String,
+      required: false,
+    },
+    vendor: {
+      type: String,
+      required: false,
+    },
     ggMappings: {},
     clientTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
     bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>

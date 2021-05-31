@@ -6,7 +6,6 @@ const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons');
 const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag } = require('../utils/tinder');
-const { findTemplateKeyFromTag } = require('./../miner/template');
 const { isEmpty, get } = require('lodash');
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
@@ -175,7 +174,7 @@ const createSkeleton = async (user, docBody, docId) => {
   return skeleton;
 };
 
-const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template) => {
+const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template, roles) => {
   let skeletonRef = prepareSkeletonMappingsForApi(skeletonReference)
   let newDocument = Object.assign({}, documentBody);
   const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
@@ -188,6 +187,9 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template)
   const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
+    if (roles && !isEmpty(roles)) {
+      newDocument = setRolesInDocument(newDocument, roles)
+    }
     let ggKey = ggMappings.get(key.value);
     if (imputations.get(key.value)!== undefined && imputations.get(key.value)!== null) {
       newDocument.osmium[i].Imputation = imputations.get(key.value)
@@ -247,8 +249,9 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
   return newDocument;
 }
 
-updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
+updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, updatedRoles) => {
   const skeleton = await getSkeletonById(updateBody.skeleton);
+  Object.assign(skeleton, updatedRoles);
   const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
   if (mbc && !isEmpty(mbc)){
     if (skeleton._id.equals(updateBody.skeleton)){
@@ -260,12 +263,11 @@ updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
        let ggMatchedResult = findGgMappingKeyFromMBC(template.keys, updateBody.ggMetadata, mbc);
        newGgMappings = Object.assign(newGgMappings, ggMatchedResult);
        skeleton.ggMappings.set(clientTempKey, mapToObject(newGgMappings));
-       let result = await updateSkeleton(skeleton._id, skeleton);
-       return result;
+       let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
+       return updatedSkeleton;
       }
     }
   } else if(updateBody.imput && updateBody.osmium !== undefined){
-    const skeleton = await getSkeletonById(updateBody.skeleton);
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
         let newImputationMappings = skeleton.imputations.get(clientTempKey);
@@ -276,14 +278,33 @@ updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc) => {
           newImputationMappings[template.keys[idx].value] = updateBody.osmium[idx].Imputation;
         })
         skeleton.imputations.set(clientTempKey, mapToObject(newImputationMappings));
-        let result = await updateSkeleton(skeleton._id, skeleton);
-        return result;
+        let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
+        return updatedSkeleton;
       }
     }
   } else {
     return skeleton;
   }
 };
+
+const setRolesInDocument = (documentBody, roles) => {
+  if(roles && Object.keys(roles)[0] === 'vendor') {
+    let newDocument = Object.assign({}, documentBody);
+    newDocument.vendor = roles.vendor
+    newDocument.osmium.forEach((x) => {
+      if (x.Imputation !== null) {
+        x.Libelle = roles.vendor
+      }
+    })
+    return newDocument
+  } else if (roles && Object.keys(roles)[0] === 'bankEntity') {
+    let newDocument = Object.assign({}, documentBody);
+    newDocument.bankEntity = roles.bankEntity
+    return newDocument
+  }
+  return documentBody
+}
+
 
 module.exports = {
   createSkeleton,

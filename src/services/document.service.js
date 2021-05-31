@@ -304,7 +304,6 @@ const updateDocument = async (user, documentId, updateBody) => {
     if (updateBody.validated && updateBody.validated == status.VALIDATED) {
       updateBody.validatedBy = user._id;
     }
-    let mbc = updateBody.mbc;
     updateBody = omit(updateBody, ['mbc']);
     Object.assign(document, updateBody);
     try{
