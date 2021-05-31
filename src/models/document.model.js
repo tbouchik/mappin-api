@@ -85,6 +85,9 @@ const documentSchema = mongoose.Schema(
       type: Number,
       default: '',
     },
+    invoiceDate: {
+      type: Date,
+    },
     vat: {
       type: String,
       default: '',
@@ -143,6 +146,7 @@ documentSchema.methods.transform = function() {
     'osmium',
     'bankOsmium',
     'totalHt',
+    'invoiceDate',
     'totalTtc',
     'vendor',
     'vat',

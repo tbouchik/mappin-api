@@ -29,6 +29,7 @@ const createDocument = {
     vendor:Joi.string(),
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
+    invoiceDate: Joi.date(),
     bankEntity:Joi.string(),
   }),
 };
@@ -53,6 +54,7 @@ const getDocuments = {
     vendor:Joi.string(),
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
+    invoiceDate: Joi.date(),
     bankEntity:Joi.string(),
   }),
 };
@@ -77,6 +79,7 @@ const exportBulkCSV = {
     vendor:Joi.string(),
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
+    invoiceDate: Joi.date(),
     bankEntity:Joi.string(),
   }),
 };
@@ -104,6 +107,7 @@ const getNextSmeltedDocumentIds = {
     vendor:Joi.string(),
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
+    invoiceDate: Joi.date(),
     bankEntity:Joi.string(),
   }),
 };
@@ -131,6 +135,7 @@ const getNextDocumentIds = {
     vendor:Joi.string(),
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
+    invoiceDate: Joi.date(),
     bankEntity:Joi.string(),
   }),
 };
@@ -172,6 +177,7 @@ const updateDocument = {
       vendor:Joi.string(),
       dateBeg:Joi.date(),
       dateEnd:Joi.date(),
+      invoiceDate: Joi.date(),
       bankEntity:Joi.string(),
     })
     .min(1),
