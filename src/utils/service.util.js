@@ -1,4 +1,5 @@
 const moment = require('moment');
+const { pick } = require('lodash');
 
 const getQueryOptions = query => {
   const page = query.page * 1 || 1;
@@ -13,6 +14,20 @@ const getQueryOptions = query => {
 
   return { limit, skip, sort };
 };
+
+const getOptions = query => {
+  let page = query.page || 0;
+  let limit = query.limit || 300;
+  let skip = page * limit;
+  let sort = page.sort || { createdAt: -1 };
+  const options = {
+    limit,
+    skip,
+    sort,
+  };
+  return options
+};
+
 
 const mergeClientTemplateIds = (client, template) => {
   let clientId = client._id ? client._id.toString() :client;
@@ -75,4 +90,5 @@ module.exports = {
   objectToMap,
   mapToObject,
   formatValue,
+  getOptions,
 };

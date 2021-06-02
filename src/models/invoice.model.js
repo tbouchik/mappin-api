@@ -2,31 +2,31 @@ const mongoose = require('mongoose');
 const { pick } = require('lodash');
 const status = require('./../enums/status');
 const mimeType = require('./../enums/mimeType');
-const extraction = require('./../enums/extraction')
 
-const documentSchema = mongoose.Schema(
+const invoiceSchema = mongoose.Schema(
   {
+    user: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref:'User',
+        required: true,
+    },
+    client: {
+        type: mongoose.SchemaTypes.ObjectId,
+        ref: 'Client',
+        required: true,
+    },
     link: {
       type: String,
       required: true,
     },
-    user: {
-      type: mongoose.SchemaTypes.ObjectId,
-      ref: 'User',
-      required: true,
-    },
-    client: {
-      type: mongoose.SchemaTypes.ObjectId,
-      ref: 'Client',
-      required: true,
+    isBankStatement: {
+      type: Boolean,
+      default: false,
     },
     filter: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Filter',
-      required: [
-        function() { return this.isBankStatement === false; },
-        'filter (or template) is required if document is not a bank statement'
-      ],
+      required: true
     },
     skeleton: {
       type: mongoose.SchemaTypes.ObjectId,
@@ -37,10 +37,6 @@ const documentSchema = mongoose.Schema(
       type: Boolean,
       default:false,
     },
-    isBankStatement: {
-      type: Boolean,
-      required: true,
-    },
     mimeType: {
       type: String,
       enum: [mimeType.PNG, mimeType.JPG, mimeType.PDF],
@@ -49,15 +45,6 @@ const documentSchema = mongoose.Schema(
     alias: {
       type: String,
       required: true,
-    },
-    businessPurpose: {
-      type: String,
-      default: 'Invoice',
-    },
-    extractionType: {
-      type: String,
-      enum: [extraction.FORMS, extraction.TABLES, extraction.TEXT],
-      default: extraction.TEXT,
     },
     status: {
       type: String,
@@ -68,15 +55,6 @@ const documentSchema = mongoose.Schema(
       type: String,
       index: true,
     },
-    uploadedBy: {
-      type: String,
-      required: true,
-      default: '',
-    },
-    validatedBy: {
-      type: String,
-      default: '',
-    },
     totalHt: {
       type: Number,
       default: '',
@@ -85,7 +63,7 @@ const documentSchema = mongoose.Schema(
       type: Number,
       default: '',
     },
-    invoiceDate: {
+    date: {
       type: Date,
     },
     vat: {
@@ -96,20 +74,15 @@ const documentSchema = mongoose.Schema(
       type: String,
       default: '',
     },
-    dateBeg: {
-      type: Date,
+    reference: {
+        type: String,
+        default: '',
     },
-    dateEnd: {
-      type: Date,
-    },
-    bankEntity: {
-      type: String,
-      default: '',
+    orderNumber: {
+        type: Number,
     },
     metadata: {},
     ggMetadata: {},
-    osmium: [],
-    bankOsmium: {},
   },
   {
     versionKey: false,
@@ -120,42 +93,34 @@ const documentSchema = mongoose.Schema(
   }
 );
 const index = { name: 'text'};
-documentSchema.index(index);
-documentSchema.methods.transform = function() {
-  const document = this;
-  return pick(document.toJSON(), [
+invoiceSchema.index(index);
+invoiceSchema.methods.transform = function() {
+  const invoice = this;
+  return pick(invoice.toJSON(), [
     'id',
     'name',
     'user',
+    'client',
     'metadata',
     'ggMetadata',
-    'uploadedBy',
-    'validatedBy',
-    'client',
     'isArchived',
-    'isBankStatement',
     'filter',
     'skeleton',
     'mimeType',
-    'businessPurpose',
-    'extractionType',
+    'isBankStatement',
     'status',
     'createdAt',
     'updatedAt',
     'alias',
-    'osmium',
-    'bankOsmium',
     'totalHt',
     'invoiceDate',
     'totalTtc',
     'vendor',
+    'date',
     'vat',
-    'dateBeg',
-    'dateEnd',
-    'bankEntity',
   ]);
 };
 
-const Document = mongoose.model('Document', documentSchema);
+const Invoice = mongoose.model('Invoice', invoiceSchema);
 
-module.exports = Document;
+module.exports = Invoice;

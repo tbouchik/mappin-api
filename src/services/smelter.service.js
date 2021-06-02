@@ -6,7 +6,7 @@ const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
 const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
-const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior } = require('../services/mbc.service');
+const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior, populateInvoiceDataFromExactPrior } = require('../services/mbc.service');
 const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
 const {  get } = require('lodash');
@@ -120,6 +120,20 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
   return newDocument
 }
 
+const populateInvoiceDataFromGgAI = (documentBody, template) => {
+  let newDocument = Object.assign({}, documentBody);
+  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF').map(x => [x.value].concat(x.tags)).flat();
+  const ggMetadataKeys = Object.keys(newDocument.ggMetadata);
+  const treshold = 39;
+  const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
+  for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
+    let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag)
+    templateIndex = template.keys.findIndex(x => x.value === templateKey);
+    newDocument[templateKey]= templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type) :  newDocument.ggMetadata[ggKey].Text;
+  }
+  return newDocument
+}
+
 const fetchMetada = async (filename, isBankStatement) => {
   let lambda = new AWS.Lambda();
   let payload = {
@@ -167,10 +181,33 @@ const populateInvoiceOsmium = async (user, documentBody, taskId) => {
   return {skeletonId, document: documentBody };
 }
 
+const populateInvoiceData = async (user, documentBody, taskId) => {
+  /**
+   * TEMPORARY FUNCTION USED FOR BEARINGPOINT POC
+   */
+  let skeletonId = '';
+    const filter = await getFilterById(user, documentBody.filter);
+    let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.page_1', {}));
+    if (matchingSkeleton) {
+      matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
+      skeletonId = matchingSkeleton._id;
+      if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
+          documentBody = populateInvoiceDataFromExactPrior(documentBody, matchingSkeleton, filter);
+        }
+    } else {
+        documentBody = populateInvoiceDataFromGgAI(documentBody, filter);
+        const newSkeleton = await createSkeleton(user, documentBody, taskId);
+        skeletonId = newSkeleton._id;
+    }
+  return {skeletonId, document: documentBody };
+}
+
 
 module.exports = {
     aixtract,
     fetchMetada,
     populateOsmiumFromGgAI,
     populateInvoiceOsmium,
+    populateInvoiceData,
+    populateInvoiceDataFromGgAI,
   };
