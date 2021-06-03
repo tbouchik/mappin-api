@@ -7,18 +7,18 @@ const status = require('./../enums/status');
 
 const createInvoice = catchAsync(async (req, res) => {
   const invoice = await invoiceService.createInvoice(req.user, req.body);
-  res.status(httpStatus.CREATED).send(invoice.transform());
+  res.status(httpStatus.CREATED).send(invoice.externalTransform());
 });
 
 const getInvoices = catchAsync(async (req, res) => {
   const invoices = await invoiceService.getInvoices(req.user, req.query);
-  const response = invoices.map(invoice => invoice.transform());
+  const response = invoices.map(invoice => invoice.externalTransform());
   res.send(response);
 });
 
 const getInvoice = catchAsync(async (req, res) => {
   const invoice = await invoiceService.getInvoiceById(req.user, req.params.invoiceId);
-  res.send(invoice.transform());
+  res.send(invoice.externalTransform());
 });
 
 const updateInvoice = catchAsync(async (req, res) => {
@@ -37,7 +37,7 @@ const updateInvoice = catchAsync(async (req, res) => {
       console.log(error);
     }
   })
-  res.send(invoice.transform());
+  res.send(invoice.externalTransform());
 });
 
 const deleteInvoice = catchAsync(async (req, res) => {

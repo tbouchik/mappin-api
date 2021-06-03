@@ -121,6 +121,26 @@ invoiceSchema.methods.transform = function() {
   ]);
 };
 
+invoiceSchema.methods.externalTransform = function() {
+  const invoice = this;
+  return pick(invoice.toJSON(), [
+    'id',
+    'name',
+    'user',
+    'mimeType',
+    'status',
+    'createdAt',
+    'updatedAt',
+    'alias',
+    'totalHt',
+    'invoiceDate',
+    'totalTtc',
+    'vendor',
+    'date',
+    'vat',
+  ]);
+};
+
 const Invoice = mongoose.model('Invoice', invoiceSchema);
 
 module.exports = Invoice;
