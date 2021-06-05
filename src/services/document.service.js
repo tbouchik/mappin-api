@@ -45,7 +45,7 @@ const getQueryFilter = (query) => {
   if (query.dates) {
     filter.dates = { $gte :  query.dates[0], $lte : query.dates[1]}
   }
-  return pickBy(filter, (v,_) => { return !!v })
+  return pickBy(filter, (v,_) => { return typeof v === 'number' || typeof v === 'boolean' || !!v })
 };
 
 const createDocument = async (user, documentBody) => {
