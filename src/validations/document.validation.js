@@ -30,6 +30,7 @@ const createDocument = {
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
     invoiceDate: Joi.date(),
+    dates:Joi.array(),
     bankEntity:Joi.string(),
   }),
 };
@@ -54,8 +55,12 @@ const getDocuments = {
     vendor:Joi.string(),
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
+    dates:Joi.array(),
     invoiceDate: Joi.date(),
     bankEntity:Joi.string(),
+    totalHtOperator:Joi.string(),
+    totalTtcOperator:Joi.string(),
+    contains:Joi.string(),
   }),
 };
 
@@ -80,7 +85,11 @@ const exportBulkCSV = {
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
     invoiceDate: Joi.date(),
+    dates:Joi.array(),
     bankEntity:Joi.string(),
+    totalHtOperator:Joi.string(),
+    totalTtcOperator:Joi.string(),
+    contains:Joi.string(),
   }),
 };
 
@@ -108,7 +117,11 @@ const getNextSmeltedDocumentIds = {
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
     invoiceDate: Joi.date(),
+    dates:Joi.array(),
     bankEntity:Joi.string(),
+    totalHtOperator:Joi.string(),
+    totalTtcOperator:Joi.string(),
+    contains:Joi.string(),
   }),
 };
 
@@ -136,7 +149,11 @@ const getNextDocumentIds = {
     dateBeg:Joi.date(),
     dateEnd:Joi.date(),
     invoiceDate: Joi.date(),
+    dates:Joi.array(),
     bankEntity:Joi.string(),
+    totalHtOperator:Joi.string(),
+    totalTtcOperator:Joi.string(),
+    contains:Joi.string(),
   }),
 };
 
@@ -178,6 +195,7 @@ const updateDocument = {
       dateBeg:Joi.date(),
       dateEnd:Joi.date(),
       invoiceDate: Joi.date(),
+      dates:Joi.array(),
       bankEntity:Joi.string(),
     })
     .min(1),

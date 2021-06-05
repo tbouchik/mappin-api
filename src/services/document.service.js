@@ -1,11 +1,52 @@
 const httpStatus = require('http-status');
-const { pick, omit } = require('lodash');
+const { pick, omit, pickBy } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Document } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
-const { getFilterById, getDefaultFilterId } = require('./filter.service');
+const { getFilterById } = require('./filter.service');
 const { getClientByEmail } = require('./client.service');
 const status = require('./../enums/status');
+
+const applyOrderRelationshipOnFilter = (query, field, orderOperator) => {
+  result = null;
+  switch (query[orderOperator]) {
+    case 'gt':
+      result = { $gte: query[field]}          
+      break;
+    case 'lt':
+      result = { $lte: query[field]} 
+      break;
+    default:
+      result = { $eq: query[field]} 
+      break;
+  }
+  return result
+}
+
+const getQueryFilter = (query) => {
+  let ObjectId = require('mongoose').Types.ObjectId; 
+  let filter = pick(query, ['client', 'status', 'filter', 'skeleton', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
+  filter.client = filter.client? ObjectId(filter.client): null
+  if (query.name) {
+    filter.name = { $regex: `(?i)${query.name}` } 
+  }
+  if (query.vendor) {
+    filter.vendor = { $regex: `(?i)${query.vendor}` } 
+  }
+  if (query.vat) {
+    filter.vat = { $regex: `(?i)${query.vat}` } 
+  }
+  if (query.totalHt) {
+    filter.totalHt = applyOrderRelationshipOnFilter(query, 'totalHt', 'totalHtOperator')
+  }
+  if (query.totalTtc) {
+    filter.totalTtc = applyOrderRelationshipOnFilter(query, 'totalTtc', 'totalTtcOperator')
+  }
+  if (query.dates) {
+    filter.dates = { $gte :  query.dates[0], $lte : query.dates[1]}
+  }
+  return pickBy(filter, (v,_) => { return !!v })
+};
 
 const createDocument = async (user, documentBody) => {
   if (!user.isClient) {
@@ -30,19 +71,9 @@ const createDocument = async (user, documentBody) => {
 
 const getDocuments = async (user, query) => {
   // FILTER
-  console.log(query);
-  let filter = {};
-  if (!user.isClient) {
-    // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter', 'skeleton', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
-    filter.user = user._id; // filter by accountant
-  } else {
-    // requestor is a client
-    filter.client = user._id; // clients should only view their own files
-  }
-  if (query.name) {
-    filter.name = { $regex: `(?i)${query.name}` } 
-  }
+  let filter = getQueryFilter(query)
+  filter.user = user._id;
+  console.log(filter)
   // OPTIONS
   let page = query.page || 0;
   let limit = query.limit || 300;
@@ -65,22 +96,9 @@ const getDocuments = async (user, query) => {
 
 const getNextSmeltedDocuments = async (user, query) => {
   // FILTER
-  let filter = {};
-  if (!user.isClient) {
-    // requestor is an accountant
-    filter = pick(query, ['client', 'filter', 'status', 'isBankStatement']); // filter by client if specified in query by accountant
-    filter.user = user._id; // filter by accountant
-  } else {
-    // requestor is a client
-    filter.client = user._id; // clients should only view their own files
-  }
-  if (query.name) {
-    filter.name = { $regex: `(?i)${query.name}` } 
-  }
-  filter.status = filter.status ? filter.status : status.SMELTED
-  if (filter.status !== status.SMELTED){
-    return []
-  }
+  let filter = getQueryFilter(query)
+  filter.user = user._id;
+  filter.status =  status.SMELTED
   // OPTIONS
   let sort = { createdAt: -1 };
   const options = {
@@ -101,20 +119,8 @@ const getNextSmeltedDocuments = async (user, query) => {
 
 const exportBulkCSV = async (user, query) => {
   // FILTER
-  let filter = {};
-  if (!user.isClient) {
-    // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
-    filter.user = user._id; // filter by accountant
-    let ObjectId = require('mongoose').Types.ObjectId; 
-    filter.client = filter.client? ObjectId(filter.client): null
-  } else {
-    // requestor is a client
-    filter.client = user._id; // clients should only view their own files
-  }
-  if (query.name) {
-    filter.name = { $regex: `(?i)${query.name}` } 
-  }
+  let filter = getQueryFilter(query)
+  filter.user = user._id;
   let templateIds = await Document.aggregate([
     { $match: filter },
     {
@@ -221,22 +227,8 @@ const archive = async (docIds) => {
 
 const getNextDocuments = async (user, query) => {
   // FILTER
-  let filter = {};
-  if (!user.isClient) {
-    // requestor is an accountant
-    filter = pick(query, ['client', 'filter', 'status', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
-    filter.user = user._id; // filter by accountant
-  } else {
-    // requestor is a client
-    filter.client = user._id; // clients should only view their own files
-  }
-  if (query.name) {
-    filter.name = { $regex: `(?i)${query.name}` } 
-  }
-  if(filter.status === undefined ) {
-    filter.status  = { $ne: status.PENDING }
-  }
-  
+  let filter = getQueryFilter(query)
+  filter.user = user._id;
   // OPTIONS
   let sort = { createdAt: -1 };
   const options = {
@@ -255,18 +247,8 @@ const getNextDocuments = async (user, query) => {
 };
 
 const getDocumentsCount = async (user, query) => {
-  let filter = {};
-  if (!user.isClient) {
-    // requestor is an accountant
-    filter = pick(query, ['client', 'status', 'filter', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
-    filter.user = user._id; // filter by accountant
-  } else {
-    // requestor is a client
-    filter.client = user._id; // clients should only view their own files
-  }
-  if (query.name) {
-    filter.name = { $regex: `(?i)${query.name}` } 
-  }
+  let filter = getQueryFilter(query)
+  filter.user = user._id;
   let count = await Document.countDocuments(filter);
   return { count };
 };
@@ -358,7 +340,6 @@ const shapeOsmiumFromFilterId = async (user, filterId) => {
   });
   return osmium;
 };
-
 
 module.exports = {
   createDocument,
