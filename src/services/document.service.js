@@ -28,24 +28,32 @@ const getQueryFilter = (query) => {
   let filter = pick(query, ['client', 'status', 'filter', 'skeleton', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
   filter.client = filter.client? ObjectId(filter.client): null
   if (query.name) {
-    filter.name = { $regex: `(?i)${query.name}` } 
+    filter.name = { $regex: `(?i)${query.name}` };
   }
   if (query.vendor) {
-    filter.vendor = { $regex: `(?i)${query.vendor}` } 
+    filter.vendor = { $regex: `(?i)${query.vendor}` };
   }
   if (query.vat) {
-    filter.vat = { $regex: `(?i)${query.vat}` } 
+    filter.vat = { $regex: `(?i)${query.vat}` };
+  }
+  if (query.bankEntity) {
+    filter.bankEntity = { $regex: `(?i)${query.bankEntity}` };
   }
   if (query.totalHt) {
-    filter.totalHt = applyOrderRelationshipOnFilter(query, 'totalHt', 'totalHtOperator')
+    filter.totalHt = applyOrderRelationshipOnFilter(query, 'totalHt', 'totalHtOperator');
   }
   if (query.totalTtc) {
-    filter.totalTtc = applyOrderRelationshipOnFilter(query, 'totalTtc', 'totalTtcOperator')
+    filter.totalTtc = applyOrderRelationshipOnFilter(query, 'totalTtc', 'totalTtcOperator');
   }
   if (query.dates) {
-    filter.dates = { $gte :  query.dates[0], $lte : query.dates[1]}
+    if (filter.isBankStatement){
+      filter.dateBeg = { $gte : query.dates[0] };
+      filter.dateEnd = { $lte : query.dates[1] };
+    } else {
+      filter.dates = { $gte : query.dates[0], $lte : query.dates[1] };
+    }
   }
-  return pickBy(filter, (v,_) => { return typeof v === 'number' || typeof v === 'boolean' || !!v })
+  return pickBy(filter, (v,_) => { return typeof v === 'number' || typeof v === 'boolean' || !!v });
 };
 
 const createDocument = async (user, documentBody) => {
