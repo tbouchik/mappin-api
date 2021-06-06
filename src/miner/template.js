@@ -4,6 +4,43 @@ const findTemplateKeyFromTag = (template, templateKeyOrTag) => {
     return result.value
   }
 
-  module.exports = {
-    findTemplateKeyFromTag
-  };
+
+const identifyRole = (template, templateKeyIndex) => {
+  result = null
+  const roleArr = template.keys[templateKeyIndex].role
+  const keyType = template.keys[templateKeyIndex].type
+  if( roleArr && roleArr.constructor === Array && roleArr.length > 0 ) {
+      switch (roleArr[roleArr.length - 1]) {
+        case 'BANK_NAME':
+          result = 'bankEntity';
+          break;
+        case 'DATE_FROM':
+          result = 'dateBeg';
+          break;
+        case 'DATE_TO':
+          result = 'dateEnd';
+          break;
+        case 'TOTAL_HT':
+          result = 'totalHt';
+          break;
+        case 'TOTAL_TTC':
+          result = 'totalTtc';
+          break;
+        case 'VENDOR':
+          result = 'vendor';
+          break;
+        case 'VAT':
+          result = 'vat';
+          break;
+      }
+  }
+  if(keyType === 'DATE') {
+    result = 'invoiceDate'
+  }
+  return result
+}
+
+module.exports = {
+  identifyRole,
+  findTemplateKeyFromTag,
+};

@@ -10,7 +10,7 @@ const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, popul
 const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
 const {  get } = require('lodash');
-const { findTemplateKeyFromTag } = require('./../miner/template');
+const { findTemplateKeyFromTag, identifyRole } = require('./../miner/template');
 const { getS3PdfAlias } = require('../utils/pdf.util');
 const path = require('path');
 
@@ -112,10 +112,14 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
   const treshold = 39;
   const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
   for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
-    let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag)
+    let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag);
     osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
     templateIndex = template.keys.findIndex(x => x.value === templateKey);
-    newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type) :  newDocument.ggMetadata[ggKey].Text;
+    currentRole = identifyRole(template, templateIndex);
+    if (currentRole) {
+      newDocument[currentRole] = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, true) :  newDocument.ggMetadata[ggKey].Text;
+    }
+    newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, false) :  newDocument.ggMetadata[ggKey].Text;
   }
   return newDocument
 }
@@ -129,7 +133,7 @@ const populateInvoiceDataFromGgAI = (documentBody, template) => {
   for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
     let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag)
     templateIndex = template.keys.findIndex(x => x.value === templateKey);
-    newDocument[templateKey]= templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type) :  newDocument.ggMetadata[ggKey].Text;
+    newDocument[templateKey]= templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, false) :  newDocument.ggMetadata[ggKey].Text;
   }
   return newDocument
 }

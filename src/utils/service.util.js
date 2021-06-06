@@ -56,26 +56,31 @@ function parseAlphaChar (str) {
   return str
 }
 
-function parseDate (value) {
+function parseDate (value, parseToDate) {
   if (!value) return ''
-  let parsedInput = ''
+  let result = ''
   try {
     moment.locale('fr')
-    parsedInput = moment(value, ['D MMMM YYYY', 'DD MMMM YYYY', 'D MMM YYYY', 'DD MMM YYYY','D MMMM YY', 'DD MMMM YY', 'D MMM YY', 'DD MMM YY', 'DD/MM/YYYY', 'DD-MM-YYYY', 'dddd, MMMM Do YYYY', 'dddd [the] Do [of] MMMM', 'YYYY-MM-DD', 'MMM DD, YYYY']).format('DD/MM/YYYY')
+    let date = moment(value, ['D MMMM YYYY', 'DD MMMM YYYY', 'D MMM YYYY', 'DD MMM YYYY','D MMMM YY', 'DD MMMM YY', 'D MMM YY', 'DD MMM YY', 'DD/MM/YYYY', 'DD-MM-YYYY', 'dddd, MMMM Do YYYY', 'dddd [the] Do [of] MMMM', 'YYYY-MM-DD', 'MMM DD, YYYY'])
+    if(parseToDate) {
+      result = date.toDate();
+    } else {
+      result = date.format('DD/MM/YYYY');
+    }
   } catch (error) {
     console.log('Moment Library Error', error)
   }
-  return parsedInput
+  return result
 }
 
-function formatValue (value, keyType) {
+function formatValue (value, keyType, parseToDate) {
   let parsedValue = null
   switch (keyType) {
     case 'NUMBER':
       parsedValue = parseAlphaChar(value)
       break
     case 'DATE':
-      parsedValue = parseDate(value)
+      parsedValue = parseDate(value, parseToDate)
       break
     default:
       parsedValue = value

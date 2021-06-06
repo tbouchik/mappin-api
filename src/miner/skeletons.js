@@ -191,6 +191,7 @@ const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKey
   let bboxMapps = constructMapppings(templateKeys);
   skeleton.bboxMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
   skeleton.ggMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
+  skeleton.imputations.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
   return skeleton
 }
 

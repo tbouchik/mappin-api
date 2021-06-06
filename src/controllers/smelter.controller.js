@@ -106,6 +106,14 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
       ggMetadata: document.ggMetadata,
       status: status.SMELTED,
       skeleton: skeletonId,
+      invoiceDate: document.invoiceDate,
+      vendor: document.vendor,
+      totalHt: document.totalHt,
+      totalTtc: document.totalTtc,
+      vat: document.vat,
+      dateEnd: document.dateEnd,
+      dateBeg: document.dateBeg,
+      bankEntity: document.bankEntity,
     });
   } catch(err) {
     console.log(err);

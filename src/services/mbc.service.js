@@ -5,6 +5,7 @@ const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = requir
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons');
+const { identifyRole } = require('./../miner/template');
 const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag } = require('../utils/tinder');
 const { isEmpty, get, pick, omit } = require('lodash');
 const fuzz = require('fuzzball');
@@ -108,7 +109,7 @@ const findGgMappingKey = (templateKey, docBody) => {
       let ggMetadataKeys = Object.keys(ggMetadata)
       for (let i = 0; i < ggMetadataKeys.length; i++) {
         let key = ggMetadataKeys[i];
-        if( formatValue(ggMetadata[key].Text, templateKey.type)=== formatValue(itemValue, templateKey.type)) {
+        if( formatValue(ggMetadata[key].Text, templateKey.type)=== formatValue(itemValue, templateKey.type, false)) {
           result = key;
           break;
         }
@@ -121,7 +122,7 @@ const findGgMappingKey = (templateKey, docBody) => {
       let ggMetadataKeys = Object.keys(ggMetadata)
       for (let i = 0; i < ggMetadataKeys.length; i++) {
         let key = ggMetadataKeys[i];
-        if( formatValue(ggMetadata[key].Text, templateKey.type)=== formatValue(osmiumItemValue, templateKey.type)) {
+        if( formatValue(ggMetadata[key].Text, templateKey.type)=== formatValue(osmiumItemValue, templateKey.type, false)) {
           result = key;
           break;
         }
@@ -137,7 +138,7 @@ const findGgMappingKeyFromMBC = (templateKeys, ggMetadata, mbc) => {
   const templateKey = templateKeys.find(x => x.value === templateKeytext);
   if (templateKey) {
     let ggMetadataEntries = Object.entries(ggMetadata).map(x => {return {key: x[0], value:x[1]? x[1].Text:null}});
-    let formattedtemplateKeyValue = formatValue(Object.values(mbc)[0].Text, templateKey.type);
+    let formattedtemplateKeyValue = formatValue(Object.values(mbc)[0].Text, templateKey.type, false);
     let tinderScores = ggMetadataEntries.map(x => {return {...x, score: fuzz.ratio(x.value, formattedtemplateKeyValue)}})
     tinderScores.sort((a,b) => {
       if ( a.score < b.score ){
@@ -202,6 +203,7 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
   const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
+    let currentRole = identifyRole(template, i);
     if (roles && !isEmpty(roles)) {
       newDocument = setRolesInDocument(newDocument, roles)
     }
@@ -212,16 +214,33 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
     }
     let matchedGgKey =  ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)
     if (matchedGgKey !== null && matchedGgKey !== undefined) {
-      newDocument.osmium[i].Value = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type);
+      newDocument.osmium[i].Value = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, false);
+      if (currentRole) {
+        if (currentRole === 'vendor' || currentRole === 'bankEntity') {
+          newDocument[currentRole] = skeletonReference[currentRole]
+        }else{
+          newDocument[currentRole] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, true);
+        }
+      }
     } else{
       let referenceBbox = bboxMappings.get(key.value);
       if (referenceBbox) {
         let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-        newDocument.osmium[i].Value = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type) : null;
+        newDocument.osmium[i].Value = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type, false) : null;
+        if (currentRole === 'vendor' || currentRole === 'bankEntity') {
+          newDocument[currentRole] = skeletonReference[currentRole]
+        }else{
+          newDocument[currentRole] = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type, true) : null;
+        }
       } else {
         const bestGgKeyMatch = ggMetadataHasSimilarTag(documentBody.ggMetadata, key.tags);
         if (bestGgKeyMatch){
-          newDocument.osmium[i].Value = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type);
+          newDocument.osmium[i].Value = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type, false);
+          if (currentRole === 'vendor' || currentRole === 'bankEntity') {
+            newDocument[currentRole] = skeletonReference[currentRole]
+          }else{
+            newDocument[currentRole] = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type, true);
+          }
         }
       }
     }
@@ -247,17 +266,17 @@ const populateInvoiceDataFromExactPrior = (documentBody, skeletonReference, temp
       let ggKey = ggMappings.get(key.value);
       let matchedGgKey =  ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)
       if (matchedGgKey !== null && matchedGgKey !== undefined) {
-        newDocument[key.value] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type);
+        newDocument[key.value] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, false);
       } else {
         let referenceBbox = bboxMappings.get(key.value);
         if (referenceBbox) {
           const docSkeleton = get(newDocument, 'metadata.page_1', {});
           let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-          newDocument[key.value] = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type) : null;
+          newDocument[key.value] = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type, false) : null;
         } else {
           const bestGgKeyMatch = ggMetadataHasSimilarTag(documentBody.ggMetadata, key.tags);
           if (bestGgKeyMatch){
-            newDocument[key.value] = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type);
+            newDocument[key.value] = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type, false);
           }
         }
       }
@@ -285,12 +304,12 @@ const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template,
         let referenceGGKey = tempkeysToGGMappingReference[matchedKey.value];
         let matchedGgKey = ggMetadataHasSimilarKey(newDocument.ggMetadata, referenceGGKey)
         if (matchedGgKey !== null && matchedGgKey!== undefined ) {
-          newDocument.osmium[index].Value =formatValue(newDocument.ggMetadata[referenceGGKey].Text, key.type);
+          newDocument.osmium[index].Value =formatValue(newDocument.ggMetadata[referenceGGKey].Text, key.type, false);
         } else {
           let referenceBbox = tempkeysToBoxMappingReference[matchedKey.value];
           if (referenceBbox) {
             let bestBboxData = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-            newDocument.osmium[index].Value = formatValue(bestBboxData.bbox.Text, key.type);
+            newDocument.osmium[index].Value = formatValue(bestBboxData.bbox.Text, key.type, false);
             skeletonReference = skeletonUpdateBbox(skeletonReference, clientId, template._id, key.value, bestBboxData.bbox);
           }
         }
@@ -335,7 +354,8 @@ updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, updatedRol
       }
     }
   } else {
-    return skeleton;
+    let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
+    return updatedSkeleton;
   }
 };
 
