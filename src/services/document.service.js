@@ -50,7 +50,7 @@ const getQueryFilter = (query) => {
       filter.dateBeg = { $gte : query.dates[0] };
       filter.dateEnd = { $lte : query.dates[1] };
     } else {
-      filter.dates = { $gte : query.dates[0], $lte : query.dates[1] };
+      filter.invoiceDate = { $gte : query.dates[0], $lte : query.dates[1] };
     }
   }
   return pickBy(filter, (v,_) => { return typeof v === 'number' || typeof v === 'boolean' || !!v });
