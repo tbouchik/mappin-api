@@ -25,7 +25,7 @@ const applyOrderRelationshipOnFilter = (query, field, orderOperator) => {
 
 const getQueryFilter = (query) => {
   let ObjectId = require('mongoose').Types.ObjectId; 
-  let filter = pick(query, ['client', 'status', 'filter', 'skeleton', 'isArchived', 'isBankStatement']); // filter by client if specified in query by accountant
+  let filter = pick(query, ['client', 'status', 'filter', 'skeleton', 'isArchived', 'isBankStatement', '_id']); // filter by client if specified in query by accountant
   filter.client = filter.client? ObjectId(filter.client): null
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` };

@@ -25,6 +25,7 @@ const munkresMatch = (primaryKeys, candidateKeys, treshold) => {
 }
 
 const ggMetadataHasSimilarKey = (ggMetadata, ggKey) => {
+  const TRESHOLD = 70
   if (ggMetadata && !isEmpty(ggMetadata) && ggKey) {
     if (ggKey in ggMetadata) {
       return ggKey
@@ -32,7 +33,7 @@ const ggMetadataHasSimilarKey = (ggMetadata, ggKey) => {
       let ggMetadataKeys = Object.keys(ggMetadata)
       let similitudeArray = ggMetadataKeys.map(x => {return {key:x, score:fuzz.ratio(ggKey, x)}})
         .sort((a,b) => a.score > b.score? -1 : (b.score > a.score ? 1 : 0))
-      return similitudeArray.length > 0 ? similitudeArray[0].key : null
+      return similitudeArray.length > 0 && similitudeArray[0].score > TRESHOLD ? similitudeArray[0].key : null
     }
   }
   return null;

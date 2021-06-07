@@ -205,19 +205,25 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
     let key = template.keys[i];
     let currentRole = identifyRole(template, i);
     if (roles && !isEmpty(roles)) {
-      newDocument = setRolesInDocument(newDocument, roles)
+      newDocument = setRolesInDocument(newDocument, roles);
     }
     let ggKey = ggMappings.get(key.value);
     if (imputations.get(key.value)!== undefined && imputations.get(key.value)!== null) {
-      newDocument.osmium[i].Imputation = imputations.get(key.value)
-      newDocument.osmium[i].Libelle = labels[parseInt(imputations.get(key.value))]
+      newDocument.osmium[i].Imputation = imputations.get(key.value);
     }
-    let matchedGgKey =  ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)
+    let matchedGgKey =  ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey);
     if (matchedGgKey !== null && matchedGgKey !== undefined) {
       newDocument.osmium[i].Value = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, false);
       if (currentRole) {
         if (currentRole === 'vendor' || currentRole === 'bankEntity') {
-          newDocument[currentRole] = skeletonReference[currentRole]
+          newDocument.osmium[i].Value = skeletonReference[currentRole];
+          newDocument[currentRole] = skeletonReference[currentRole];
+          if (currentRole=== 'vendor') {
+            let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i}).filter(x => x !== undefined)
+            imputableOsmiumKeysIndices.forEach((idx) => {
+              newDocument.osmium[idx].Libelle = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, false);
+            })                                          
+          }
         }else{
           newDocument[currentRole] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, true);
         }
@@ -228,7 +234,15 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
         let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
         newDocument.osmium[i].Value = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type, false) : null;
         if (currentRole === 'vendor' || currentRole === 'bankEntity') {
-          newDocument[currentRole] = skeletonReference[currentRole]
+          newDocument.osmium[i].Value = skeletonReference[currentRole];
+          newDocument[currentRole] = skeletonReference[currentRole];
+          if (currentRole=== 'vendor') {
+            let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i})
+                                          .filter(x => x !== undefined)
+            imputableOsmiumKeysIndices.forEach((idx) => {
+              newDocument.osmium[idx].Libelle = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type, false) : null;
+            })                                          
+          }
         }else{
           newDocument[currentRole] = bestBbox !== undefined ? formatValue(bestBbox.bbox.Text, key.type, true) : null;
         }
@@ -237,7 +251,15 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
         if (bestGgKeyMatch){
           newDocument.osmium[i].Value = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type, false);
           if (currentRole === 'vendor' || currentRole === 'bankEntity') {
-            newDocument[currentRole] = skeletonReference[currentRole]
+            newDocument.osmium[i].Value = skeletonReference[currentRole];
+            newDocument[currentRole] = skeletonReference[currentRole];
+            if (currentRole=== 'vendor') {
+              let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i})
+                                          .filter(x => x !== undefined)
+            imputableOsmiumKeysIndices.forEach((idx) => {
+              newDocument.osmium[idx].Libelle = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type, true);
+            })                                          
+            }
           }else{
             newDocument[currentRole] = formatValue(documentBody.ggMetadata[bestGgKeyMatch].Text, key.type, true);
           }
