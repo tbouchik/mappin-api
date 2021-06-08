@@ -56,6 +56,26 @@ function parseAlphaChar (str) {
   return str
 }
 
+function parseDateRange (value, side) {
+  let result = { value: '', hasRange: false }
+  const pattern = /(du)(.*)(au)(.*)/gi
+  const matches = [...value.matchAll(pattern)]
+  if (matches && matches.length && matches[0].length >= 5) {
+    const duIdx = matches[0].findIndex(x => x.trim() === 'du')
+    const auIdx = matches[0].findIndex(x => x.trim() === 'au')
+    if (side === 'dateBeg' && duIdx + 1 < matches[0].length) {
+      result.value = matches[0][duIdx + 1]
+      result.hasRange = true
+      return result
+    } else if (side === 'dateEnd' && auIdx + 1 < matches[0].length) {
+      result.value = matches[0][auIdx + 1]
+      result.hasRange = true
+      return result
+    }
+  }
+  return result
+}
+
 function parseDate (value, parseToDate) {
   if (!value) return ''
   let result = ''
@@ -73,14 +93,19 @@ function parseDate (value, parseToDate) {
   return result
 }
 
-function formatValue (value, keyType, parseToDate) {
+function formatValue (value, keyType, keyRole, parseToDate) {
   let parsedValue = null
   switch (keyType) {
     case 'NUMBER':
       parsedValue = parseAlphaChar(value)
       break
     case 'DATE':
-      parsedValue = parseDate(value, parseToDate)
+      if (keyRole === 'dateBeg' || keyRole=== 'dateEnd') {
+        let parseResult = parseDateRange(value, keyRole)
+        parsedValue = parseResult.hasRange ?parseDate(parseResult.value, parseToDate)  : parseDate(value, parseToDate);;
+      } else {
+        parsedValue = parseDate(value, parseToDate);
+      }
       break
     default:
       parsedValue = value

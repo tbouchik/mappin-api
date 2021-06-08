@@ -34,7 +34,7 @@ const identifyRole = (template, templateKeyIndex) => {
           break;
       }
   }
-  if(keyType === 'DATE') {
+  if(keyType === 'DATE' && result === null) {
     result = 'invoiceDate'
   }
   return result

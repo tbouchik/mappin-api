@@ -117,9 +117,9 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
     templateIndex = template.keys.findIndex(x => x.value === templateKey);
     currentRole = identifyRole(template, templateIndex);
     if (currentRole) {
-      newDocument[currentRole] = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, true) :  newDocument.ggMetadata[ggKey].Text;
+      newDocument[currentRole] = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, true) :  newDocument.ggMetadata[ggKey].Text;
     }
-    newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, false) :  newDocument.ggMetadata[ggKey].Text;
+    newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, false) :  newDocument.ggMetadata[ggKey].Text;
   }
   return newDocument
 }
@@ -133,7 +133,7 @@ const populateInvoiceDataFromGgAI = (documentBody, template) => {
   for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
     let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag)
     templateIndex = template.keys.findIndex(x => x.value === templateKey);
-    newDocument[templateKey]= templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, false) :  newDocument.ggMetadata[ggKey].Text;
+    newDocument[templateKey]= templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, false) :  newDocument.ggMetadata[ggKey].Text;
   }
   return newDocument
 }

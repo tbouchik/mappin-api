@@ -225,8 +225,7 @@ const getTitleForBankStatementDocument = (document) => {
   const dateFromObj = document.osmium.find((x) => x.Role[x.Role.length -1] === 'DATE_FROM');
   const dateFrom = dateFromObj ? '_'.concat(dateFromObj.Value).replace(/\//g, '_') : undefined;
   const clientName = document.client.name.replace(/\s/g, '_').toUpperCase();
-  return clientName
-  // .concat(bankName || '').concat(dateFrom || '');
+  return clientName.concat(bankName || '').concat(dateFrom || '');
 }
 
 const archive = async (docIds) => {
