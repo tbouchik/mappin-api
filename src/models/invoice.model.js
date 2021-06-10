@@ -106,6 +106,7 @@ invoiceSchema.methods.transform = function() {
     'isArchived',
     'filter',
     'skeleton',
+    'orderNumber',
     'mimeType',
     'isBankStatement',
     'status',

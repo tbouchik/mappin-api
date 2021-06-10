@@ -109,13 +109,18 @@ const isDateRegexPattern = (text) => {
 const getGeoIntersection = (bbox1, bbox2) => {
   result = undefined;
   let coor1 = [getBboxCoordinates(bbox1)];
-  let coor2 = [getBboxCoordinates(bbox2)]
-  const poly1 = turf.polygon(coor1);
-  const poly2 = turf.polygon(coor2);
-  const intersection = turf.intersect(poly1, poly2);
-  if (intersection) {
-    const intersectionArea = turf.area(intersection);
-    result = Math.min(intersectionArea/getBBoxArea(bbox1), intersectionArea/getBBoxArea(bbox2));
+  let coor2 = [getBboxCoordinates(bbox2)];
+  try {
+    const poly1 = turf.polygon(coor1);
+    const poly2 = turf.polygon(coor2);
+    const intersection = turf.intersect(poly1, poly2);
+    if (intersection) {
+      const intersectionArea = turf.area(intersection);
+      result = Math.min(intersectionArea/getBBoxArea(bbox1), intersectionArea/getBBoxArea(bbox2));
+    }
+  } catch (e) {
+    console.log('coor1', coor1)
+    console.log('coor2', coor2)
   }
   return Object.is(result, undefined) ? 0 : result;
 }
