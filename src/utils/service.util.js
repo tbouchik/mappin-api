@@ -51,7 +51,7 @@ const mapToObject = (objOrMap) => {
 
 function parseAlphaChar (str) {
   if (typeof str === 'string') {
-    return str.replace(',', '.').replace(/[^\d.-]/g, '')
+    return str.replace(',', '.').replace(/[^\d.]/g, '')
   }
   return str
 }
