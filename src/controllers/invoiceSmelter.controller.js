@@ -30,9 +30,12 @@ const smelt = async(req, res) => {
     let emptyDocumentMold = await createDocumentMold(user, body);
     res.json({ id: emptyDocumentMold.id });
     updateUserCounter(user._id, {counter: 1})
-    let documentMold = await moldMetadataInDocument(emptyDocumentMold);
-    Object.assign(documentMold, fetchHardcodedMold(documentMold.alias));
-    await saveSmeltedResult(user, documentMold);
+    // let documentMold = await moldMetadataInDocument(emptyDocumentMold);
+    let documentMold = emptyDocumentMold;
+    setTimeout(async() => {
+       Object.assign(documentMold, fetchHardcodedMold(emptyDocumentMold.alias));
+       await saveSmeltedResult(user, documentMold);
+      }, 9000);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: 'Caught error' });

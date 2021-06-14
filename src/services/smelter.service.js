@@ -189,20 +189,20 @@ const populateInvoiceData = async (user, documentBody, taskId) => {
   /**
    * TEMPORARY FUNCTION USED FOR BEARINGPOINT POC
    */
-  let skeletonId = '';
-    const filter = await getFilterById(user, documentBody.filter);
-    let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.page_1', {}));
-    if (matchingSkeleton) {
-      matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
-      skeletonId = matchingSkeleton._id;
-      if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
-          documentBody = populateInvoiceDataFromExactPrior(documentBody, matchingSkeleton, filter);
-        }
-    } else {
-        documentBody = populateInvoiceDataFromGgAI(documentBody, filter);
-        const newSkeleton = await createSkeleton(user, documentBody, taskId);
-        skeletonId = newSkeleton._id;
-    }
+  let skeletonId = null;
+    // const filter = await getFilterById(user, documentBody.filter);
+    // let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.page_1', {}));
+    // if (matchingSkeleton) {
+    //   matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
+    //   skeletonId = matchingSkeleton._id;
+    //   if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
+    //       documentBody = populateInvoiceDataFromExactPrior(documentBody, matchingSkeleton, filter);
+    //     }
+    // } else {
+    //     documentBody = populateInvoiceDataFromGgAI(documentBody, filter);
+    //     const newSkeleton = await createSkeleton(user, documentBody, taskId);
+    //     skeletonId = newSkeleton._id;
+    // }
   return {skeletonId, document: documentBody };
 }
 
