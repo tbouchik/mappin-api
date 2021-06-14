@@ -134,6 +134,7 @@ invoiceSchema.methods.externalTransform = function() {
     'updatedAt',
     'alias',
     'totalHt',
+    'orderNumber',
     'invoiceDate',
     'totalTtc',
     'vendor',
