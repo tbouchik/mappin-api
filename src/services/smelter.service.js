@@ -56,6 +56,9 @@ const parseForm = async (pdfContent) => {
     // Extract shards from the text field
     const getText = textAnchor => {
       // First shard in document doesn't have startIndex property
+      if (textAnchor.textSegments[0] === undefined) {
+        console.log(textAnchor)
+      }
       const startIndex = textAnchor.textSegments[0].startIndex || 0;
       const endIndex = textAnchor.textSegments[0].endIndex;
 
@@ -68,11 +71,14 @@ const parseForm = async (pdfContent) => {
     let ggMetadata = new Map();
 
     for (const field of formFields) {
-        
-      const fieldName = getText(field.fieldName.textAnchor);
-      const fieldValue = getText(field.fieldValue.textAnchor).replace(/\r?\n|\r/g, ' ');
-      let valueData = { Text: fieldValue, Coords: field.fieldValue.boundingPoly.normalizedVertices };
-      ggMetadata.set(fieldName, valueData);
+      try {
+        const fieldName = getText(field.fieldName.textAnchor);
+        const fieldValue = getText(field.fieldValue.textAnchor).replace(/\r?\n|\r/g, ' ');
+        let valueData = { Text: fieldValue, Coords: field.fieldValue.boundingPoly.normalizedVertices };
+        ggMetadata.set(fieldName, valueData);
+      } catch(err) {
+        console.log('error parsing a GGMETADATA item', err)
+      }
     }
     return mapToObject(ggMetadata);
   }
@@ -169,7 +175,7 @@ const populateInvoiceOsmium = async (user, documentBody, taskId) => {
           documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter, null);
         } else {
           documentBody = populateOsmiumFromGgAI(documentBody, filter);
-          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user.id);
+          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user.id); 
         }
       } else {
         documentBody = populateOsmiumFromGgAI(documentBody, filter);
@@ -190,19 +196,19 @@ const populateInvoiceData = async (user, documentBody, taskId) => {
    * TEMPORARY FUNCTION USED FOR BEARINGPOINT POC
    */
   let skeletonId = null;
-    // const filter = await getFilterById(user, documentBody.filter);
-    // let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.page_1', {}));
-    // if (matchingSkeleton) {
-    //   matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
-    //   skeletonId = matchingSkeleton._id;
-    //   if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
-    //       documentBody = populateInvoiceDataFromExactPrior(documentBody, matchingSkeleton, filter);
-    //     }
-    // } else {
-    //     documentBody = populateInvoiceDataFromGgAI(documentBody, filter);
-    //     const newSkeleton = await createSkeleton(user, documentBody, taskId);
-    //     skeletonId = newSkeleton._id;
-    // }
+    const filter = await getFilterById(user, documentBody.filter);
+    let matchingSkeleton = await findSimilarSkeleton(get(documentBody, 'metadata.page_1', {}));
+    if (matchingSkeleton) {
+      matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
+      skeletonId = matchingSkeleton._id;
+      if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
+          documentBody = populateInvoiceDataFromExactPrior(documentBody, matchingSkeleton, filter);
+        }
+    } else {
+        documentBody = populateInvoiceDataFromGgAI(documentBody, filter);
+        const newSkeleton = await createSkeleton(user, documentBody, taskId);
+        skeletonId = newSkeleton._id;
+    }
   return {skeletonId, document: documentBody };
 }
 

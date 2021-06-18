@@ -288,37 +288,17 @@ const populateInvoiceDataFromExactPrior = (documentBody, skeletonReference, temp
 
 
 const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template, clientId) => {
-  const mostResemblantTemplateData = getMostResemblantTemplate(template, skeletonReference);
   skeletonReference = skeletonStoreClientTemplate(skeletonReference,clientId, template.id, template.keys);
-  let newDocument = Object.assign({}, documentBody);
-  const tempkeysToBoxMappingReference = skeletonReference.bboxMappings.get(mostResemblantTemplateData.key);
-  const tempkeysToGGMappingReference = skeletonReference.ggMappings.get(mostResemblantTemplateData.key);
-  const docSkeleton = get(newDocument, 'words.page_1', {});
-  template.keys.map((key, index) => {
-
-    let matchedIndex = mostResemblantTemplateData.indices[index];
-    if (matchedIndex !== undefined) {
-      if (key.type === 'IMPUT') {
-        newDocument.osmium[index].Value = skeletonReference.imputations.get(mostResemblantTemplateData.key);
-      } else if (!newDocument.osmium[index].Value){
-        let matchedKey = mostResemblantTemplateData.template[matchedIndex];
-        let referenceGGKey = tempkeysToGGMappingReference[matchedKey.value];
-        let matchedGgKey = ggMetadataHasSimilarKey(newDocument.ggMetadata, referenceGGKey)
-        if (matchedGgKey !== null && matchedGgKey!== undefined ) {
-          newDocument.osmium[index].Value =formatValue(newDocument.ggMetadata[referenceGGKey].Text, key.type, null, false);
-        } else {
-          let referenceBbox = tempkeysToBoxMappingReference[matchedKey.value];
-          if (referenceBbox) {
-            let bestBboxData = getGeoClosestBoxScores(docSkeleton, referenceBbox);
-            newDocument.osmium[index].Value = formatValue(bestBboxData.bbox.Text, key.type, null, false);
-            skeletonReference = skeletonUpdateBbox(skeletonReference, clientId, template._id, key.value, bestBboxData.bbox);
-          }
-        }
-      }
+  let newGgMappings = skeletonReference.ggMappings.get(mergeClientTemplateIds(clientId, template.id));
+  for (let i= 0; i < template.keys.length; i++) {
+    let elementMapped = findGgMappingKey(template.keys[i], documentBody);
+    if (elementMapped) {
+      newGgMappings.set(template.keys[i].value, elementMapped);
     }
-  });
+  }
+  skeletonReference.ggMappings.set(mergeClientTemplateIds(clientId, template.id), newGgMappings);
   updateSkeleton(skeletonReference._id, skeletonReference)
-  return newDocument;
+  return documentBody;
 }
 
 const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, updatedRoles) => {
