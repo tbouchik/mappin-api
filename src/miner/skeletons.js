@@ -194,9 +194,11 @@ const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKey
     skeleton.clientTemplateMapping.set(clientId, [templateId])
   }
   let bboxMapps = constructMapppings(templateKeys);
+  let ggMaps = Object.assign({},  bboxMapps); // Necessary step: we have to create duplicate objects for each set of mappings. Otherwise all mappings would refer to same object in memory
+  let imputMaps = Object.assign({},  bboxMapps);// Ditto
   skeleton.bboxMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
-  skeleton.ggMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
-  skeleton.imputations.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
+  skeleton.ggMappings.set(mergeClientTemplateIds(clientId, templateId), ggMaps);
+  skeleton.imputations.set(mergeClientTemplateIds(clientId, templateId), imputMaps);
   return skeleton
 }
 
@@ -206,8 +208,38 @@ const skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
   if (skeleton.bboxMappings.has(clientTemKey)) {
     let newBboxmappings = skeleton.bboxMappings.get(clientTemKey);
     if (keyName in newBboxmappings) {
-      newBboxmappings[keyName] = bbox;
+      // newBboxmappings[keyName] = bbox;
+      let newBBoxEntry = new Map([[keyName, bbox]])
+      newGgMappings = Object.assign(newGgMappings, mapToObject(newBBoxEntry))
       skeleton.bboxMappings.set(clientTemKey, newBboxmappings);
+    }
+  }
+  return skeleton;
+}
+
+const skeletonUpdateGgMapping = (skeleton, clientId, templateId, keyName, ggKey) => {
+  skeleton = prepareSkeletonMappingsForApi(skeleton);
+  const clientTemKey = mergeClientTemplateIds(clientId, templateId);
+  if (skeleton.ggMappings.has(clientTemKey)) {
+    let newGgMappings = skeleton.ggMappings.get(clientTemKey);
+    if (keyName in newGgMappings) {
+      // newGgMappings[keyName] = ggKey;
+      let newGgEntry = new Map([[keyName, ggKey]])
+      newGgMappings = Object.assign(newGgMappings, mapToObject(newGgEntry))
+      skeleton.ggMappings.set(clientTemKey, newGgMappings);
+    }
+  }
+  return skeleton;
+}
+
+const skeletonUpdateImputationMapping = (skeleton, clientId, templateId, keyName, imput) => {
+  skeleton = prepareSkeletonMappingsForApi(skeleton);
+  const clientTemKey = mergeClientTemplateIds(clientId, templateId);
+  if (skeleton.imputations.has(clientTemKey)) {
+    let newImputMappings = skeleton.imputations.get(clientTemKey);
+    if (keyName in newImputMappings) {
+      newImputMappings[keyName] = imput;
+      skeleton.imputations.set(clientTemKey, newImputMappings);
     }
   }
   return skeleton;
@@ -268,6 +300,8 @@ module.exports = {
     skeletonHasClientTemplate,
     skeletonStoreClientTemplate,
     skeletonUpdateBbox,
+    skeletonUpdateGgMapping,
+    skeletonUpdateImputationMapping,
     prepareSkeletonMappingsForApi,
     prepareSkeletonMappingsForDB,
     gcpCoordParse,

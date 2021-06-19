@@ -1,3 +1,5 @@
+const fuzz = require('fuzzball');
+
 const findTemplateKeyFromTag = (template, templateKeyOrTag) => {
     const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF')
     let result = nonRefTemplateKeys.find(x => x.value === templateKeyOrTag || x.tags.includes(templateKeyOrTag))
@@ -40,7 +42,34 @@ const identifyRole = (template, templateKeyIndex) => {
   return result
 }
 
+const templateKeyIsInvoiceDate = (templateKey) => {
+  const isDateType = templateKey.type === 'DATE'
+  const hadNoRole = templateKey.role === undefined || templateKey.role === null || templateKey.role === []
+  return isDateType && hadNoRole;
+}
+
+const templateKeysHaveSameRole = (key1, key2) => {
+  if( key1.role && key2.role ) {
+    return key1.role.length === 2 && key2.role.length === 2 && key1.role[0] === key2.role[0] && key1.role[1]=== key2.role[1]
+  }
+  return false
+}
+
+const templateKeyoneToOneCompare = (newTemplateKey, refTemplateKey) => {
+  if (templateKeyIsInvoiceDate(newTemplateKey) && templateKeyIsInvoiceDate(refTemplateKey)) {
+    return 100
+  } else if(templateKeysHaveSameRole(newTemplateKey,refTemplateKey)) {
+    return 100
+  } else if ((newTemplateKey.isImputable && !refTemplateKey.isImputable) ||(!newTemplateKey.isImputable && refTemplateKey.isImputable) ) {
+    return 0
+  } else if( newTemplateKey.type === 'REF' || refTemplateKey.type === 'REF') {
+    return 0
+  } else {
+    return fuzz.ratio(newTemplateKey.value, refTemplateKey.value)
+  }
+}
 module.exports = {
   identifyRole,
   findTemplateKeyFromTag,
+  templateKeyoneToOneCompare
 };

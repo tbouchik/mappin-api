@@ -175,7 +175,7 @@ const populateInvoiceOsmium = async (user, documentBody, taskId) => {
           documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter, null);
         } else {
           documentBody = populateOsmiumFromGgAI(documentBody, filter);
-          documentBody = populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user.id); 
+          documentBody = await populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user); 
         }
       } else {
         documentBody = populateOsmiumFromGgAI(documentBody, filter);

@@ -1,11 +1,11 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
-const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
+const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox, skeletonUpdateGgMapping, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons');
-const { identifyRole } = require('./../miner/template');
+const { identifyRole, templateKeyoneToOneCompare } = require('./../miner/template');
 const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag } = require('../utils/tinder');
 const { isEmpty, get, pick, omit } = require('lodash');
 const fuzz = require('fuzzball');
@@ -28,7 +28,7 @@ const buildKeysDistanceMatrix = (newTemplateKeys, refTemplateKeys) => {
   let matrix = [];
   for (let i = 0; i < newTemplateKeys.length; i++) {
     let newTemplateKey = newTemplateKeys[i];
-    let row = refTemplateKeys.map((refTemplateKey) => 100 - fuzz.ratio(newTemplateKey.value, refTemplateKey.value));
+    let row = refTemplateKeys.map((refTemplateKey) => 100 - templateKeyoneToOneCompare(newTemplateKey, refTemplateKey));
     matrix.push(row);
   }
   return matrix;
@@ -56,7 +56,7 @@ const flattenMunkres = (munkresOutput, templateKeysLength) => {
 }
 
 
-const getMostResemblantTemplate = (documentFilter, skeletonReference) => {
+const getMostResemblantTemplate = async (user, documentFilter, skeletonReference) => {
   let result = { key:'', template:'', indices: [] };
   let candidates = [] 
   let clientTemplateMap = skeletonReference.clientTemplateMapping;
@@ -66,13 +66,14 @@ const getMostResemblantTemplate = (documentFilter, skeletonReference) => {
       let templateId = templateIdArrays[i]
       if (skeletonHasClientTemplate(skeletonReference,clientId,templateId)) {
         let clientTempKey = mergeClientTemplateIds(clientId, templateId);
+        const refTemplate = await getFilterById(user, templateId, true);
         candidates.push({ key: clientTempKey,
                           templateId: templateId,
-                          templateKeys: extractTemplateKeysFromBBoxMap(bboxMap.get(clientTempKey))
+                          templateKeys: refTemplate.keys
                         })
       }
     }
-}
+  }
   let bestScore = Number.MAX_SAFE_INTEGER;
   candidates.forEach((candidate) => {
     let distanceMatrix = buildKeysDistanceMatrix(documentFilter.keys, candidate.templateKeys);
@@ -287,16 +288,48 @@ const populateInvoiceDataFromExactPrior = (documentBody, skeletonReference, temp
 }
 
 
-const populateOsmiumFromFuzzyPrior = (documentBody, skeletonReference, template, clientId) => {
-  skeletonReference = skeletonStoreClientTemplate(skeletonReference,clientId, template.id, template.keys);
-  let newGgMappings = skeletonReference.ggMappings.get(mergeClientTemplateIds(clientId, template.id));
+const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, template, user) => {
+  const mostResemblantTemplateData = await getMostResemblantTemplate(user, template, skeletonReference);
+  const referenceBboxMappings = skeletonReference.bboxMappings.get(mostResemblantTemplateData.key);
+  const referenceGgMappings = skeletonReference.ggMappings.get(mostResemblantTemplateData.key);
+  skeletonReference = skeletonStoreClientTemplate(skeletonReference,user.id, template.id, template.keys);
   for (let i= 0; i < template.keys.length; i++) {
-    let elementMapped = findGgMappingKey(template.keys[i], documentBody);
-    if (elementMapped) {
-      newGgMappings.set(template.keys[i].value, elementMapped);
+    let currentRole = identifyRole(template, i);
+    if ((currentRole) && (currentRole === 'vendor' || currentRole === 'bankEntity')) {
+      documentBody.osmium[i].Value = skeletonReference[currentRole];
+      documentBody[currentRole] = skeletonReference[currentRole];
+      if (currentRole=== 'vendor') {
+        let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i}).filter(x => x !== undefined)
+        imputableOsmiumKeysIndices.forEach((idx) => {
+          documentBody.osmium[idx].Libelle = skeletonReference[currentRole];
+        })                        
+      }
+    } else {
+      let matchedReferenceTemplateKeyIdx = mostResemblantTemplateData.indices[i];
+      if (matchedReferenceTemplateKeyIdx !== undefined) {
+        let matchedReferenceTemplateKey = mostResemblantTemplateData.template[matchedReferenceTemplateKeyIdx];
+        let referenceGGKey = referenceGgMappings[matchedReferenceTemplateKey.value];
+        let matchedGgKey = ggMetadataHasSimilarKey(documentBody.ggMetadata, referenceGGKey)
+        if (matchedGgKey ) {
+          documentBody.osmium[i].Value = formatValue(documentBody.ggMetadata[matchedGgKey].Text, template.keys[i].type, null, false);
+          if (currentRole) {
+            documentBody[currentRole] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, template.keys[i].type, null, false);
+          }
+          skeletonReference = skeletonUpdateGgMapping(skeletonReference, user.id, template.id, template.keys[i].value, matchedGgKey)
+        } else {
+          let referenceBbox = referenceBboxMappings[matchedReferenceTemplateKey.value];
+          let bestBboxData = referenceBbox ? getGeoClosestBoxScores(skeletonReference, referenceBbox): null;
+          if (bestBboxData && referenceBbox.geoSimilitude > 0) {
+            documentBody.osmium[i].Value = formatValue(bestBboxData.bbox.Text, template.keys[i].type, null, false);
+            if (currentRole) {
+              documentBody[currentRole] = formatValue(bestBboxData.bbox.Text, template.keys[i].type, null, false);
+            }
+            skeletonReference = skeletonUpdateBbox(skeletonReference, user.id, template.id, template.keys[i].value, bestBboxData.bbox)
+          }
+        }
+      }
     }
   }
-  skeletonReference.ggMappings.set(mergeClientTemplateIds(clientId, template.id), newGgMappings);
   updateSkeleton(skeletonReference._id, skeletonReference)
   return documentBody;
 }
