@@ -135,21 +135,19 @@ const getSkeletonBottomSignature = (skeleton) => {
   return skeleton.slice(startIndex)
 }
 
-const getGeoClosestBoxScores = (skeleton, bbox) => {
+const getGeoClosestBoxScores = (ossature, bbox) => {
   let result = { // initializing default values to avoid null exceptions by caller function
     geoSimilitude: 0,
     textSimilitude: 0,
     bbox: {Text:''}
   }
-  let checkedBboxes = [];
   let index = 0;
-  while(result.geoSimilitude < 0.5 && index < skeleton.length) {
+  while(result.geoSimilitude < 0.5 && index < ossature.length) {
     let currentGrade = {
-      geoSimilitude: getGeoIntersection(bbox, skeleton[index]),
-      textSimilitude: getTextIntersection(bbox.Text, skeleton[index].Text),
-      bbox: skeleton[index]
+      geoSimilitude: getGeoIntersection(bbox, ossature[index]),
+      textSimilitude: getTextIntersection(bbox.Text, ossature[index].Text),
+      bbox: ossature[index]
     }
-    checkedBboxes.push(currentGrade);
     if (currentGrade.geoSimilitude > result.geoSimilitude) {
       Object.assign(result, currentGrade);
     }
@@ -210,7 +208,7 @@ const skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
     if (keyName in newBboxmappings) {
       // newBboxmappings[keyName] = bbox;
       let newBBoxEntry = new Map([[keyName, bbox]])
-      newGgMappings = Object.assign(newGgMappings, mapToObject(newBBoxEntry))
+      newBboxmappings = Object.assign(newBboxmappings, mapToObject(newBBoxEntry))
       skeleton.bboxMappings.set(clientTemKey, newBboxmappings);
     }
   }

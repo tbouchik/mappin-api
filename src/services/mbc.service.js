@@ -313,16 +313,16 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
         if (matchedGgKey ) {
           documentBody.osmium[i].Value = formatValue(documentBody.ggMetadata[matchedGgKey].Text, template.keys[i].type, null, false);
           if (currentRole) {
-            documentBody[currentRole] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, template.keys[i].type, null, false);
+            documentBody[currentRole] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, template.keys[i].type, null, true);
           }
           skeletonReference = skeletonUpdateGgMapping(skeletonReference, user.id, template.id, template.keys[i].value, matchedGgKey)
         } else {
           let referenceBbox = referenceBboxMappings[matchedReferenceTemplateKey.value];
-          let bestBboxData = referenceBbox ? getGeoClosestBoxScores(skeletonReference, referenceBbox): null;
-          if (bestBboxData && referenceBbox.geoSimilitude > 0) {
+          let bestBboxData = referenceBbox ? getGeoClosestBoxScores(documentBody.metadata.page_1, referenceBbox): null;
+          if (bestBboxData && bestBboxData.geoSimilitude > 0) {
             documentBody.osmium[i].Value = formatValue(bestBboxData.bbox.Text, template.keys[i].type, null, false);
             if (currentRole) {
-              documentBody[currentRole] = formatValue(bestBboxData.bbox.Text, template.keys[i].type, null, false);
+              documentBody[currentRole] = formatValue(bestBboxData.bbox.Text, template.keys[i].type, null, true);
             }
             skeletonReference = skeletonUpdateBbox(skeletonReference, user.id, template.id, template.keys[i].value, bestBboxData.bbox)
           }
