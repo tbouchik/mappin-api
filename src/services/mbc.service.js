@@ -149,8 +149,8 @@ const findGgMappingKeyFromMBC = (templateKeys, ggMetadata, mbc) => {
       }
       return 0;
     })
-    let tmpresult =       new Map()
-    tmpresult.set(templateKey.value, tinderScores[0].score > 65 ? tinderScores[0].key: null);
+    let tmpresult =  new Map()
+    tmpresult.set(templateKey.value, tinderScores[0].score > 60 ? tinderScores[0].key: null);
     result = mapToObject(tmpresult);  
   }
   return result;

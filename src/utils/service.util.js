@@ -77,15 +77,14 @@ function parseDateRange (value, side) {
 }
 
 function parseDate (value, parseToDate) {
-  if (!value) return ''
-  let result = ''
+  let result = null
   try {
     moment.locale('fr')
     let date = moment(value, ['D MMMM YYYY', 'DD MMMM YYYY', 'D MMM YYYY', 'DD MMM YYYY','D MMMM YY', 'DD MMMM YY', 'D MMM YY', 'DD MMM YY', 'DD/MM/YYYY', 'DD-MM-YYYY', 'dddd, MMMM Do YYYY', 'dddd [the] Do [of] MMMM', 'YYYY-MM-DD', 'MMM DD, YYYY'])
     if(parseToDate) {
-      result = date.toDate();
+      result = date._isValid? date.toDate() : null;
     } else {
-      result = date.format('DD/MM/YYYY');
+      result = date._isValid? date.format('DD/MM/YYYY') : null;
     }
   } catch (error) {
     console.log('Moment Library Error', error)
