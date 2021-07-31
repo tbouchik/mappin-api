@@ -209,7 +209,7 @@ const exportBankStatementsBulkCSV = async (user, query) => {
     Object.keys(document.bankOsmium).forEach((docPage) => {
       const pageStatements = document.bankOsmium[docPage];
       pageStatements.forEach((statement) => {
-        let entrySegment = [statement.Date, statement.Designation, statement.Compte, statement.Debit, statement.Credit];
+        let entrySegment = [statement.Date.Text, statement.Designation.Text, statement.Compte.Text, statement.Debit.Text, statement.Credit.Text];
         docContent.push(entrySegment);
       })
     })

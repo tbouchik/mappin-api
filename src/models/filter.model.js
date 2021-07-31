@@ -16,7 +16,7 @@ const filterSchema = mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['expense', 'sale'],
+      enum: ['bankStatement', 'invoice'],
     },
     description: {
         type: String,
