@@ -33,6 +33,9 @@ const getFilters = async (user, query) => {
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
+  if (query.type) {
+    filter.type = query.type;
+  }
   if(query.current) {
     let ObjectId = require('mongoose').Types.ObjectId;
     const idToExclude = new ObjectId(query.current)
