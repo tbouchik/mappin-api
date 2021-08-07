@@ -25,6 +25,10 @@ const skeletonSchema = mongoose.Schema(
       type: String,
       required: false,
     },
+    signature: {
+      type: String,
+      required: true,
+    },
     ggMappings: {},
     clientTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
     bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>

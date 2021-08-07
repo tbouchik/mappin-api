@@ -1,6 +1,6 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
-const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, skeletonUpdateBbox, skeletonUpdateGgMapping, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
+const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, getSignatureFromOssature, skeletonUpdateBbox, skeletonUpdateGgMapping, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
@@ -177,6 +177,7 @@ const createSkeleton = async (user, docBody, docId) => {
   ggMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyGgMapping));
   let imputations = new Map ();
   imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
+  const signature = getSignatureFromOssature(get(docBody, 'metadata.page_1', {}))
   const skeletonBody = {
     ossature: get(docBody, 'metadata.page_1', {}),
     document: docId,
@@ -185,6 +186,7 @@ const createSkeleton = async (user, docBody, docId) => {
     clientTemplateMapping,
     ggMappings,
     bboxMappings,
+    signature,
   }
   const skeleton = await Skeleton.create(skeletonBody);
   return skeleton;

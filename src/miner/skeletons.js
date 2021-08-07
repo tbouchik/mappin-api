@@ -23,6 +23,15 @@ const skeletonsMatch = (skeleton1, skeleton2) => {
   return false;
 }
 
+const getSignatureFromOssature = (ossature) => {
+  let signature = ''
+  ossature = ossature.sort((a, b) => (a.Top > b.Top) ? 1 : (a.Top === b.Top) ? ((a.size > b.size) ? 1 : -1) : -1  )
+  for (let i=1; i<7; i++) {
+    signature = signature.concat(` ${ossature[i-1].Text}`) 
+  }
+  return signature
+}
+
 const compareTwoSkeletonSignatures = (ske1, ske2) => {
   let textSig1 = [];
   let textSig2 = [];
@@ -303,4 +312,5 @@ module.exports = {
     prepareSkeletonMappingsForApi,
     prepareSkeletonMappingsForDB,
     gcpCoordParse,
+    getSignatureFromOssature,
 };
