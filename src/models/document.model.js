@@ -89,7 +89,7 @@ const documentSchema = mongoose.Schema(
       type: Date,
     },
     vat: {
-      type: String,
+      type: Number,
       default: '',
     },
     vendor: {
