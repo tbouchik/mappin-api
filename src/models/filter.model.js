@@ -20,7 +20,7 @@ const filterSchema = mongoose.Schema(
     },
     description: {
         type: String,
-        default: 'No description added',
+        default: 'Aucune Déscription',
     },
     keys: [],
   },
