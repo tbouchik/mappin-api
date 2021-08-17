@@ -5,7 +5,7 @@ const createFilter = {
   body: Joi.object().keys({
     name: Joi.string().required(),
     keys: Joi.array().required(),
-    description: Joi.string(),
+    description: Joi.string().allow(null, ''),
     type: Joi.string(),
   }),
 };
@@ -36,7 +36,7 @@ const updateFilter = {
     .keys({
       name: Joi.string(),
       keys: Joi.array(),
-      description: Joi.string(),
+      description: Joi.string().allow(null, ''),
       type: Joi.string(),
     })
     .min(1),
