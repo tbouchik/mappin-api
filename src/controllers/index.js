@@ -7,3 +7,4 @@ module.exports.filterController = require('./filter.controller');
 module.exports.subscriptionController = require('./subscription.controller');
 module.exports.invoiceController = require('./invoice.controller');
 module.exports.invoiceSmelterController = require('./invoiceSmelter.controller');
+module.exports.smeltErrorController = require('./smelterror.controller');

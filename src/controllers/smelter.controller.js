@@ -1,7 +1,6 @@
 const AWS = require('aws-sdk');
-const httpStatus = require('http-status');
-const AppError = require('../utils/AppError');
 const { createDocument, updateDocument } = require('../services/document.service');
+const { createSmeltError } = require('../services/smelterror.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { aixtract, fetchMetada, populateInvoiceOsmium } = require('../services/smelter.service')
 const { omitBy } = require('lodash');
@@ -25,37 +24,56 @@ const startSmelterEngine = async (payload) => {
   })
 }
 
-const moldOsmiumInDocument = async (payload) => {
+const moldOsmiumInDocument = async (user, payload) => {
   let newDocumentBody = Object.assign({}, payload.documentBody);
   let { awsMetadata, gcpMetadata } = await startSmelterEngine(payload);
-  newDocumentBody.metadata = awsMetadata.status === 'fulfilled' ? awsMetadata.value.words : {};
-  newDocumentBody.ggMetadata = gcpMetadata.status === 'fulfilled' ? omitBy(gcpMetadata.value, (v,k) => k[0]=='$') : {};
-  if (newDocumentBody.isBankStatement) {
-    newDocumentBody.bankOsmium = awsMetadata.status === 'fulfilled' ? awsMetadata.value.tables : {};
+  if (awsMetadata.status === 'fulfilled') {
+    newDocumentBody.metadata = awsMetadata.value.words
+    if (newDocumentBody.isBankStatement) {
+      newDocumentBody.bankOsmium = awsMetadata.value.tables;
+    }
+  } else {
+    newDocumentBody.metadata = {}
+    addSmeltError(user, newDocumentBody.id, awsMetadata.reason)
+    throw 'Metadata smelt failed';
+  }
+  if (gcpMetadata.status === 'fulfilled') {
+    newDocumentBody.ggMetadata = omitBy(gcpMetadata.value, (v,k) => k[0]=='$')
+  } else {
+    newDocumentBody.ggMetadata = {}
+    addSmeltError(user, newDocumentBody.id, gcpMetadata.reason)
+    throw 'GGMetadata smelt failed';
   }
   return newDocumentBody;
 }
 
 const bulkSmelt = async(req, res) => {
-  try {
-    const { body, user } = req;
-    res.json({ done: true });
-    let createdDocs = await addFilesToQueue(user, body.files);
-    for (let i= 0; i< createdDocs.length; i ++) {
+  const { body, user } = req;
+  res.json({ done: true });
+  let createdDocs = await addFilesToQueue(user, body.files);
+  for (let i= 0; i< createdDocs.length; i ++) {
+    try {
       await saveSmeltedResult(user, createdDocs[i], createdDocs[i].id);
+    } catch (err) {
+      addSmeltError(user, createdDocs[i].id, err);
     }
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ msg: 'Caught error' });
   }
 };
+
+const addSmeltError = (user, documentId, message) => {
+  const body = {
+    document:documentId,
+    stack:message
+  };
+  createSmeltError(user, body)
+}
 
 const addFilesToQueue = async (user, files) => {
   try{
     const trimedFiles = await trimUnauthorizedDocuments(user._id, files);
     updateUserCounter(user._id, {counter: trimedFiles.length})
     let emptyDocsBatch = await createBatchMolds(user, trimedFiles);
-    let filledDocsBatch = await injectOsmiumInBatchMolds(emptyDocsBatch);
+    let filledDocsBatch = await injectOsmiumInBatchMolds(user, emptyDocsBatch);
     return filledDocsBatch;
   } catch (err) {
     console.log(err)
@@ -87,37 +105,33 @@ const createBatchMolds = async (user, files) => {
       });
 }
 
-const injectOsmiumInBatchMolds = async (documents) => {
-  return Promise.allSettled(documents.map(x => moldOsmiumInDocument({id:x._id, documentBody:x })))
+const injectOsmiumInBatchMolds = async (user, documents) => {
+  return Promise.allSettled(documents.map(x => moldOsmiumInDocument(user, {id:x._id, documentBody:x })))
     .then(moldedDocs => {
     return moldedDocs.filter(x => x.status === 'fulfilled').map(x => x.value);
     });
 }
 
 const saveSmeltedResult = async (user, documentBody, taskId) => {
-  try{
-    let skeletonId = null;
-    let document = documentBody;
-    ({ skeletonId, document } = await populateInvoiceOsmium(user, documentBody, taskId));
-    await updateDocument(user, taskId, {
-      osmium: document.osmium,
-      bankOsmium: document.bankOsmium,
-      metadata: document.metadata,
-      ggMetadata: document.ggMetadata,
-      status: status.SMELTED,
-      skeleton: skeletonId,
-      invoiceDate: document.invoiceDate,
-      vendor: document.vendor,
-      totalHt: document.totalHt,
-      totalTtc: document.totalTtc,
-      vat: document.vat,
-      dateEnd: document.dateEnd,
-      dateBeg: document.dateBeg,
-      bankEntity: document.bankEntity,
-    });
-  } catch(err) {
-    console.log(err);
-  }
+  let skeletonId = null;
+  let document = documentBody;
+  ({ skeletonId, document } = await populateInvoiceOsmium(user, documentBody, taskId));
+  await updateDocument(user, taskId, {
+    osmium: document.osmium,
+    bankOsmium: document.bankOsmium,
+    metadata: document.metadata,
+    ggMetadata: document.ggMetadata,
+    status: status.SMELTED,
+    skeleton: skeletonId,
+    invoiceDate: document.invoiceDate,
+    vendor: document.vendor,
+    totalHt: document.totalHt,
+    totalTtc: document.totalTtc,
+    vat: document.vat,
+    dateEnd: document.dateEnd,
+    dateBeg: document.dateBeg,
+    bankEntity: document.bankEntity,
+  })
 }
 
 const trimUnauthorizedDocuments = async (user, files) => {

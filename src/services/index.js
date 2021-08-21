@@ -8,3 +8,4 @@ module.exports.clientService = require('./client.service');
 module.exports.filterService = require('./filter.service');
 module.exports.subscriptionService = require('./subscription.service');
 module.exports.invoiceService = require('./invoice.service');
+module.exports.smeltErrorService = require('./smelterror.service');

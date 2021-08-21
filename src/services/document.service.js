@@ -295,11 +295,7 @@ const updateDocument = async (user, documentId, updateBody) => {
     }
     updateBody = omit(updateBody, ['mbc']);
     Object.assign(document, updateBody);
-    try{
-      await document.save();
-    } catch(error){
-      console.log(error)
-    }
+    await document.save()
     return document;
   }
 };

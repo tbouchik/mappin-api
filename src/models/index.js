@@ -7,3 +7,4 @@ module.exports.Filter = require('./filter.model');
 module.exports.Subscription = require('./subscription.model');
 module.exports.Skeleton = require('./skeleton.model');
 module.exports.Invoice = require('./invoice.model');
+module.exports.SmeltError = require('./smelterror.model');
