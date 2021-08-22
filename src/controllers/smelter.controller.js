@@ -66,6 +66,7 @@ const addSmeltError = (user, documentId, message) => {
     stack:message
   };
   createSmeltError(user, body)
+  updateUserCounter(user._id, {counter: -1})
 }
 
 const addFilesToQueue = async (user, files) => {
