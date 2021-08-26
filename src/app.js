@@ -15,6 +15,8 @@ const { authLimiter } = require('./middlewares/rateLimiter');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const AppError = require('./utils/AppError');
+const client = require('prom-client');
+const { response } = require('express');
 
 const app = express();
 
@@ -22,6 +24,23 @@ if (config.env !== 'test') {
   app.use(morgan.successHandler);
   app.use(morgan.errorHandler);
 }
+
+// Create a Registry which registers the metrics
+const register = new client.Registry()
+
+// Enable the collection of default metrics
+client.collectDefaultMetrics({ register })
+
+// Create a histogram metric
+const httpRequestDurationMicroseconds = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in microseconds',
+  labelNames: ['method', 'route', 'code'],
+  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10]
+})
+
+// Register the histogram
+register.registerMetric(httpRequestDurationMicroseconds)
 
 // set security HTTP headers
 app.use(helmet());
@@ -70,6 +89,12 @@ app.get(
     defaultKey: 'index.html',
   })
 );
+app.get('/metrics',function(req, res, next) {
+  res.setHeader('Content-Type', register.contentType);
+  register.metrics().then((data) => {
+    res.end(data);
+  })
+})
 
 // uppy
 const options = {
