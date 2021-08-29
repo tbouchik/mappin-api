@@ -45,6 +45,9 @@ const getQueryFilter = (query) => {
   if (query.totalTtc) {
     filter.totalTtc = applyOrderRelationshipOnFilter(query, 'totalTtc', 'totalTtcOperator');
   }
+  if (query.vat) {
+    filter.vat = applyOrderRelationshipOnFilter(query, 'vat', 'vatOperator');
+  }
   if (query.dates) {
     if (filter.isBankStatement){
       filter.dateBeg = { $gte : query.dates[0] };

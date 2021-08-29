@@ -60,6 +60,7 @@ const getDocuments = {
     bankEntity:Joi.string(),
     totalHtOperator:Joi.string(),
     totalTtcOperator:Joi.string(),
+    vatOperator:Joi.string(),
     contains:Joi.string(),
   }),
 };
@@ -89,6 +90,7 @@ const exportBulkCSV = {
     bankEntity:Joi.string(),
     totalHtOperator:Joi.string(),
     totalTtcOperator:Joi.string(),
+    vatOperator:Joi.string(),
     contains:Joi.string(),
   }),
 };
@@ -121,6 +123,7 @@ const getNextSmeltedDocumentIds = {
     bankEntity:Joi.string(),
     totalHtOperator:Joi.string(),
     totalTtcOperator:Joi.string(),
+    vatOperator:Joi.string(),
     contains:Joi.string(),
   }),
 };
@@ -153,6 +156,7 @@ const getNextDocumentIds = {
     bankEntity:Joi.string(),
     totalHtOperator:Joi.string(),
     totalTtcOperator:Joi.string(),
+    vatOperator:Joi.string(),
     contains:Joi.string(),
   }),
 };
