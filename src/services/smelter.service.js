@@ -131,6 +131,9 @@ const populateOsmiumFromGgAI = (documentBody, template) => {
 }
 
 const populateInvoiceDataFromGgAI = (documentBody, template) => {
+  /**
+   * TEMPORARY FUNCTION USED FOR BEARINGPOINT POC
+   */
   let newDocument = Object.assign({}, documentBody);
   const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF').map(x => [x.value].concat(x.tags)).flat();
   const ggMetadataKeys = Object.keys(newDocument.ggMetadata);

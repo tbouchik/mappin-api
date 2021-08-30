@@ -161,7 +161,6 @@ const exportBulkCSV = async (user, query) => {
       let nonImputableEntrySegment = nonImputableOsmiumKeysIndices.map(nonImputableIdx => doc.osmium[nonImputableIdx].Value)
       imputableOsmiumKeysIndices.forEach((imputableOsmiumKey) => {
         let imputableEntrySegment = [ doc.osmium[imputableOsmiumKey].Imputation,
-                                      doc.osmium[imputableOsmiumKey].Libelle,
                                       doc.osmium[imputableOsmiumKey].Value];
         let entrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
         documentSerialization.push(entrySegment)

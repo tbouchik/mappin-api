@@ -230,12 +230,6 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
     if ((currentRole) && (currentRole === 'vendor' || currentRole === 'bankEntity')) {
         newDocument.osmium[i].Value = skeletonReference[currentRole];
         newDocument[currentRole] = skeletonReference[currentRole];
-        if (currentRole=== 'vendor') {
-          let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i}).filter(x => x !== undefined)
-          imputableOsmiumKeysIndices.forEach((idx) => {
-            newDocument.osmium[idx].Libelle = skeletonReference[currentRole];
-          })                        
-        }
     } else {
       let matchedGgKey =  ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey);
       if (matchedGgKey !== null && matchedGgKey !== undefined) {
@@ -314,12 +308,6 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
     if ((currentRole) && (currentRole === 'vendor' || currentRole === 'bankEntity')) {
       documentBody.osmium[i].Value = skeletonReference[currentRole];
       documentBody[currentRole] = skeletonReference[currentRole];
-      if (currentRole=== 'vendor') {
-        let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i}).filter(x => x !== undefined)
-        imputableOsmiumKeysIndices.forEach((idx) => {
-          documentBody.osmium[idx].Libelle = skeletonReference[currentRole];
-        })                        
-      }
     } else {
       let matchedReferenceTemplateKeyIdx = mostResemblantTemplateData.indices[i];
       if (matchedReferenceTemplateKeyIdx !== undefined) {
@@ -439,11 +427,6 @@ const setRolesInDocument = (documentBody, roles) => {
   if(roles && Object.keys(roles)[0] === 'vendor') {
     let newDocument = Object.assign({}, documentBody);
     newDocument.vendor = roles.vendor
-    newDocument.osmium.forEach((x) => {
-      if (x.Imputation !== null) {
-        x.Libelle = roles.vendor
-      }
-    })
     return newDocument
   } else if (roles && Object.keys(roles)[0] === 'bankEntity') {
     let newDocument = Object.assign({}, documentBody);
