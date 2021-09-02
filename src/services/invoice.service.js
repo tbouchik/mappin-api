@@ -36,9 +36,6 @@ const getInvoices = async (user, query) => {
   // OPTIONS
   const options = getOptions(query)
   let invoices = await Invoice.find(filter, null, options);
-  if (invoices.length){
-    console.log(invoices[0].user.name, invoices[0].user.id, ' on docs dashboard')
-  }
   return invoices;
 };
 

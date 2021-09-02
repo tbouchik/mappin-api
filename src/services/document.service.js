@@ -84,7 +84,6 @@ const getDocuments = async (user, query) => {
   // FILTER
   let filter = getQueryFilter(query)
   filter.user = user._id;
-  console.log(filter)
   // OPTIONS
   let page = query.page || 0;
   let limit = query.limit || 300;
@@ -99,9 +98,6 @@ const getDocuments = async (user, query) => {
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('filter');
-  if (documents.length){
-    console.log(documents[0].user.name, documents[0].user.id, ' on docs dashboard')
-  }
   return documents;
 };
 
