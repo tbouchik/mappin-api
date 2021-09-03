@@ -94,8 +94,8 @@ const getDurationInMilliseconds  = (start) => {
 const httpRequestDurationMicroseconds = new client.Histogram({
   name: 'http_request_duration_seconds',
   help: 'Duration of HTTP requests in milliseconds',
-  labelNames: ['method', 'route', 'params', 'code'],
-  buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10]
+  labelNames: ['method', 'route', 'code'],
+  buckets: [10, 30, 50, 70, 100, 300, 500, 700, 1000]
 })
 
 // Register the histogram for requests duration
@@ -105,7 +105,7 @@ app.use((req, res, next) => {
   res.on('close', () => {
       const durationInMilliseconds = getDurationInMilliseconds (start)
       httpRequestDurationMicroseconds
-        .labels(req.method, req._parsedUrl.pathname, req._parsedUrl.query, res.statusCode)
+        .labels(req.method, req._parsedUrl.pathname,res.statusCode)
         .observe(durationInMilliseconds)
   })
   next()
