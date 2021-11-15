@@ -147,7 +147,7 @@ const exportBulkCSV = async (user, query) => {
                                           .filter(x => x !== undefined)
     let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i})
                                           .filter(x => x !== undefined)
-    let fixedKeys = ['N° Compte', 'Libellé', 'Valeur'] // TODO change logic once real requirements come in
+    let fixedKeys = ['N° Compte', 'Valeur'] // TODO change logic once real requirements come in
     const osmiumKeys = nonImputableOsmiumKeysIndices.map((keyIdx) => template.keys[keyIdx].value).concat(fixedKeys)
     aggregate.template = template.name
     aggregate.header = osmiumKeys
