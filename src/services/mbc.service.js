@@ -11,14 +11,15 @@ const { isEmpty, get, pick, omit } = require('lodash');
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
 
-const findSimilarSkeleton = async (skeleton) => {
+
+const findSimilarSkeleton = async (ossature) => {
   const skeletons = await Skeleton.find();
   let foundMatch = false;
   let candidate = null;
   let index = 0;
   while(!foundMatch && index < skeletons.length) {
     candidate = skeletons[index];
-    foundMatch = skeletonsMatch(skeleton, candidate.ossature);
+    foundMatch = skeletonsMatch(ossature, candidate.ossature);
     index++;
   }
   return foundMatch === true? candidate : null;
