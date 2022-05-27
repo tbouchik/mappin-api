@@ -18,6 +18,13 @@ const filterSchema = mongoose.Schema(
       type: String,
       enum: ['bankStatement', 'invoice'],
     },
+    isActiveDC: {
+      type: Boolean
+    },
+    isActiveJournal: {
+      type: Boolean
+    },
+    journalTags: [],
     description: {
         type: String,
     },

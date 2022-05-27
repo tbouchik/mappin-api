@@ -18,7 +18,7 @@ router
 router
   .route('/:filterId')
   .get(auth('manageFilters'), validate(filterValidation.getFilter), filterController.getFilter)
-  .patch(auth('manageFilters'), validate(filterValidation.updateFilter), filterController.updateFilter)
+  .put(auth('manageFilters'), validate(filterValidation.updateFilter), filterController.updateFilter)
   .delete(auth('manageFilters'), validate(filterValidation.deleteFilter), filterController.deleteFilter);
 
 module.exports = router;

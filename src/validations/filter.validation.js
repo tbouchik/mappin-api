@@ -6,6 +6,9 @@ const createFilter = {
     name: Joi.string().required(),
     keys: Joi.array().required(),
     description: Joi.string().allow(null, ''),
+    isActiveJournal: Joi.boolean(),
+    isActiveDC: Joi.boolean(),
+    journalTags: Joi.array(),
     type: Joi.string(),
   }),
 };
@@ -19,6 +22,9 @@ const getFilters = {
     type: Joi.string(),
     current: Joi.string().custom(objectId),
     name: Joi.string(),
+    isActiveJournal: Joi.boolean(),
+    isActiveDC: Joi.boolean(),
+    journalTags: Joi.array(),
   }),
 };
 
@@ -38,6 +44,9 @@ const updateFilter = {
       keys: Joi.array(),
       description: Joi.string().allow(null, ''),
       type: Joi.string(),
+      isActiveJournal: Joi.boolean(),
+      isActiveDC: Joi.boolean(),
+      journalTags: Joi.array(),
     })
     .min(1),
 };
