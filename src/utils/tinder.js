@@ -56,10 +56,15 @@ const ggMetadataHasSimilarTag = (ggMetadata, tags) => {
   }
   return result;
 }
+
+const compareStringsSimilitude = (text1, text2) => {
+    return fuzz.ratio(text1, text2) 
+}
   
-  module.exports = {
-    munkresMatch,
-    ggMetadataHasSimilarKey,
-    ggMetadataHasSimilarTag
-  };
+module.exports = {
+  munkresMatch,
+  ggMetadataHasSimilarKey,
+  ggMetadataHasSimilarTag,
+  compareStringsSimilitude
+};
   

@@ -65,7 +65,6 @@ const moldOsmiumInDocument = async (user, payload) => {
   } else {
     newDocumentBody.references = {}
     addSmeltError(user, newDocumentBody.id, expenseItems.reason)
-    throw 'ExpenseItems smelt failed';
   }
   return newDocumentBody;
 }
@@ -145,6 +144,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
     bankOsmium: document.bankOsmium,
     metadata: document.metadata,
     ggMetadata: document.ggMetadata,
+    references: document.references,
     status: status.SMELTED,
     skeleton: skeletonId,
     invoiceDate: document.invoiceDate,

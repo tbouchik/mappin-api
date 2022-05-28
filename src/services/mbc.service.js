@@ -6,7 +6,7 @@ const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons');
 const { identifyRole, templateKeyoneToOneCompare } = require('./../miner/template');
-const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag } = require('../utils/tinder');
+const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag, compareStringsSimilitude } = require('../utils/tinder');
 const { isEmpty, get, pick, omit } = require('lodash');
 const fuzz = require('fuzzball');
 const munkres = require('munkres-js');
@@ -200,9 +200,12 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
   let bboxMappings = skeletonRef.bboxMappings.get(bboxMappingKey);
   let ggMappings = skeletonRef.ggMappings.get(bboxMappingKey);
   let imputations = skeletonRef.imputations.get(bboxMappingKey);
+  let references = skeletonRef.refMappings.get(bboxMappingKey);
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
   imputations = objectToMap(imputations);
+  references = objectToMap(references);
+  newDocument.references = getReferencesImputations(newDocument.references, references)
   const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
@@ -421,6 +424,22 @@ const setRolesInDocument = (documentBody, roles) => {
     return newDocument
   }
   return documentBody
+}
+
+const getReferencesImputations = (documentReferences, skeletonReferences) => {
+  let threshold = 82;
+  for (let i =0;  i< documentReferences.length; i++ ){
+    let docLibelle = documentReferences[i].libelle
+    let maxScore = 0
+    for (let [libelle, imputation] of Object.entries(skeletonReferences)) {
+      currentScore = compareStringsSimilitude(docLibelle, libelle)
+      if (currentScore > Math.max(threshold, maxScore)) {
+        maxScore = currentScore
+        documentReferences[i].imputation = imputation
+      }
+    }
+  }
+  return documentReferences
 }
 
 
