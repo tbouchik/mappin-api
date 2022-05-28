@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { createSmeltError } = require('../services/smelterror.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
-const { aixtract, fetchMetada, populateInvoiceOsmium } = require('../services/smelter.service')
+const { aixtract, fetchMetada, populateInvoiceOsmium, fetchExpenseItems } = require('../services/smelter.service')
 const { omitBy } = require('lodash');
 const status = require('./../enums/status')
 
@@ -13,20 +13,36 @@ const startSmelterEngine = async (payload) => {
   const filename = payload.documentBody.alias;
   const mimeType = payload.documentBody.mimeType;
   const isBankStatement = payload.documentBody.isBankStatement;
-  return Promise.allSettled([
-    fetchMetada(filename, isBankStatement),
-    aixtract(filename, mimeType)
-  ]).then((metadata) => {
-    return {
-      awsMetadata: metadata[0],
-      gcpMetadata: metadata[1],
-    };
-  })
+  if(isBankStatement) {
+    return Promise.allSettled([
+      fetchMetada(filename, isBankStatement),
+      aixtract(filename, mimeType)
+    ]).then((metadata) => {
+      return {
+        awsMetadata: metadata[0],
+        gcpMetadata: metadata[1],
+        expenseItems: null
+      };
+    })
+  } else {
+    return Promise.allSettled([
+      fetchMetada(filename, isBankStatement),
+      aixtract(filename, mimeType),
+      fetchExpenseItems(filename)
+    ]).then((response) => {
+      return {
+        awsMetadata: response[0],
+        gcpMetadata: response[1],
+        expenseItems: response[2]
+      };
+    })
+  }
+  
 }
 
 const moldOsmiumInDocument = async (user, payload) => {
   let newDocumentBody = Object.assign({}, payload.documentBody);
-  let { awsMetadata, gcpMetadata } = await startSmelterEngine(payload);
+  let { awsMetadata, gcpMetadata, expenseItems } = await startSmelterEngine(payload);
   if (awsMetadata.status === 'fulfilled') {
     newDocumentBody.metadata = awsMetadata.value.words
     if (newDocumentBody.isBankStatement) {
@@ -43,6 +59,13 @@ const moldOsmiumInDocument = async (user, payload) => {
     newDocumentBody.ggMetadata = {}
     addSmeltError(user, newDocumentBody.id, gcpMetadata.reason)
     throw 'GGMetadata smelt failed';
+  }
+  if(expenseItems && expenseItems.status === 'fulfilled') {
+    newDocumentBody.references = expenseItems.value
+  } else {
+    newDocumentBody.references = {}
+    addSmeltError(user, newDocumentBody.id, expenseItems.reason)
+    throw 'ExpenseItems smelt failed';
   }
   return newDocumentBody;
 }

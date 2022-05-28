@@ -167,6 +167,25 @@ const fetchMetada = async (filename, isBankStatement) => {
   })
 }
 
+const fetchExpenseItems = async (filename) => {
+  let lambda = new AWS.Lambda();
+  let payload = {
+    bucketName: process.env.AWS_BUCKET_NAME,
+    document: filename,
+    region: process.env.AWS_REGION,
+  };
+  let params = {
+    FunctionName: process.env.INVOICE_EXPENSE_LAMBDA, 
+    Payload: JSON.stringify(payload)
+  };
+  return new Promise((resolve, reject) => {
+    lambda.invoke(params, function(err, data) {
+      if (err) reject(err);
+      else     resolve(JSON.parse(data.Payload));
+    });
+  })
+}
+
 const populateInvoiceOsmium = async (user, documentBody, taskId) => {
   let skeletonId = '';
     const filter = await getFilterById(user, documentBody.filter);
@@ -223,4 +242,5 @@ module.exports = {
     populateInvoiceOsmium,
     populateInvoiceData,
     populateInvoiceDataFromGgAI,
+    fetchExpenseItems
   };

@@ -32,6 +32,7 @@ const skeletonSchema = mongoose.Schema(
     ggMappings: {},
     clientTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
     bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>
+    refMappings: {}, 
     imputations: {},
   },
   {
