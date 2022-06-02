@@ -156,7 +156,7 @@ const fetchMetada = async (filename, isBankStatement) => {
     tables: isBankStatement || false,
   };
   let params = {
-    FunctionName: process.env.LAMBDA_NAME, 
+    FunctionName: process.env.TEXTRACT_LAMBDA, 
     Payload: JSON.stringify(payload)
   };
   return new Promise((resolve, reject) => {

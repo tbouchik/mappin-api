@@ -257,6 +257,7 @@ const prepareSkeletonMappingsForApi = (skeleton) => {
   skeleton.bboxMappings = objectToMap(skeleton.bboxMappings);
   skeleton.ggMappings = objectToMap(skeleton.ggMappings);
   skeleton.imputations = objectToMap(skeleton.imputations);
+  skeleton.refMappings = objectToMap(skeleton.refMappings);
   return skeleton
 }
 
@@ -265,6 +266,7 @@ const prepareSkeletonMappingsForDB = (skeleton) => {
   skeleton.bboxMappings = mapToObject(skeleton.bboxMappings);
   skeleton.ggMappings = mapToObject(skeleton.ggMappings);
   skeleton.imputations = mapToObject(skeleton.imputations);
+  skeleton.refMappings = mapToObject(skeleton.refMappings);
   return skeleton
 }
 

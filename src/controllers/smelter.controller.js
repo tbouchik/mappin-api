@@ -110,6 +110,7 @@ const createBatchMolds = async (user, files) => {
       name: file.name,
       metadata: {},
       ggMetadata: {},
+      references: [],
       osmium: [],
       client: file.client,
       isBankStatement: file.isBankStatement,

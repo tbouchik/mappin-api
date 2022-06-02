@@ -177,6 +177,7 @@ const createSkeleton = async (user, docBody, docId) => {
   let ggMappings = new Map();
   ggMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyGgMapping));
   let imputations = new Map ();
+  let refMappings = new Map();
   imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   const signature = getSignatureFromOssature(get(docBody, 'metadata.page_1', {}))
   const skeletonBody = {
@@ -188,6 +189,7 @@ const createSkeleton = async (user, docBody, docId) => {
     ggMappings,
     bboxMappings,
     signature,
+    refMappings,
   }
   const skeleton = await Skeleton.create(skeletonBody);
   return skeleton;
@@ -200,12 +202,12 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
   let bboxMappings = skeletonRef.bboxMappings.get(bboxMappingKey);
   let ggMappings = skeletonRef.ggMappings.get(bboxMappingKey);
   let imputations = skeletonRef.imputations.get(bboxMappingKey);
-  let references = skeletonRef.refMappings.get(bboxMappingKey);
+  let refMappings = skeletonRef.refMappings? skeletonRef.refMappings.get(bboxMappingKey): {};
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
   imputations = objectToMap(imputations);
-  references = objectToMap(references);
-  newDocument.references = getReferencesImputations(newDocument.references, references)
+  refMappings = objectToMap(refMappings);
+  newDocument.refMappings = getReferencesImputations(newDocument.references, refMappings)
   const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
@@ -328,7 +330,7 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
   return documentBody;
 }
 
-const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, updatedRoles) => {
+const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refMapping, updatedRoles) => {
   const skeleton = await getSkeletonById(updateBody.skeleton);
   Object.assign(skeleton, updatedRoles);
   const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
@@ -361,8 +363,19 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, upda
         return updatedSkeleton;
       }
     }
+    
+  } else if(refMapping){
+    if (skeleton._id.equals(updateBody.skeleton)){
+      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
+        let newRefMappings = skeleton.refMappings.get(clientTempKey);
+        newRefMappings = Object.assign(newRefMappings, refMapping);
+        skeleton.refMappings.set(clientTempKey, mapToObject(newRefMappings));
+        let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
+        return updatedSkeleton;
+      }
+    }
   } else {
-    let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
+    let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton); // TODO REMOVE
     return updatedSkeleton;
   }
 };
@@ -428,18 +441,19 @@ const setRolesInDocument = (documentBody, roles) => {
 
 const getReferencesImputations = (documentReferences, skeletonReferences) => {
   let threshold = 82;
-  for (let i =0;  i< documentReferences.length; i++ ){
-    let docLibelle = documentReferences[i].libelle
+  let newDocumentReferences = documentReferences
+  for (let i =0;  i< newDocumentReferences.length; i++ ){
+    let docLibelle = newDocumentReferences[i].libelle
     let maxScore = 0
     for (let [libelle, imputation] of Object.entries(skeletonReferences)) {
       currentScore = compareStringsSimilitude(docLibelle, libelle)
       if (currentScore > Math.max(threshold, maxScore)) {
         maxScore = currentScore
-        documentReferences[i].imputation = imputation
+        newDocumentReferences[i].imputation = imputation
       }
     }
   }
-  return documentReferences
+  return newDocumentReferences
 }
 
 

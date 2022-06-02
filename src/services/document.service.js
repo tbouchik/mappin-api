@@ -291,7 +291,7 @@ const updateDocument = async (user, documentId, updateBody) => {
     if (updateBody.validated && updateBody.validated == status.VALIDATED) {
       updateBody.validatedBy = user._id;
     }
-    updateBody = omit(updateBody, ['mbc']);
+    updateBody = omit(updateBody, ['mbc', 'refMapping']);
     Object.assign(document, updateBody);
     await document.save()
     return document;
