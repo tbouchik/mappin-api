@@ -148,6 +148,12 @@ const exportBulkCSV = async (user, query) => {
     let imputableOsmiumKeysIndices = template.keys.map((x, i) => {if (x.isImputable === true)return i})
                                           .filter(x => x !== undefined)
     let fixedKeys = ['N° Compte', 'Valeur'] // TODO change logic once real requirements come in
+    if (template.isActiveDC) {
+      fixedKeys.push('Sens')
+    }
+    if (template.isActiveJournal) {
+      fixedKeys.push('Journal')
+    }
     const osmiumKeys = nonImputableOsmiumKeysIndices.map((keyIdx) => template.keys[keyIdx].value).concat(fixedKeys)
     aggregate.template = template.name
     aggregate.header = osmiumKeys
@@ -155,11 +161,41 @@ const exportBulkCSV = async (user, query) => {
     docs.forEach(doc => {
       let documentSerialization = []
       let nonImputableEntrySegment = nonImputableOsmiumKeysIndices.map(nonImputableIdx => doc.osmium[nonImputableIdx].Value)
+      // add osmiums
       imputableOsmiumKeysIndices.forEach((imputableOsmiumKey) => {
         let imputableEntrySegment = [ doc.osmium[imputableOsmiumKey].Imputation,
-                                      doc.osmium[imputableOsmiumKey].Value];
-        let entrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
-        documentSerialization.push(entrySegment)
+        doc.osmium[imputableOsmiumKey].Value ];
+        // populate sens
+        const roleArr = doc.osmium[imputableOsmiumKey].Role
+        if (template.isActiveDC) {
+          if (roleArr && roleArr.constructor === Array && roleArr.length > 0) {
+            if(roleArr[roleArr.length - 1] === 'TOTAL_TTC') {
+              imputableEntrySegment.push('C')
+            } else {
+              imputableEntrySegment.push('D')
+            }
+          } 
+        }
+        // populate journal
+        // if (template.isActiveJournal) {
+        //   imputableEntrySegment.push(doc.journal)
+        // }
+        let osmiumEntrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
+        documentSerialization.push(osmiumEntrySegment)
+      })
+      // add expenses
+      doc.references.forEach((ref) => {
+        let expenseSegment = [ref.Imputation, ref.Price]
+        // populate sens
+        if (template.isActiveDC) {
+          expenseSegment.push('D')
+        }
+        // populate journal
+        // if (template.isActiveJournal) {
+        //   expenseSegment.push(doc.journal)
+        // }
+        let referenceEntrySegment = nonImputableEntrySegment.concat(expenseSegment);
+        documentSerialization.push(referenceEntrySegment)
       })
       aggregate.osmiums.push(documentSerialization)
     })

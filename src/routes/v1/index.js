@@ -8,6 +8,7 @@ const clientRoute = require('./client.route');
 const filterRoute = require('./filter.route');
 const subscriptionRoute = require('./subscription.route');
 const invoiceRoute = require('./invoice.route');
+const journalRoute = require('./journal.route');
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use('/clients', clientRoute);
 router.use('/filters', filterRoute);
 router.use('/subs', subscriptionRoute);
 router.use('/invoice', invoiceRoute);
+router.use('/journal', journalRoute);
 
 module.exports = router;
