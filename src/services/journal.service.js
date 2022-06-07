@@ -19,7 +19,12 @@ const getJournals = async (user, query) => {
     journal.type = query.type;
   }
   if (query.code) {
-    journal.code = query.code;
+    journal.code = { $regex: `(?i)${query.code}` };
+  }
+  if(query.current) {
+    let ObjectId = require('mongoose').Types.ObjectId;
+    const idToExclude = new ObjectId(query.current)
+    journal._id = { $ne: idToExclude }
   }
   journal.user = user._id;
   const options = getQueryOptions(query);

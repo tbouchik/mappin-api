@@ -21,6 +21,6 @@ router.use('/clients', clientRoute);
 router.use('/filters', filterRoute);
 router.use('/subs', subscriptionRoute);
 router.use('/invoice', invoiceRoute);
-router.use('/journal', journalRoute);
+router.use('/journals', journalRoute);
 
 module.exports = router;

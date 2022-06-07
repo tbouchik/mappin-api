@@ -34,6 +34,7 @@ const skeletonSchema = mongoose.Schema(
     bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>
     refMappings: {}, 
     imputations: {},
+    journalMappings: {},
   },
   {
     timestamps: true,

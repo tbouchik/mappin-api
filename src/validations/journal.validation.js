@@ -14,6 +14,7 @@ const getJournals = {
     userId: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
+    current: Joi.any(),
     page: Joi.number(),
     type: Joi.string(),
     name: Joi.string(),

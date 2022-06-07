@@ -203,11 +203,13 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
   let ggMappings = skeletonRef.ggMappings.get(bboxMappingKey);
   let imputations = skeletonRef.imputations.get(bboxMappingKey);
   let refMappings = skeletonRef.refMappings? skeletonRef.refMappings.get(bboxMappingKey): {};
+  let journalMapping = skeletonRef.journalMappings? skeletonRef.journalMappings.get(bboxMappingKey): null;
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
   imputations = objectToMap(imputations);
   refMappings = objectToMap(refMappings);
   newDocument.refMappings = getReferencesImputations(newDocument.references, refMappings)
+  newDocument.journal = journalMapping 
   const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
@@ -330,7 +332,7 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
   return documentBody;
 }
 
-const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refMapping, updatedRoles) => {
+const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refMapping, newJournal, updatedRoles) => {
   const skeleton = await getSkeletonById(updateBody.skeleton);
   Object.assign(skeleton, updatedRoles);
   const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
@@ -370,6 +372,14 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
         let newRefMappings = skeleton.refMappings.get(clientTempKey);
         newRefMappings = Object.assign(newRefMappings, refMapping);
         skeleton.refMappings.set(clientTempKey, mapToObject(newRefMappings));
+        let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
+        return updatedSkeleton;
+      }
+    }
+  } else if (newJournal) {
+    if (skeleton._id.equals(updateBody.skeleton)){
+      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
+        skeleton.journalMappings.set(clientTempKey, newJournal);
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
       }

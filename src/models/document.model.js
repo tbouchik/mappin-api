@@ -20,6 +20,10 @@ const documentSchema = mongoose.Schema(
       ref: 'Client',
       required: true,
     },
+    journal: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Journal',
+    },
     filter: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Filter',

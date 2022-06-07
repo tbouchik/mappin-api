@@ -146,6 +146,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
     metadata: document.metadata,
     ggMetadata: document.ggMetadata,
     references: document.references,
+    journal: document.journal,
     status: status.SMELTED,
     skeleton: skeletonId,
     invoiceDate: document.invoiceDate,
