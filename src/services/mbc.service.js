@@ -178,6 +178,7 @@ const createSkeleton = async (user, docBody, docId) => {
   ggMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyGgMapping));
   let imputations = new Map ();
   let refMappings = new Map();
+  let journalMappings = new Map();
   imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   const signature = getSignatureFromOssature(get(docBody, 'metadata.page_1', {}))
   const skeletonBody = {
@@ -188,6 +189,7 @@ const createSkeleton = async (user, docBody, docId) => {
     clientTemplateMapping,
     ggMappings,
     bboxMappings,
+    journalMappings,
     signature,
     refMappings,
   }
@@ -376,7 +378,7 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
         return updatedSkeleton;
       }
     }
-  } else if (newJournal) {
+  } else if (newJournal){
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
         skeleton.journalMappings.set(clientTempKey, newJournal);
