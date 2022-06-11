@@ -179,6 +179,8 @@ const createSkeleton = async (user, docBody, docId) => {
   let imputations = new Map ();
   let refMappings = new Map();
   let journalMappings = new Map();
+  journalMappings.set(mergeClientTemplateIds(user.id, docBody.filter), null)
+  refMappings.set(mergeClientTemplateIds(user.id, docBody.filter), {})
   imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   const signature = getSignatureFromOssature(get(docBody, 'metadata.page_1', {}))
   const skeletonBody = {
@@ -372,7 +374,11 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
         let newRefMappings = skeleton.refMappings.get(clientTempKey);
-        newRefMappings = Object.assign(newRefMappings, refMapping);
+        if(newRefMappings) {
+          newRefMappings = Object.assign(newRefMappings, refMapping);
+        } else {
+          newRefMappings = refMapping
+        }
         skeleton.refMappings.set(clientTempKey, mapToObject(newRefMappings));
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
@@ -455,13 +461,13 @@ const getReferencesImputations = (documentReferences, skeletonReferences) => {
   let threshold = 82;
   let newDocumentReferences = documentReferences
   for (let i =0;  i< newDocumentReferences.length; i++ ){
-    let docLibelle = newDocumentReferences[i].libelle
+    let docLibelle = newDocumentReferences[i].Libelle
     let maxScore = 0
-    for (let [libelle, imputation] of Object.entries(skeletonReferences)) {
+    for (let [libelle, imputation] of skeletonReferences.entries()) {
       currentScore = compareStringsSimilitude(docLibelle, libelle)
       if (currentScore > Math.max(threshold, maxScore)) {
         maxScore = currentScore
-        newDocumentReferences[i].imputation = imputation
+        newDocumentReferences[i].Imputation = imputation
       }
     }
   }

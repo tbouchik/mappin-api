@@ -178,9 +178,9 @@ const exportBulkCSV = async (user, query) => {
           } 
         }
         // populate journal
-        // if (template.isActiveJournal) {
-        //   imputableEntrySegment.push(doc.journal)
-        // }
+        if (template.isActiveJournal) {
+          imputableEntrySegment.push(doc.journal.name)
+        }
         let osmiumEntrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
         documentSerialization.push(osmiumEntrySegment)
       })
@@ -192,9 +192,9 @@ const exportBulkCSV = async (user, query) => {
           expenseSegment.push('D')
         }
         // populate journal
-        // if (template.isActiveJournal) {
-        //   expenseSegment.push(doc.journal)
-        // }
+        if (template.isActiveJournal) {
+          expenseSegment.push(doc.journal.name)
+        }
         let referenceEntrySegment = nonImputableEntrySegment.concat(expenseSegment);
         documentSerialization.push(referenceEntrySegment)
       })

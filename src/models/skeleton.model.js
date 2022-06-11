@@ -38,6 +38,7 @@ const skeletonSchema = mongoose.Schema(
   },
   {
     timestamps: true,
+    minimize: false,
     toObject: { getters: true },
     toJSON: { getters: true },
   },
