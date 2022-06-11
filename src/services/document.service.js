@@ -97,6 +97,7 @@ const getDocuments = async (user, query) => {
   let documents = await Document.find(filter, null, options)
     .populate('user', 'name')
     .populate('client', 'name')
+    .populate('journal', 'name')
     .populate('filter');
   return documents;
 };
@@ -298,6 +299,7 @@ const getDocumentById = async (user, documentId) => {
   const document = await Document.findById(documentId)
     .populate('user', 'name')
     .populate('client', 'name')
+    .populate('journal', 'name')
     .populate('filter');
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
@@ -327,7 +329,10 @@ const updateDocument = async (user, documentId, updateBody) => {
     if (updateBody.validated && updateBody.validated == status.VALIDATED) {
       updateBody.validatedBy = user._id;
     }
-    updateBody = omit(updateBody, ['mbc', 'refMapping']);
+    if (updateBody.newJournal ) {
+      updateBody.journal = updateBody.newJournal;
+    }
+    updateBody = omit(updateBody, ['mbc', 'refMapping', 'newJournal']);
     Object.assign(document, updateBody);
     await document.save()
     return document;

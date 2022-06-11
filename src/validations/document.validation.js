@@ -207,6 +207,7 @@ const updateDocument = {
       isArchived: Joi.boolean(),
       totalHt:Joi.number(),
       totalTtc:Joi.number(),
+      newJournal: Joi.any(),
       vat:Joi.number(),
       vendor:Joi.string(),
       dateBeg:Joi.date(),

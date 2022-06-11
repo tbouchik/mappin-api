@@ -14,7 +14,7 @@ router
 router
   .route('/:journalId')
   .get(auth('manageDocuments'), validate(journalValidation.getJournal), journalController.getJournal)
-  .put(auth('manageDocuments'), validate(journalValidation.updateJournal), journalController.updateJournal)
+  .patch(auth('manageDocuments'), validate(journalValidation.updateJournal), journalController.updateJournal)
   .delete(auth('manageDocuments'), validate(journalValidation.deleteJournal), journalController.deleteJournal);
 
 module.exports = router;

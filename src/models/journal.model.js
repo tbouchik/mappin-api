@@ -21,7 +21,7 @@ const journalSchema = mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['Achats', 'Ventes', 'Trésorerie', 'Général', 'Situation'],
+      enum: ['achats', 'ventes', 'tresorerie', 'general', 'situation'],
     }
   },
   {

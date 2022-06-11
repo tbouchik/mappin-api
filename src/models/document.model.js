@@ -153,6 +153,7 @@ documentSchema.methods.transform = function() {
     'bankOsmium',
     'totalHt',
     'invoiceDate',
+    'journal',
     'totalTtc',
     'vendor',
     'vat',
