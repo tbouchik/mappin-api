@@ -1,5 +1,4 @@
 const moment = require('moment');
-const { pick } = require('lodash');
 
 const getQueryOptions = query => {
   const page = query.page * 1 || 1;
@@ -52,6 +51,12 @@ const mapToObject = (objOrMap) => {
 function parseAlphaChar (str) {
   if (typeof str === 'string') {
     return str.replace(',', '.').replace(/[^\d.]/g, '')
+  }
+  return str
+}
+function removeBlanksFromString (str) {
+  if (typeof str === 'string') {
+    return str.replace(/(\r\n|\n|\r)/gm, " ");
   }
   return str
 }
@@ -120,4 +125,5 @@ module.exports = {
   mapToObject,
   formatValue,
   getOptions,
+  removeBlanksFromString,
 };

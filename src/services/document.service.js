@@ -2,7 +2,7 @@ const httpStatus = require('http-status');
 const { pick, omit, pickBy } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Document } = require('../models');
-const { getQueryOptions } = require('../utils/service.util');
+const { removeBlanksFromString } = require('../utils/service.util');
 const { getFilterById } = require('./filter.service');
 const { getClientByEmail } = require('./client.service');
 const status = require('./../enums/status');
@@ -155,6 +155,7 @@ const exportBulkCSV = async (user, query) => {
     if (template.isActiveJournal) {
       fixedKeys.push('Journal')
     }
+    fixedKeys.push('Libelle')
     const osmiumKeys = nonImputableOsmiumKeysIndices.map((keyIdx) => template.keys[keyIdx].value).concat(fixedKeys)
     aggregate.template = template.name
     aggregate.header = osmiumKeys
@@ -175,12 +176,14 @@ const exportBulkCSV = async (user, query) => {
             } else {
               imputableEntrySegment.push('D')
             }
-          } 
+          }
         }
         // populate journal
         if (template.isActiveJournal) {
           imputableEntrySegment.push(doc.journal.name)
         }
+        // populate libelle
+        imputableEntrySegment.push(generateLibelle(doc.vendor, roleArr, null))
         let osmiumEntrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
         documentSerialization.push(osmiumEntrySegment)
       })
@@ -196,6 +199,8 @@ const exportBulkCSV = async (user, query) => {
           expenseSegment.push(doc.journal.name)
         }
         let referenceEntrySegment = nonImputableEntrySegment.concat(expenseSegment);
+        // populate libelle
+        referenceEntrySegment.push(generateLibelle(doc.vendor, null, ref.DisplayedLibelle))
         documentSerialization.push(referenceEntrySegment)
       })
       aggregate.osmiums.push(documentSerialization)
@@ -382,6 +387,26 @@ const shapeOsmiumFromFilterId = async (user, filterId) => {
   });
   return osmium;
 };
+
+const generateLibelle = (vendor, roleArray, currentLibelle) => {
+  let libelle = ''
+  if (roleArray) {
+    if (roleArray && roleArray.constructor === Array && roleArray.length > 0) {
+      if(roleArray[roleArray.length - 1] === 'TOTAL_TTC') {
+        libelle = vendor.concat(' Total TTC')
+      } else if(roleArray[roleArray.length - 1] === 'TOTAL_HT') { 
+        libelle = vendor.concat(' Total HT')
+      } else if(roleArray[roleArray.length - 1] === 'VAT') { 
+        libelle = vendor.concat(' T.V.A')
+      }
+    }
+  }
+  if (currentLibelle) {
+    libelle = libelle.concat(currentLibelle)
+  }
+  libelle = removeBlanksFromString(libelle)
+  return libelle
+}
 
 module.exports = {
   createDocument,
