@@ -9,4 +9,5 @@ module.exports.filterService = require('./filter.service');
 module.exports.subscriptionService = require('./subscription.service');
 module.exports.invoiceService = require('./invoice.service');
 module.exports.journalService = require('./journal.service');
+module.exports.vendorService = require('./vendor.service');
 module.exports.smeltErrorService = require('./smelterror.service');
