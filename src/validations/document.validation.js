@@ -208,6 +208,7 @@ const updateDocument = {
       totalHt:Joi.number(),
       totalTtc:Joi.number(),
       newJournal: Joi.any(),
+      newVendor: Joi.any(),
       vat:Joi.number(),
       vendor:Joi.any(),
       dateBeg:Joi.date(),
