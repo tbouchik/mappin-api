@@ -31,7 +31,7 @@ const getQueryFilter = (query) => {
     filter.name = { $regex: `(?i)${query.name}` };
   }
   if (query.vendor) {
-    filter.vendor = { $regex: `(?i)${query.vendor}` };
+    filter.vendor = query.vendor //{ $regex: `(?i)${query.vendor}` };
   }
   if (query.vat) {
     filter.vat = { $regex: `(?i)${query.vat}` };
@@ -98,6 +98,7 @@ const getDocuments = async (user, query) => {
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('journal', 'name')
+    .populate('vendor', 'name')
     .populate('filter');
   return documents;
 };
@@ -183,7 +184,7 @@ const exportBulkCSV = async (user, query) => {
           imputableEntrySegment.push(doc.journal.name)
         }
         // populate libelle
-        imputableEntrySegment.push(generateLibelle(doc.vendor, roleArr, null))
+        imputableEntrySegment.push(generateLibelle(doc.vendor.name, roleArr, null))
         let osmiumEntrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
         documentSerialization.push(osmiumEntrySegment)
       })
@@ -200,7 +201,7 @@ const exportBulkCSV = async (user, query) => {
         }
         let referenceEntrySegment = nonImputableEntrySegment.concat(expenseSegment);
         // populate libelle
-        referenceEntrySegment.push(generateLibelle(doc.vendor, null, ref.DisplayedLibelle))
+        referenceEntrySegment.push(generateLibelle(doc.vendor.name, null, ref.DisplayedLibelle))
         documentSerialization.push(referenceEntrySegment)
       })
       aggregate.osmiums.push(documentSerialization)
@@ -305,6 +306,7 @@ const getDocumentById = async (user, documentId) => {
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('journal', 'name')
+    .populate('vendor', 'name')
     .populate('filter');
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
@@ -337,7 +339,10 @@ const updateDocument = async (user, documentId, updateBody) => {
     if (updateBody.newJournal ) {
       updateBody.journal = updateBody.newJournal;
     }
-    updateBody = omit(updateBody, ['mbc', 'refMapping', 'newJournal']);
+    if (updateBody.newVendor ) {
+      updateBody.vendor = updateBody.newVendor;
+    }
+    updateBody = omit(updateBody, ['mbc', 'refMapping', 'newJournal', 'newVendor']);
     Object.assign(document, updateBody);
     await document.save()
     return document;
