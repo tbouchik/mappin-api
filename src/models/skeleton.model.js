@@ -13,19 +13,19 @@ const skeletonSchema = mongoose.Schema(
       ref: 'Document',
       required: true,
     },
-    isBankSkeleton: {
+    isBankSkeleton:{
       type: Boolean,
       required:true,
     },
-    bankEntity: {
+    bankEntity:{
       type: String,
       required: false,
     },
-    vendor: {
+    vendor:{
       type: String,
       required: false,
     },
-    signature: {
+    signature:{
       type: String,
       required: true,
     },
@@ -35,6 +35,7 @@ const skeletonSchema = mongoose.Schema(
     refMappings: {}, 
     imputations: {},
     journalMappings: {},
+    vendorMappings: {},
   },
   {
     timestamps: true,

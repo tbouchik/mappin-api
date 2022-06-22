@@ -179,6 +179,7 @@ const createSkeleton = async (user, docBody, docId) => {
   let imputations = new Map ();
   let refMappings = new Map();
   let journalMappings = new Map();
+  let vendorMappings = new Map();
   journalMappings.set(mergeClientTemplateIds(user.id, docBody.filter), null)
   refMappings.set(mergeClientTemplateIds(user.id, docBody.filter), {})
   imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
@@ -192,6 +193,7 @@ const createSkeleton = async (user, docBody, docId) => {
     ggMappings,
     bboxMappings,
     journalMappings,
+    vendorMappings,
     signature,
     refMappings,
   }
@@ -202,18 +204,20 @@ const createSkeleton = async (user, docBody, docId) => {
 const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template, roles) => {
   let skeletonRef = prepareSkeletonMappingsForApi(skeletonReference)
   let newDocument = Object.assign({}, documentBody);
-  const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
-  let bboxMappings = skeletonRef.bboxMappings.get(bboxMappingKey);
-  let ggMappings = skeletonRef.ggMappings.get(bboxMappingKey);
-  let imputations = skeletonRef.imputations.get(bboxMappingKey);
-  let refMappings = skeletonRef.refMappings? skeletonRef.refMappings.get(bboxMappingKey): {};
-  let journalMapping = skeletonRef.journalMappings? skeletonRef.journalMappings.get(bboxMappingKey): null;
+  const mappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
+  let bboxMappings = skeletonRef.bboxMappings.get(mappingKey);
+  let ggMappings = skeletonRef.ggMappings.get(mappingKey);
+  let imputations = skeletonRef.imputations.get(mappingKey);
+  let refMappings = skeletonRef.refMappings? skeletonRef.refMappings.get(mappingKey): {};
+  let journalMapping = skeletonRef.journalMappings? skeletonRef.journalMappings.get(mappingKey): null;
+  let vendorMapping = skeletonRef.vendorMappings? skeletonRef.vendorMappings.get(mappingKey): null;
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
   imputations = objectToMap(imputations);
   refMappings = objectToMap(refMappings);
   newDocument.refMappings = getReferencesImputations(newDocument.references, refMappings)
   newDocument.journal = journalMapping 
+  newDocument.vendor = vendorMapping 
   const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
@@ -261,10 +265,10 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
 const populateInvoiceDataFromExactPrior = (documentBody, skeletonReference, template) => {
   let skeletonRef = prepareSkeletonMappingsForApi(skeletonReference)
   let newDocument = Object.assign({}, documentBody);
-  const bboxMappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
-  let bboxMappings = skeletonRef.bboxMappings.get(bboxMappingKey);
-  let ggMappings = skeletonRef.ggMappings.get(bboxMappingKey);
-  let imputations = skeletonRef.imputations.get(bboxMappingKey);
+  const mappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
+  let bboxMappings = skeletonRef.bboxMappings.get(mappingKey);
+  let ggMappings = skeletonRef.ggMappings.get(mappingKey);
+  let imputations = skeletonRef.imputations.get(mappingKey);
   bboxMappings = objectToMap(bboxMappings);
   ggMappings = objectToMap(ggMappings);
   imputations = objectToMap(imputations);
@@ -336,7 +340,7 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
   return documentBody;
 }
 
-const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refMapping, newJournal, updatedRoles) => {
+const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refMapping, newJournal, newVendor, updatedRoles) => {
   const skeleton = await getSkeletonById(updateBody.skeleton);
   Object.assign(skeleton, updatedRoles);
   const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
@@ -388,6 +392,14 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
         skeleton.journalMappings.set(clientTempKey, newJournal);
+        let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
+        return updatedSkeleton;
+      }
+    }
+  } else if (newVendor){
+    if (skeleton._id.equals(updateBody.skeleton)){
+      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
+        skeleton.vendorMappings.set(clientTempKey, newVendor);
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
       }

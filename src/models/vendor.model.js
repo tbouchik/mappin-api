@@ -6,8 +6,6 @@ const vendorSchema = mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      min: 2,
-      max: 50,
     },
     user: {
       type: mongoose.SchemaTypes.ObjectId,
@@ -16,7 +14,7 @@ const vendorSchema = mongoose.Schema(
     },
     code: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     }
   },

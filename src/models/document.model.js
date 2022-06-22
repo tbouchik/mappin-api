@@ -24,6 +24,10 @@ const documentSchema = mongoose.Schema(
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Journal',
     },
+    vendor: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Vendor',
+    },
     filter: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Filter',
@@ -94,10 +98,6 @@ const documentSchema = mongoose.Schema(
     },
     vat: {
       type: Number,
-      default: '',
-    },
-    vendor: {
-      type: String,
       default: '',
     },
     dateBeg: {
