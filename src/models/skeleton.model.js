@@ -21,10 +21,6 @@ const skeletonSchema = mongoose.Schema(
       type: String,
       required: false,
     },
-    vendor:{
-      type: String,
-      required: false,
-    },
     signature:{
       type: String,
       required: true,

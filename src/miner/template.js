@@ -28,9 +28,6 @@ const identifyRole = (template, templateKeyIndex) => {
         case 'TOTAL_TTC':
           result = 'totalTtc';
           break;
-        case 'VENDOR':
-          result = 'vendor';
-          break;
         case 'VAT':
           result = 'vat';
           break;

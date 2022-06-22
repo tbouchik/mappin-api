@@ -229,7 +229,7 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
     if (imputations.get(key.value)!== undefined && imputations.get(key.value)!== null) {
       newDocument.osmium[i].Imputation = imputations.get(key.value);
     }
-    if ((currentRole) && (currentRole === 'vendor' || currentRole === 'bankEntity')) {
+    if ((currentRole) && (currentRole === 'bankEntity')) {
         newDocument.osmium[i].Value = skeletonReference[currentRole];
         newDocument[currentRole] = skeletonReference[currentRole];
     } else {
@@ -307,7 +307,7 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
   skeletonReference = skeletonStoreClientTemplate(skeletonReference,user.id, template.id, template.keys);
   for (let i= 0; i < template.keys.length; i++) {
     let currentRole = identifyRole(template, i);
-    if ((currentRole) && (currentRole === 'vendor' || currentRole === 'bankEntity')) {
+    if ((currentRole) && (currentRole === 'bankEntity')) {
       documentBody.osmium[i].Value = skeletonReference[currentRole];
       documentBody[currentRole] = skeletonReference[currentRole];
     } else {
@@ -457,11 +457,7 @@ const findGgMappingKeys = (templateKeys, ggMetadata, updateBody) => { // updateB
 }
 
 const setRolesInDocument = (documentBody, roles) => {
-  if(roles && Object.keys(roles)[0] === 'vendor') {
-    let newDocument = Object.assign({}, documentBody);
-    newDocument.vendor = roles.vendor
-    return newDocument
-  } else if (roles && Object.keys(roles)[0] === 'bankEntity') {
+  if (roles && Object.keys(roles)[0] === 'bankEntity') {
     let newDocument = Object.assign({}, documentBody);
     newDocument.bankEntity = roles.bankEntity
     return newDocument
