@@ -98,7 +98,7 @@ const getDocuments = async (user, query) => {
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('journal', 'name')
-    .populate('vendor', 'name')
+    .populate('vendor')
     .populate('filter');
   return documents;
 };
@@ -156,6 +156,8 @@ const exportBulkCSV = async (user, query) => {
     if (template.isActiveJournal) {
       fixedKeys.push('Journal')
     }
+    fixedKeys.push('Fournisseur')
+    fixedKeys.push('N° Compte Fournisseur')
     fixedKeys.push('Libelle')
     const osmiumKeys = nonImputableOsmiumKeysIndices.map((keyIdx) => template.keys[keyIdx].value).concat(fixedKeys)
     aggregate.template = template.name
@@ -183,6 +185,10 @@ const exportBulkCSV = async (user, query) => {
         if (template.isActiveJournal) {
           imputableEntrySegment.push(doc.journal.name)
         }
+        // populate vendor
+        imputableEntrySegment.push(doc.vendor.name)
+        // populay vendor number
+        imputableEntrySegment.push(doc.vendor.code)
         // populate libelle
         imputableEntrySegment.push(generateLibelle(doc.vendor.name, roleArr, null))
         let osmiumEntrySegment = nonImputableEntrySegment.concat(imputableEntrySegment);
@@ -200,6 +206,10 @@ const exportBulkCSV = async (user, query) => {
           expenseSegment.push(doc.journal.name)
         }
         let referenceEntrySegment = nonImputableEntrySegment.concat(expenseSegment);
+        // populate vendor
+        referenceEntrySegment.push(doc.vendor.name)
+        // populay vendor number
+        referenceEntrySegment.push(doc.vendor.code)
         // populate libelle
         referenceEntrySegment.push(generateLibelle(doc.vendor.name, null, ref.DisplayedLibelle))
         documentSerialization.push(referenceEntrySegment)
@@ -306,7 +316,7 @@ const getDocumentById = async (user, documentId) => {
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('journal', 'name')
-    .populate('vendor', 'name')
+    .populate('vendor')
     .populate('filter');
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
