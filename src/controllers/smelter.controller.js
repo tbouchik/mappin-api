@@ -4,7 +4,8 @@ const { createSmeltError } = require('../services/smelterror.service');
 const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
 const { aixtract, fetchMetada, populateInvoiceOsmium, fetchExpenseItems } = require('../services/smelter.service')
 const { omitBy } = require('lodash');
-const status = require('./../enums/status')
+const status = require('./../enums/status');
+const { formatValue } = require('../utils/service.util');
 
 AWS.config.update({ region: 'us-east-1' });
 
@@ -61,7 +62,12 @@ const moldOsmiumInDocument = async (user, payload) => {
     throw 'GGMetadata smelt failed';
   }
   if(expenseItems && expenseItems.status === 'fulfilled') {
-    newDocumentBody.references = expenseItems.value
+    // format expense Prices to numerical values only
+    let formattedReferences = expenseItems.value.map((x) => {
+      x.Price = formatValue(x.Price, 'NUMBER', null, null)
+      return x
+    })
+    newDocumentBody.references = formattedReferences
   } else {
     newDocumentBody.references = {}
     addSmeltError(user, newDocumentBody.id, expenseItems.reason)
