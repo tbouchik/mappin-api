@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const { pick } = require('lodash');
 const status = require('./../enums/status');
 const mimeType = require('./../enums/mimeType');
-const extraction = require('./../enums/extraction')
+const extraction = require('./../enums/extraction');
+const { runRules, runRulesValidated } = require('./../utils/validator');
 
 const documentSchema = mongoose.Schema(
   {
@@ -115,6 +116,11 @@ const documentSchema = mongoose.Schema(
     references: [],
     osmium: [],
     bankOsmium: {},
+    rules: {},
+    rulesValidated:{
+      type: Boolean,
+      default: false,
+    },
   },
   {
     versionKey: false,
@@ -122,6 +128,7 @@ const documentSchema = mongoose.Schema(
     toObject: { getters: true },
     toJSON: { getters: true },
     autoIndex: false,
+    minimize: false,
   }
 );
 const index = { name: 'text'};
@@ -160,8 +167,16 @@ documentSchema.methods.transform = function() {
     'dateBeg',
     'dateEnd',
     'bankEntity',
+    'rules',
   ]);
 };
+
+documentSchema.pre('save', function(next) {
+  const document = this
+  this.rules = runRules(document)
+  this.rulesValidated = runRulesValidated(document)
+  next();
+});
 
 const Document = mongoose.model('Document', documentSchema);
 

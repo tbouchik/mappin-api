@@ -52,7 +52,7 @@ skeletonSchema.methods.transform = function() {
   return skeleton.toJSON();
 };
 
-skeletonSchema.pre('save', async function(next) {
+skeletonSchema.pre('save', function(next) {
   let skeleton = this;
   skeleton = prepareSkeletonMappingsForDB(skeleton);
   next();
