@@ -30,7 +30,7 @@ const checkAllFieldsPopulated = (document) => {
         })
     }
     return {
-        value: fields.length == 0 && imputations.length == 0,
+        value: fields.length != 0 || imputations.length != 0,
         name:"FIELDS_MISSING",
         fields,
         imputations,
@@ -44,7 +44,7 @@ const checkTotalsAreBalanced = (document) => {
     const refsSum = computeSum(refs, vat)
     const isTotalBalanced = ttc === refsSum
     return {
-        value: isTotalBalanced,
+        value: !isTotalBalanced,
         name: "TOTALS_UNBALANCED",
         refs:refsSum,
         ttc,
