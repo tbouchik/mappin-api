@@ -87,7 +87,7 @@ const runRulesValidated = (document) => {
     } else {
         if (!document.rules) return false
         if (document.rules.isAllFieldsPopulated.fields.length === 0) {
-            return document.rules.isAllFieldsPopulated.value && document.rules.isTotalBalanced.value
+            return !document.rules.isAllFieldsPopulated.value && !document.rules.isTotalBalanced.value
         } else {
             return false
         }
