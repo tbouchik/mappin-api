@@ -168,6 +168,7 @@ documentSchema.methods.transform = function() {
     'dateEnd',
     'bankEntity',
     'rules',
+    'rulesValidated'
   ]);
 };
 
