@@ -17,7 +17,7 @@ const checkAllFieldsPopulated = (document) => {
             if(!element.Value) {
                 fields.push(element.Key)
             }
-            if(!element.Imputation) {
+            if(element.Imputation === "") {
                 imputations.push(element.Key)
             }
         })
