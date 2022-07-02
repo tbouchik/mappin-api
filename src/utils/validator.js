@@ -24,7 +24,7 @@ const checkAllFieldsPopulated = (document) => {
     }
     if (document.references) {
         document.references.forEach(element => {
-            if(!element.Imputation) {
+            if(element.Imputation === "") {
                 imputations.push(element.DisplayedLibelle)
             }
         })
@@ -46,7 +46,7 @@ const checkTotalsAreBalanced = (document) => {
     return {
         value: !isTotalBalanced,
         name: "TOTALS_UNBALANCED",
-        refs:refsSum,
+        refs:computeSum(refs, 0),
         ttc,
         vat,
     }
