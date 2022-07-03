@@ -24,7 +24,10 @@ const checkAllFieldsPopulated = (document) => {
     }
     if (document.references) {
         document.references.forEach(element => {
-            if(element.Imputation === "") {
+            if (element.DisplayedLibelle && !element.Price){
+                fields.push(element.DisplayedLibelle)
+            }
+            if(element.DisplayedLibelle && element.Imputation === "") {
                 imputations.push(element.DisplayedLibelle)
             }
         })
@@ -40,7 +43,7 @@ const checkAllFieldsPopulated = (document) => {
 const checkTotalsAreBalanced = (document) => {
     const ttc = parseFloat(document.totalTtc).toFixed(2)
     const vat = parseFloat(document.vat).toFixed(2)
-    const refs = document.references.map(x => parseFloat(x.Price).toFixed(2))
+    const refs = document.references.map(x => isValidNumber(x.Price) ?parseFloat(x.Price).toFixed(2):0.0)
     const refsSum = computeSum(refs, vat)
     const isTotalBalanced = ttc === refsSum
     return {

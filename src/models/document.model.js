@@ -176,6 +176,7 @@ documentSchema.pre('save', function(next) {
   const document = this
   this.rules = runRules(document)
   this.rulesValidated = runRulesValidated(document)
+  if(this.rulesValidated) this.status= 'validated'
   next();
 });
 
