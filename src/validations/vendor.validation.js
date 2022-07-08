@@ -4,7 +4,7 @@ const { objectId } = require('./custom.validation');
 const createVendor = {
   body: Joi.object().keys({
     name: Joi.string().required(),
-    code: Joi.string().required(),
+    code: Joi.string().allow(null, ''),
   }),
 };
 

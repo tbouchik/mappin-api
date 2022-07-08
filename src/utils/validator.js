@@ -1,4 +1,4 @@
-const { cloneDeep, omit } = require('lodash');
+const { cloneDeep } = require('lodash');
 
 const checkAllFieldsPopulated = (document) => {
     let fields = []
