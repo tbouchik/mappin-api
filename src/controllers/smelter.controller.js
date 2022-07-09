@@ -22,7 +22,7 @@ const startSmelterEngine = async (payload) => {
       return {
         awsMetadata: metadata[0],
         gcpMetadata: metadata[1],
-        expenseItems: null
+        awsInvoiceData: null
       };
     })
   } else {
@@ -34,7 +34,7 @@ const startSmelterEngine = async (payload) => {
       return {
         awsMetadata: response[0],
         gcpMetadata: response[1],
-        expenseItems: response[2]
+        awsInvoiceData: response[2]
       };
     })
   }
@@ -43,7 +43,7 @@ const startSmelterEngine = async (payload) => {
 
 const moldOsmiumInDocument = async (user, payload) => {
   let newDocumentBody = Object.assign({}, payload.documentBody);
-  let { awsMetadata, gcpMetadata, expenseItems } = await startSmelterEngine(payload);
+  let { awsMetadata, gcpMetadata, awsInvoiceData } = await startSmelterEngine(payload);
   if (awsMetadata.status === 'fulfilled') {
     newDocumentBody.metadata = awsMetadata.value.words
     if (newDocumentBody.isBankStatement) {
@@ -61,16 +61,18 @@ const moldOsmiumInDocument = async (user, payload) => {
     addSmeltError(user, newDocumentBody.id, gcpMetadata.reason)
     throw 'GGMetadata smelt failed';
   }
-  if(expenseItems && expenseItems.status === 'fulfilled') {
+  if(awsInvoiceData && awsInvoiceData.status === 'fulfilled') {
     // format expense Prices to numerical values only
-    let formattedReferences = expenseItems.value.map((x) => {
+    let formattedReferences = awsInvoiceData.expenses.value.map((x) => {
       x.Price = formatValue(x.Price, 'NUMBER', null, null)
       return x
     })
     newDocumentBody.references = formattedReferences
+    newDocumentBody.semantics = awsInvoiceData.semantics
+    Object.assign(newDocumentBody.ggMetadata,awsInvoiceData.fields)
   } else {
     newDocumentBody.references = {}
-    addSmeltError(user, newDocumentBody.id, expenseItems.reason)
+    addSmeltError(user, newDocumentBody.id, awsInvoiceData.reason)
   }
   return newDocumentBody;
 }

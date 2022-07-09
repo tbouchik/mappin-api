@@ -113,6 +113,7 @@ const documentSchema = mongoose.Schema(
     },
     metadata: {},
     ggMetadata: {},
+    semantics:{},
     references: [],
     osmium: [],
     bankOsmium: {},
