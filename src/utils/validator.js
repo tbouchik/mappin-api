@@ -17,7 +17,7 @@ const checkAllFieldsPopulated = (document) => {
             if(!element.Value) {
                 fields.push(element.Key)
             }
-            if(element.Imputation === "") {
+            if(element.Imputation === "" || (typeof element.Imputation === 'string' && element.Imputation.length !== 8)) {
                 imputations.push(element.Key)
             }
         })
@@ -27,7 +27,7 @@ const checkAllFieldsPopulated = (document) => {
             if (element.DisplayedLibelle && !element.Price){
                 fields.push(element.DisplayedLibelle)
             }
-            if(element.DisplayedLibelle && element.Imputation === "") {
+            if(element.DisplayedLibelle && (typeof element.Imputation === 'string' && element.Imputation.length !== 8)) {
                 imputations.push(element.DisplayedLibelle)
             }
         })

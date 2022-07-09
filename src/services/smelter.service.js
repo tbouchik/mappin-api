@@ -6,7 +6,7 @@ const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
 const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
-const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior, populateInvoiceDataFromExactPrior } = require('../services/mbc.service');
+const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior, populateInvoiceDataFromExactPrior, populateDefaultImputations } = require('../services/mbc.service');
 const { mapToObject, formatValue } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
 const {  get } = require('lodash');
@@ -201,6 +201,7 @@ const populateInvoiceOsmium = async (user, documentBody, taskId) => {
         }
       } else {
         documentBody = populateOsmiumFromGgAI(documentBody, filter);
+        documentBody = populateDefaultImputations(documentBody, filter);
         const newSkeleton = await createSkeleton(user, documentBody, taskId);
         skeletonId = newSkeleton._id;
     }

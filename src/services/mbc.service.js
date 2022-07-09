@@ -228,6 +228,12 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
     let ggKey = ggMappings.get(key.value);
     if (imputations.get(key.value)!== undefined && imputations.get(key.value)!== null) {
       newDocument.osmium[i].Imputation = imputations.get(key.value);
+    } else {
+      if (newDocument.osmium[i].Imputation === '' && currentRole === 'totalTtc'){
+        newDocument.osmium[i].Imputation = '44110000'
+      } else if (newDocument.osmium[i].Imputation === '' && currentRole === 'vat'){
+        newDocument.osmium[i].Imputation = '34550000'
+      }
     }
     if ((currentRole) && (currentRole === 'bankEntity')) {
         newDocument.osmium[i].Value = skeletonReference[currentRole];
@@ -482,6 +488,18 @@ const getReferencesImputations = (documentReferences, skeletonReferences) => {
   return newDocumentReferences
 }
 
+const populateDefaultImputations = (document, template) => {
+  let newDocument = Object.assign({}, document);
+  for (let i = 0; i <template.keys.length; i++) {
+    let currentRole = identifyRole(template, i);
+    if (newDocument.osmium[i].Imputation === '' && currentRole === 'totalTtc'){
+      newDocument.osmium[i].Imputation = '44110000'
+    } else if (newDocument.osmium[i].Imputation === '' && currentRole === 'vat'){
+      newDocument.osmium[i].Imputation = '34550000'
+    }
+  }
+  return newDocument;
+}
 
 module.exports = {
   createSkeleton,
@@ -492,6 +510,7 @@ module.exports = {
   populateInvoiceDataFromExactPrior,
   updateSkeletonFromDocUpdate,
   updateSkeletonFromInvoiceUpdate,
+  populateDefaultImputations
 };
 
 /** **** ShapeOsmium ****
