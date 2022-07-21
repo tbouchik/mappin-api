@@ -6,13 +6,15 @@ const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
 const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
+const { updateSkeleton } = require('../services/skeleton.service');
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior, populateInvoiceDataFromExactPrior, populateDefaultImputations } = require('../services/mbc.service');
-const { mapToObject, formatValue } = require('../utils/service.util');
+const { mapToObject, formatValue, mergeClientTemplateIds } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
 const {  get } = require('lodash');
-const { findTemplateKeyFromTag, identifyRole } = require('./../miner/template');
+const { findTemplateKeyFromTag, identifyRole, identifySemanticField } = require('./../miner/template');
 const { getS3PdfAlias } = require('../utils/pdf.util');
 const path = require('path');
+const { createVendor } = require('./vendor.service');
 
 const s3options = {
     bucket: process.env.AWS_BUCKET_NAME,
@@ -111,23 +113,48 @@ const aixtract = async (bucketKey, mimeType) => {
   })
 }
 
-const populateOsmiumFromGgAI = (documentBody, template) => {
+const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) => {
   let newDocument = Object.assign({}, documentBody);
-  const nonRefTemplateKeys = template.keys.filter(x => x.type !== 'REF').map(x => [x.value].concat(x.tags)).flat();
   const ggMetadataKeys = Object.keys(newDocument.ggMetadata);
   const treshold = 39;
+  // Populate from Semantic fields (AWS) except for Vendor
+  let populatedTemplateKeysCache = new Set()
+  for (let i = 0; i <template.keys.length; i++) {
+    let currentRole = identifyRole(template, i);
+    if (currentRole) {
+      let currentSemanticField = identifySemanticField(currentRole);
+      if (currentSemanticField in newDocument.semantics) {
+        newDocument[currentRole] = formatValue(newDocument.semantics[currentSemanticField], template.keys[i].type, null, true);
+        newDocument.osmium[i].Value = formatValue(newDocument.semantics[currentSemanticField], template.keys[i].type, null, false);
+        populatedTemplateKeysCache.add(i)
+      }
+    }
+  }
+  // Populate suggested vendor if exists
+  if ('VENDOR_NAME' in newDocument.semantics){
+    let newVendorBody = {name: newDocument.semantics['VENDOR_NAME'], confirmed: false};
+    let newVendor = await createVendor(user, newVendorBody);
+    const mappingKey = mergeClientTemplateIds(user._id, newDocument.filter);
+    skeleton.vendorMappings.set(mappingKey, newVendor._id);
+    await updateSkeleton(skeleton._id, skeleton); 
+    newDocument.vendor = newVendor._id;
+  }
+  // Populate from KVP mappings (AWS + GCP)
+  const nonRefTemplateKeys = template.keys.filter((x, idx) => x.type !== 'REF' && !populatedTemplateKeysCache.has(idx) ).map(x => [x.value].concat(x.tags)).flat();
   const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
   for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
     let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag);
     osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
     templateIndex = template.keys.findIndex(x => x.value === templateKey);
-    currentRole = identifyRole(template, templateIndex);
-    if (currentRole) {
-      newDocument[currentRole] = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, true) :  newDocument.ggMetadata[ggKey].Text;
+    if(templateIndex){
+      let currentRole = identifyRole(template, templateIndex);
+      if (currentRole) {
+        newDocument[currentRole] = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, true) : newDocument.ggMetadata[ggKey].Text;
+      }
+      newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, false) : newDocument.ggMetadata[ggKey].Text;
     }
-    newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, false) :  newDocument.ggMetadata[ggKey].Text;
   }
-  return newDocument
+  return newDocument;
 }
 
 const populateInvoiceDataFromGgAI = (documentBody, template) => {
@@ -142,7 +169,7 @@ const populateInvoiceDataFromGgAI = (documentBody, template) => {
   for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
     let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag)
     templateIndex = template.keys.findIndex(x => x.value === templateKey);
-    newDocument[templateKey]= templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, false) :  newDocument.ggMetadata[ggKey].Text;
+    newDocument[templateKey]= templateIndex !== undefined ? formatValue( newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, true) :  newDocument.ggMetadata[ggKey].Text;
   }
   return newDocument
 }
@@ -196,15 +223,16 @@ const populateInvoiceOsmium = async (user, documentBody, taskId) => {
       if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
           documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter, null);
         } else {
-          documentBody = populateOsmiumFromGgAI(documentBody, filter);
-          documentBody = await populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user); 
+          documentBody = await populateOsmiumFromGgAI(user, documentBody, filter, matchingSkeleton);
+          documentBody = await populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user);
         }
       } else {
-        documentBody = populateOsmiumFromGgAI(documentBody, filter);
-        documentBody = populateDefaultImputations(documentBody, filter);
-        const newSkeleton = await createSkeleton(user, documentBody, taskId);
+        let newSkeleton = await createSkeleton(user, documentBody, taskId);
+        newSkeleton = prepareSkeletonMappingsForApi(newSkeleton);
+        documentBody = await populateOsmiumFromGgAI(user, documentBody, filter, newSkeleton);
         skeletonId = newSkeleton._id;
-    }
+      }
+    documentBody = populateDefaultImputations(documentBody, filter);
     const hasRefField = filter.keys.some((key) => key.type === 'REF');
     if (hasRefField) {
       const refFieldIndex = filter.keys.findIndex((key) => key.type === 'REF');

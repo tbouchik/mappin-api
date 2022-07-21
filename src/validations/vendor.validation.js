@@ -5,6 +5,7 @@ const createVendor = {
   body: Joi.object().keys({
     name: Joi.string().required(),
     code: Joi.string().allow(null, ''),
+    confirmed: Joi.boolean(),
   }),
 };
 
@@ -17,6 +18,7 @@ const getVendors = {
     page: Joi.number(),
     name: Joi.string(),
     code: Joi.string(),
+    confirmed: Joi.boolean(),
   }),
 };
 
@@ -34,6 +36,7 @@ const updateVendor = {
     .keys({
       name: Joi.string(),
       code: Joi.string(),
+      confirmed: Joi.boolean(),
     })
     .min(1),
 };

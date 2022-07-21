@@ -16,6 +16,10 @@ const vendorSchema = mongoose.Schema(
       type: String,
       required: false,
       trim: true,
+    },
+    confirmed: {
+      type: Boolean,
+      default: false,
     }
   },
   {

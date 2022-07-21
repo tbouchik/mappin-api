@@ -48,12 +48,49 @@ const mapToObject = (objOrMap) => {
   return objOrMap instanceof Map ? Object.fromEntries(objOrMap) : objOrMap;
 }
 
-function parseAlphaChar (str) {
+function parseNumericChar (str) {
   if (typeof str === 'string') {
-    return str.replace(',', '.').replace(/[^\d.]/g, '')
+    return str.replace(/[^0-9]+/gi, '')
   }
   return str
 }
+
+function insertDecimal (str, delta) {
+  if (typeof str === 'string') {
+    let numChars = parseNumericChar(str)
+    let numCharsLen = numChars.length
+    let result = numChars.slice(0, numCharsLen-delta) + ("." || "") + numChars.slice(numCharsLen-delta);
+    return result;
+  }
+  return str
+}
+
+function parsePrice(val) {
+  if (!val) return val
+  let result = val
+  let value = val.replace(/ /g, '')
+  let lastDotIdx = value.lastIndexOf('.')
+  let lastCommaIdx = value.lastIndexOf(',')
+  let len = value.length
+  if (lastDotIdx === -1 && lastCommaIdx===-1) {
+    result = parseNumericChar(value)
+  } else if (lastDotIdx === -1 && lastCommaIdx!==-1) {
+    let delta = len - 1 - lastCommaIdx
+    if ( delta <= 2 ) result = insertDecimal(value, delta)
+    else result = parseNumericChar(value)
+  } else if (lastDotIdx !== -1 && lastCommaIdx===-1) {
+    let delta = len - 1 - lastDotIdx
+    if ( delta <= 2 ) result = insertDecimal(value, delta)
+    else result = parseNumericChar(value)
+  } else{
+    let last = Math.max(lastDotIdx, lastCommaIdx)
+    let delta = len - 1 - last
+    if ( delta <= 2 ) result = insertDecimal(value, delta)
+    else result = parseNumericChar(value)
+  }
+  return result
+}
+
 function removeBlanksFromString (str) {
   if (typeof str === 'string') {
     return str.replace(/(\r\n|\n|\r)/gm, " ");
@@ -101,7 +138,7 @@ function formatValue (value, keyType, keyRole, parseToDate) {
   let parsedValue = null
   switch (keyType) {
     case 'NUMBER':
-      parsedValue = parseAlphaChar(value)
+      parsedValue = parsePrice(value)
       break
     case 'DATE':
       if (keyRole === 'dateBeg' || keyRole=== 'dateEnd') {

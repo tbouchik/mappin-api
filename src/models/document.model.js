@@ -159,6 +159,7 @@ documentSchema.methods.transform = function() {
     'alias',
     'osmium',
     'bankOsmium',
+    'semantics',
     'totalHt',
     'invoiceDate',
     'journal',

@@ -5,7 +5,7 @@ const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = requir
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
 const { skeletonHasClientTemplate } = require('../miner/skeletons');
-const { identifyRole, templateKeyoneToOneCompare } = require('./../miner/template');
+const { identifySemanticField, identifyRole, templateKeyoneToOneCompare } = require('./../miner/template');
 const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag, compareStringsSimilitude } = require('../utils/tinder');
 const { isEmpty, get, pick, omit } = require('lodash');
 const fuzz = require('fuzzball');
@@ -215,13 +215,14 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
   ggMappings = objectToMap(ggMappings);
   imputations = objectToMap(imputations);
   refMappings = objectToMap(refMappings);
-  newDocument.refMappings = getReferencesImputations(newDocument.references, refMappings)
-  newDocument.journal = journalMapping 
-  newDocument.vendor = vendorMapping 
+  newDocument.refMappings = getReferencesImputations(newDocument.references, refMappings);
+  newDocument.journal = journalMapping;
+  newDocument.vendor = vendorMapping;
   const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];
     let currentRole = identifyRole(template, i);
+    let currentSemanticField = identifySemanticField(currentRole);
     if (roles && !isEmpty(roles)) {
       newDocument = setRolesInDocument(newDocument, roles);
     }
@@ -245,7 +246,13 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
         if (currentRole) {
           newDocument[currentRole] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, currentRole, true);
         }
-      } else {
+      } else if (currentSemanticField in documentBody.semantics) {
+        newDocument[currentRole] = formatValue(documentBody.semantics
+          [currentSemanticField], key.type, null, true);
+        newDocument.osmium[i].Value = formatValue(documentBody.semantics
+          [currentSemanticField], key.type, null, false);
+      }
+      else {
         let referenceBbox = bboxMappings.get(key.value);
         if (referenceBbox) {
           let bestBbox = getGeoClosestBoxScores(docSkeleton, referenceBbox);
@@ -286,7 +293,7 @@ const populateInvoiceDataFromExactPrior = (documentBody, skeletonReference, temp
       let ggKey = ggMappings.get(key.value);
       let matchedGgKey =  ggMetadataHasSimilarKey(documentBody.ggMetadata, ggKey)
       if (matchedGgKey !== null && matchedGgKey !== undefined) {
-        newDocument[key.value] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, null, false);
+        newDocument[key.value] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, key.type, null, true);
       } else {
         let referenceBbox = bboxMappings.get(key.value);
         if (referenceBbox) {

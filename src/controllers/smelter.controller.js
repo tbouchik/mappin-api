@@ -38,7 +38,6 @@ const startSmelterEngine = async (payload) => {
       };
     })
   }
-  
 }
 
 const moldOsmiumInDocument = async (user, payload) => {
@@ -63,16 +62,16 @@ const moldOsmiumInDocument = async (user, payload) => {
   }
   if(awsInvoiceData && awsInvoiceData.status === 'fulfilled') {
     // format expense Prices to numerical values only
-    let formattedReferences = awsInvoiceData.expenses.value.map((x) => {
+    let formattedReferences = awsInvoiceData.value.expenses.map((x) => {
       x.Price = formatValue(x.Price, 'NUMBER', null, null)
       return x
     })
     newDocumentBody.references = formattedReferences
-    newDocumentBody.semantics = awsInvoiceData.semantics
-    Object.assign(newDocumentBody.ggMetadata,awsInvoiceData.fields)
+    newDocumentBody.semantics = awsInvoiceData.value.semantics
+    Object.assign(newDocumentBody.ggMetadata,awsInvoiceData.value.fields)
   } else {
     newDocumentBody.references = {}
-    addSmeltError(user, newDocumentBody.id, awsInvoiceData.reason)
+    addSmeltError(user, newDocumentBody.id, awsInvoiceData.value.reason)
   }
   return newDocumentBody;
 }
@@ -85,7 +84,7 @@ const bulkSmelt = async(req, res) => {
     try {
       await saveSmeltedResult(user, createdDocs[i], createdDocs[i].id);
     } catch (err) {
-      addSmeltError(user, createdDocs[i].id, err);
+      addSmeltError(user, createdDocs[i].id, err.stack);
     }
   }
 };
@@ -120,6 +119,7 @@ const createBatchMolds = async (user, files) => {
       ggMetadata: {},
       references: [],
       osmium: [],
+      semantics: {},
       client: file.client,
       isBankStatement: file.isBankStatement,
       filter: file.filter,
@@ -165,6 +165,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
     dateEnd: document.dateEnd,
     dateBeg: document.dateBeg,
     bankEntity: document.bankEntity,
+    semantics:document.semantics
   })
 }
 

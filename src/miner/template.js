@@ -39,6 +39,31 @@ const identifyRole = (template, templateKeyIndex) => {
   return result
 }
 
+const identifySemanticField = (role) => {
+  result = null
+  switch (role) {
+    case 'totalHt':
+      result = 'SUBTOTAL';
+      break;
+    case 'totalTtc':
+      result = 'TOTAL';
+      break;
+    case 'vat':
+      result = 'TAX';
+      break;
+    case 'invoiceRef':
+      result = 'INVOICE_RECEIPT_ID';
+      break;
+    case 'paymentTerm':
+      result = 'PAYMENT_TERMS';
+      break;
+    case 'invoiceDate':
+      result = 'INVOICE_RECEIPT_DATE';
+      break; 
+  }
+  return result
+}
+
 const templateKeyIsInvoiceDate = (templateKey) => {
   const isDateType = templateKey.type === 'DATE'
   const hadNoRole = templateKey.role === undefined || templateKey.role === null || templateKey.role === []
@@ -67,6 +92,7 @@ const templateKeyoneToOneCompare = (newTemplateKey, refTemplateKey) => {
 }
 module.exports = {
   identifyRole,
+  identifySemanticField,
   findTemplateKeyFromTag,
   templateKeyoneToOneCompare
 };
