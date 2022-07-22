@@ -136,20 +136,24 @@ function parseDate (value, parseToDate) {
 
 function formatValue (value, keyType, keyRole, parseToDate) {
   let parsedValue = null
-  switch (keyType) {
-    case 'NUMBER':
-      parsedValue = parsePrice(value)
-      break
-    case 'DATE':
-      if (keyRole === 'dateBeg' || keyRole=== 'dateEnd') {
-        let parseResult = parseDateRange(value, keyRole)
-        parsedValue = parseResult.hasRange ?parseDate(parseResult.value, parseToDate)  : parseDate(value, parseToDate);;
-      } else {
-        parsedValue = parseDate(value, parseToDate);
-      }
-      break
-    default:
-      parsedValue = value
+  if (keyRole && keyRole.length && (keyRole[keyRole.length - 1]) === 'INVOICE_REF'){
+    parsedValue = value.includes(':') ? value.split(':')[1] : value;
+  } else {
+    switch (keyType) {
+      case 'NUMBER':
+        parsedValue = parsePrice(value)
+        break
+      case 'DATE':
+        if (keyRole === 'dateBeg' || keyRole=== 'dateEnd') {
+          let parseResult = parseDateRange(value, keyRole)
+          parsedValue = parseResult.hasRange ?parseDate(parseResult.value, parseToDate)  : parseDate(value, parseToDate);;
+        } else {
+          parsedValue = parseDate(value, parseToDate);
+        }
+        break
+      default:
+        parsedValue = value
+    }
   }
   return parsedValue
 }
