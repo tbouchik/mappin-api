@@ -1,9 +1,8 @@
 const httpStatus = require('http-status');
-const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
 const { Vendor } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
-
+const { compareStringsSimilitude } = require('../utils/tinder')
 const createVendor = async (user, vendorBody) => {
   vendorBody.user = user._id;
   const vendor = await Vendor.create(vendorBody);
@@ -11,7 +10,7 @@ const createVendor = async (user, vendorBody) => {
 };
 
 const getVendors = async (user, query) => {
-  const vendor = {};
+  let vendor = {};
   if (query.name) {
     vendor.name = { $regex: `(?i)${query.name}` } 
   }
@@ -28,6 +27,25 @@ const getVendors = async (user, query) => {
   const vendors = await Vendor.find(vendor, null, options);
   return vendors;
 };
+
+getSimilarVendor = async (user, name) =>{
+  let query = {user: user._id, confirmed: true}
+  const vendors = await Vendor.find(query, null);
+  let foundMatch = false;
+  let candidate = null;
+  let index = 0;
+  while(!foundMatch && index < vendors.length) {
+    candidate = vendors[index];
+    foundMatch = vendorsMatch(name, candidate.name);
+    index++;
+  }
+  return foundMatch === true? candidate : null;
+}
+
+vendorsMatch = (name1, name2) =>{
+  let score = compareStringsSimilitude(name1, name2)
+  return score > 90
+}
 
 const getVendorById = async (user, vendorId, skipAuth = false) => {
   const vendor = await Vendor.findById(vendorId);
@@ -58,4 +76,5 @@ module.exports = {
   getVendorById,
   updateVendor,
   deleteVendor,
+  getSimilarVendor
 };

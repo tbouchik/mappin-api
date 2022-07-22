@@ -5,6 +5,7 @@ const location = process.env.GOOGLE_PROJECT_LOCATION;
 const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai').v1beta2;
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
+const { getSimilarVendor } = require('../services/vendor.service');
 const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { updateSkeleton } = require('../services/skeleton.service');
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior, populateInvoiceDataFromExactPrior, populateDefaultImputations } = require('../services/mbc.service');
@@ -132,12 +133,16 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
   }
   // Populate suggested vendor if exists
   if ('VENDOR_NAME' in newDocument.semantics){
-    let newVendorBody = {name: newDocument.semantics['VENDOR_NAME'], confirmed: false};
-    let newVendor = await createVendor(user, newVendorBody);
+    let newVendorName = newDocument.semantics['VENDOR_NAME']
+    let vendor = await getSimilarVendor(user, newVendorName);
+    if (!vendor) {
+      let newVendorBody = {name: newVendorName, confirmed: false};
+      vendor = await createVendor(user, newVendorBody);
+    }
     const mappingKey = mergeClientTemplateIds(user._id, newDocument.filter);
-    skeleton.vendorMappings.set(mappingKey, newVendor._id);
-    await updateSkeleton(skeleton._id, skeleton); 
-    newDocument.vendor = newVendor._id;
+    skeleton.vendorMappings.set(mappingKey, vendor._id);
+    updateSkeleton(skeleton._id, skeleton); 
+    newDocument.vendor = vendor._id;
   }
   // Populate from KVP mappings (AWS + GCP)
   const nonRefTemplateKeys = template.keys.filter((x, idx) => x.type !== 'REF' && !populatedTemplateKeysCache.has(idx) ).map(x => [x.value].concat(x.tags)).flat();
