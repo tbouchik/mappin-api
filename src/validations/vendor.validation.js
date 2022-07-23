@@ -16,8 +16,8 @@ const getVendors = {
     limit: Joi.number().integer(),
     current: Joi.any(),
     page: Joi.number(),
-    name: Joi.string(),
-    code: Joi.string(),
+    name: Joi.string().allow(null, ''),
+    code: Joi.string().allow(null, ''),
     confirmed: Joi.boolean(),
   }),
 };

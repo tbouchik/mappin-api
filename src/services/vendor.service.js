@@ -17,6 +17,9 @@ const getVendors = async (user, query) => {
   if (query.code) {
     vendor.code = { $regex: `(?i)${query.code}` };
   }
+  if (query.confirmed) {
+    vendor.confirmed = query.confirmed;
+  }
   if(query.current) {
     let ObjectId = require('mongoose').Types.ObjectId;
     const idToExclude = new ObjectId(query.current)
