@@ -30,6 +30,9 @@ const getQueryFilter = (query) => {
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` };
   }
+  if (query.ref) {
+    filter.ref = { $regex: `(?i)${query.ref}` };
+  }
   if (query.vendor) {
     filter.vendor = query.vendor //{ $regex: `(?i)${query.vendor}` };
   }

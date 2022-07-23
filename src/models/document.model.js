@@ -59,6 +59,11 @@ const documentSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    ref: {
+      type: String,
+      required: false,
+      default:''
+    },
     businessPurpose: {
       type: String,
       default: 'Invoice',
@@ -146,6 +151,7 @@ documentSchema.methods.transform = function() {
     'uploadedBy',
     'validatedBy',
     'client',
+    'ref',
     'isArchived',
     'isBankStatement',
     'filter',

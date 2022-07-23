@@ -141,22 +141,24 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
     }
     const mappingKey = mergeClientTemplateIds(user._id, newDocument.filter);
     skeleton.vendorMappings.set(mappingKey, vendor._id);
-    updateSkeleton(skeleton._id, skeleton); 
+    await updateSkeleton(skeleton._id, skeleton); 
     newDocument.vendor = vendor._id;
   }
   // Populate from KVP mappings (AWS + GCP)
   const nonRefTemplateKeys = template.keys.filter((x, idx) => x.type !== 'REF' && !populatedTemplateKeysCache.has(idx) ).map(x => [x.value].concat(x.tags)).flat();
-  const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
-  for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
-    let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag);
-    osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
-    templateIndex = template.keys.findIndex(x => x.value === templateKey);
-    if(templateIndex){
-      let currentRole = identifyRole(template, templateIndex);
-      if (currentRole) {
-        newDocument[currentRole] = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, true) : newDocument.ggMetadata[ggKey].Text;
+  if (nonRefTemplateKeys.length) {
+    const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
+    for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
+      let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag);
+      osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
+      templateIndex = template.keys.findIndex(x => x.value === templateKey);
+      if(templateIndex){
+        let currentRole = identifyRole(template, templateIndex);
+        if (currentRole) {
+          newDocument[currentRole] = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, true) : newDocument.ggMetadata[ggKey].Text;
+        }
+        newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, false) : newDocument.ggMetadata[ggKey].Text;
       }
-      newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, false) : newDocument.ggMetadata[ggKey].Text;
     }
   }
   return newDocument;

@@ -32,7 +32,7 @@ const getVendors = async (user, query) => {
 };
 
 getSimilarVendor = async (user, name) =>{
-  let query = {user: user._id, confirmed: true}
+  let query = {user: user._id}
   const vendors = await Vendor.find(query, null);
   let foundMatch = false;
   let candidate = null;

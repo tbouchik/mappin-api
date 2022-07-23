@@ -31,6 +31,9 @@ const identifyRole = (template, templateKeyIndex) => {
         case 'VAT':
           result = 'vat';
           break;
+        case 'INVOICE_REF':
+          result = 'ref';
+          break;
       }
   }
   if(keyType === 'DATE' && result === null) {
@@ -51,7 +54,7 @@ const identifySemanticField = (role) => {
     case 'vat':
       result = 'TAX';
       break;
-    case 'invoiceRef':
+    case 'ref':
       result = 'INVOICE_RECEIPT_ID';
       break;
     case 'paymentTerm':
