@@ -27,7 +27,7 @@ const getVendors = async (user, query) => {
   }
   vendor.user = user._id;
   const options = getQueryOptions(query);
-  const vendors = await Vendor.find(vendor, null, options);
+  const vendors = await Vendor.paginate(vendor, options);
   return vendors;
 };
 

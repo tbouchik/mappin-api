@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const paginate = require('../plugins/paginate.plugin');
 
 const vendorSchema = mongoose.Schema(
   {
@@ -30,6 +31,7 @@ const vendorSchema = mongoose.Schema(
   },
 );
 
+vendorSchema.plugin(paginate);
 vendorSchema.methods.transform = function() {
   const vendor = this;
   return vendor.toJSON();
