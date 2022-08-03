@@ -4,6 +4,7 @@ const status = require('./../enums/status');
 const mimeType = require('./../enums/mimeType');
 const extraction = require('./../enums/extraction');
 const { runRules, runRulesValidated } = require('./../utils/validator');
+const paginate = require('../plugins/paginate.plugin');
 
 const documentSchema = mongoose.Schema(
   {
@@ -138,6 +139,7 @@ const documentSchema = mongoose.Schema(
   }
 );
 const index = { name: 'text'};
+documentSchema.plugin(paginate);
 documentSchema.index(index);
 documentSchema.methods.transform = function() {
   const document = this;

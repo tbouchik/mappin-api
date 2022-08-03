@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const AppError = require('../utils/AppError');
 const { Vendor } = require('../models');
-const { getQueryOptions } = require('../utils/service.util');
+const { pick } = require('lodash');
 const { compareStringsSimilitude } = require('../utils/tinder')
 const createVendor = async (user, vendorBody) => {
   vendorBody.user = user._id;
@@ -26,7 +26,7 @@ const getVendors = async (user, query) => {
     vendor._id = { $ne: idToExclude }
   }
   vendor.user = user._id;
-  const options = getQueryOptions(query);
+  const options = pick(query, ['page', 'limit']);
   const vendors = await Vendor.paginate(vendor, options);
   return vendors;
 };

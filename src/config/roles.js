@@ -1,8 +1,9 @@
-const roles = ['user', 'admin'];
+const roles = ['user', 'operator', 'admin'];
 
 const roleRights = new Map();
-roleRights.set(roles[0], ['manageDocuments']);
-roleRights.set(roles[1], ['getUsers', 'manageUsers', 'manageDocuments', 'manageFilters']);
+roleRights.set('user', ['manageDocuments']);
+roleRights.set('operator', ['getUsers', 'manageUsers', 'manageDocuments', 'manageFilters']);
+roleRights.set('admin', ['getUsers', 'manageUsers', 'manageDocuments', 'manageFilters', 'publishDocuments']);
 
 module.exports = {
   roles,

@@ -9,7 +9,7 @@ const createVendor = catchAsync(async (req, res) => {
 
 const getVendors = catchAsync(async (req, res) => {
   const vendors = await vendorService.getVendors(req.user, req.query);
-  vendors.forEach(vendor => vendor.transform());
+  vendors.results.forEach(vendor => vendor.transform());
   res.send(vendors);
 });
 
