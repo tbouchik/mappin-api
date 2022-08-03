@@ -65,7 +65,8 @@ const getClients = async (user, query) => {
     skip, 
     sort
   }
-  const clients = await Client.find(filter, null, options);
+  const clients = await Client.find(filter, null, options)
+  .populate('lastModifiedBy', 'name');
   return clients;
 };
 

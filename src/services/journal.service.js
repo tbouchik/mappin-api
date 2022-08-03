@@ -28,7 +28,7 @@ const getJournals = async (user, query) => {
   }
   journal.user = user._id;
   const options = getQueryOptions(query);
-  const journals = await Journal.find(journal, null, options);
+  const journals = await Journal.find(journal, null, options).populate('lastModifiedBy', 'name');
   return journals;
 };
 

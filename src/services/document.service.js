@@ -101,9 +101,10 @@ const getDocuments = async (user, query) => {
     .populate('user', 'name')
     .populate('client', 'name')
     .populate('journal', 'name')
+    .populate('lastModifiedBy', 'name')
     .populate('vendor')
     .populate('filter');
-  // options.populate = [{path:'user', select:'name'}, {path:'client', select:'name'}, {path:'journal', select:'name'}, {path:'vendor'}, {path:'user'}]
+  // options.populate = [{path:'user', select:'name'}, {path:'client', select:'name'}, {path:'lastModifiedBy', select:'name'}, {path:'journal', select:'name'}, {path:'vendor'}, {path:'user'}]
   // let documents = await Document.paginate(filter, options)
   return documents;
 };

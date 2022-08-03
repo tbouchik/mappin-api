@@ -43,7 +43,7 @@ const getFilters = async (user, query) => {
   }
   filter.user = user._id;
   const options = getQueryOptions(query);
-  const filters = await Filter.find(filter, null, options);
+  const filters = await Filter.find(filter, null, options).populate('lastModifiedBy', 'name');
   return filters;
 };
 

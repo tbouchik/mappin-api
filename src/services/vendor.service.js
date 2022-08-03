@@ -27,6 +27,7 @@ const getVendors = async (user, query) => {
   }
   vendor.user = user._id;
   const options = pick(query, ['page', 'limit']);
+  options.populate = [{path:'lastModifiedBy', select:'name'}]
   const vendors = await Vendor.paginate(vendor, options);
   return vendors;
 };
