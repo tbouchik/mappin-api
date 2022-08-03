@@ -12,6 +12,7 @@ const createVendor = {
 const getVendors = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
+    lastModifiedBy: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     current: Joi.any(),
@@ -34,6 +35,7 @@ const updateVendor = {
   }),
   body: Joi.object()
     .keys({
+      lastModifiedBy: Joi.string().custom(objectId),
       name: Joi.string(),
       code: Joi.string(),
       confirmed: Joi.boolean(),

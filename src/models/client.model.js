@@ -23,6 +23,10 @@ const clientSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    lastModifiedBy: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'User',
+    },
     email: {
       type: String,
       required: false,

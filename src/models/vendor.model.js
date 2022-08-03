@@ -13,6 +13,10 @@ const vendorSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    lastModifiedBy: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'User',
+    },
     code: {
       type: String,
       required: false,

@@ -14,6 +14,10 @@ const filterSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    lastModifiedBy: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'User',
+    },
     type: {
       type: String,
       enum: ['bankStatement', 'invoice'],

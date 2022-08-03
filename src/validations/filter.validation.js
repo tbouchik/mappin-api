@@ -16,6 +16,7 @@ const createFilter = {
 const getFilters = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
+    lastModifiedBy: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number(),
@@ -42,6 +43,7 @@ const updateFilter = {
     .keys({
       name: Joi.string(),
       keys: Joi.array(),
+      lastModifiedBy: Joi.string().custom(objectId),
       description: Joi.string().allow(null, ''),
       type: Joi.string(),
       isActiveJournal: Joi.boolean(),

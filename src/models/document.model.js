@@ -17,6 +17,10 @@ const documentSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    lastModifiedBy: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'User',
+    },
     client: {
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'Client',
@@ -147,6 +151,7 @@ documentSchema.methods.transform = function() {
     'id',
     'name',
     'user',
+    'lastModifiedBy',
     'metadata',
     'ggMetadata',
     'references',

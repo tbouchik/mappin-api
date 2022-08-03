@@ -15,6 +15,7 @@ const createClient = {
 const getClients = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
+    lastModifiedBy: Joi.string().custom(objectId),
     companyId: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
@@ -38,6 +39,7 @@ const updateClient = {
     .keys({
       email: Joi.string().email(),
       name: Joi.string(),
+      lastModifiedBy: Joi.string(),
       company: Joi.string(),
       number: Joi.string(),
       reference:Joi.string(),

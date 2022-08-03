@@ -41,6 +41,7 @@ const createDocument = {
 const getDocuments = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
+    lastModifiedBy: Joi.string().custom(objectId),
     companyId: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
@@ -74,6 +75,7 @@ const getDocuments = {
 const exportBulkCSV = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
+    lastModifiedBy: Joi.string().custom(objectId),
     companyId: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     references: Joi.array(),
@@ -108,6 +110,7 @@ const getNextSmeltedDocumentIds = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
     companyId: Joi.string().custom(objectId),
+    lastModifiedBy: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -144,6 +147,7 @@ const getNextDocumentIds = {
   query: Joi.object().keys({
     userId: Joi.string().custom(objectId),
     companyId: Joi.string().custom(objectId),
+    lastModifiedBy: Joi.string().custom(objectId),
     sortBy: Joi.string(),
     limit: Joi.number().integer(),
     page: Joi.number().integer(),
@@ -191,6 +195,7 @@ const updateDocument = {
       name: Joi.string(),
       metadata: Joi.array(),
       mimeType: Joi.string().valid(mimeType.PNG, mimeType.JPG, mimeType.PDF),
+      lastModifiedBy: Joi.string().custom(objectId),
       alias: Joi.string(),
       bankOsmium: Joi.object(),
       osmium: Joi.array(),
