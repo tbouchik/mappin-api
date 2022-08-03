@@ -19,6 +19,7 @@ const checkDuplicateEmail = async (email, userId) => {
 
 const createClient = async (user, clientBody) => {
   await checkDuplicateEmail(clientBody.email, user._id);
+  clientBody.lastModifiedBy = user._id;
   clientBody.user = user._id;
   const client = await Client.create(clientBody);
   return client;

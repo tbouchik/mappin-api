@@ -9,6 +9,7 @@ let ObjectId = require('mongoose').Types.ObjectId;
 
 const createFilter = async (user, filterBody) => {
   filterBody.user = user._id;
+  filterBody.lastModifiedBy = user._id;
   const filter = await Filter.create(filterBody);
   return filter;
 };

@@ -66,6 +66,7 @@ const createDocument = async (user, documentBody) => {
   if (!user.isClient) {
     // Upload done by accountant
     documentBody.user = user._id;
+    documentBody.lastModifiedBy = user._id;
     if (!documentBody.client) {
       const genericClient = await getClientByEmail(process.env.GENERIC_EMAIL);
       documentBody.client = genericClient._id;

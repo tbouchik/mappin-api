@@ -6,6 +6,7 @@ const { getQueryOptions } = require('../utils/service.util');
 
 const createJournal = async (user, journalBody) => {
   journalBody.user = user._id;
+  journalBody.lastModifiedBy = user._id;
   const journal = await Journal.create(journalBody);
   return journal;
 };

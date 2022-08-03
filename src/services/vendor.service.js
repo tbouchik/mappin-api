@@ -3,8 +3,10 @@ const AppError = require('../utils/AppError');
 const { Vendor } = require('../models');
 const { pick } = require('lodash');
 const { compareStringsSimilitude } = require('../utils/tinder')
+
 const createVendor = async (user, vendorBody) => {
   vendorBody.user = user._id;
+  vendorBody.lastModifiedBy = user._id;
   const vendor = await Vendor.create(vendorBody);
   return vendor;
 };
