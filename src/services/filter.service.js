@@ -67,6 +67,7 @@ const getFilterByName = async name => {
 
 const updateFilter = async (user, filterId, updateBody) => {
   const filter = await getFilterById(user, filterId);
+  updateBody.lastModifiedBy = user._id;
   Object.assign(filter, updateBody);
   await filter.save();
   return filter;

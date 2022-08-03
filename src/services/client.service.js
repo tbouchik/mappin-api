@@ -93,6 +93,7 @@ const updateClient = async (user, clientId, updateBody) => {
   if (updateBody.email && updateBody.email !== client.email) {
     await checkDuplicateEmail(updateBody.email, user.id);
   }
+  updateBody.lastModifiedBy = user._id;
   Object.assign(client, updateBody);
   await client.save();
   return client;

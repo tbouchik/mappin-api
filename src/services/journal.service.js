@@ -44,6 +44,7 @@ const getJournalById = async (user, journalId, skipAuth = false) => {
 
 const updateJournal = async (user, journalId, updateBody) => {
   const journal = await getJournalById(user, journalId);
+  updateBody.lastModifiedBy = user._id;
   Object.assign(journal, updateBody);
   await journal.save();
   return journal;

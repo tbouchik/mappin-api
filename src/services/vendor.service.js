@@ -63,6 +63,7 @@ const getVendorById = async (user, vendorId, skipAuth = false) => {
 
 const updateVendor = async (user, vendorId, updateBody) => {
   const vendor = await getVendorById(user, vendorId);
+  updateBody.lastModifiedBy = user._id;
   Object.assign(vendor, updateBody);
   await vendor.save();
   return vendor;

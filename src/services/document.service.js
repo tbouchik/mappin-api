@@ -358,6 +358,7 @@ const updateDocument = async (user, documentId, updateBody) => {
     if (updateBody.newVendor ) {
       updateBody.vendor = updateBody.newVendor;
     }
+    updateBody.lastModifiedBy = user._id;
     updateBody = omit(updateBody, ['mbc', 'refMapping', 'newJournal', 'newVendor']);
     Object.assign(document, updateBody);
     await document.save()
