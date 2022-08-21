@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const { pick, omit, pickBy } = require('lodash');
 const AppError = require('../utils/AppError');
-const { Document } = require('../models');
+const { Document, User } = require('../models');
 const { removeBlanksFromString } = require('../utils/service.util');
 const { getFilterById } = require('./filter.service');
 const { getClientByEmail } = require('./client.service');
@@ -87,7 +87,13 @@ const createDocument = async (user, documentBody) => {
 const getDocuments = async (user, query) => {
   // FILTER
   let filter = getQueryFilter(query)
-  filter.user = user._id;
+  if (user.role == 'admin'){
+    const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
+    const usersIdsFromSameCompany = usersFromSameCompany.map(x => x._id)
+    filter.user = {$in: usersIdsFromSameCompany};
+  } else {
+    filter.user = user._id;
+  }
   // OPTIONS
   let page = query.page || 0;
   let limit = query.limit || 300;

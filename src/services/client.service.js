@@ -1,13 +1,13 @@
 const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
-const { Client } = require('../models');
+const { Client, User } = require('../models');
 const stdClients = require('../utils/stdClient');
 
 const checkDuplicateEmail = async (email, userId) => {
   if (email !== process.env.GENERIC_EMAIL) {
     let ObjectId = require('mongoose').Types.ObjectId; 
-    const client = await Client.findOne({ 
+    const client = await Client.findOne({
       email,
       user: new ObjectId(userId)
     });
@@ -35,7 +35,7 @@ const createDefaultClient = async (userId, company) => {
     reference:'N/A',
     company,
   };
-  defaultClients.push(genericClientBody)
+  defaultClients.push(genericClientBody);
   const client = await Client.insertMany(defaultClients);
   return client;
 };
@@ -43,7 +43,9 @@ const createDefaultClient = async (userId, company) => {
 const getClients = async (user, query) => {
   // FILTER
   const filter = pick(query, ['company']);
-  filter.user = user._id;
+  const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
+  const usersIdsFromSameCompany = usersFromSameCompany.map(x => x._id)
+  filter.user = {$in: usersIdsFromSameCompany};
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
@@ -53,7 +55,7 @@ const getClients = async (user, query) => {
     const idToExclude = new ObjectId(query.current)
     // qty: { $nin: [ 5, 15 ] }
     filter._id = { $nin: [defaultClientId, idToExclude]}
-  }else {
+  } else {
     filter._id = { $ne: defaultClientId }
   }
   // OPTIONS

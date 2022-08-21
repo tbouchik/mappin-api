@@ -1,6 +1,6 @@
 const httpStatus = require('http-status');
 const AppError = require('../utils/AppError');
-const { Vendor } = require('../models');
+const { Vendor, User } = require('../models');
 const { pick } = require('lodash');
 const { compareStringsSimilitude } = require('../utils/tinder')
 
@@ -27,7 +27,9 @@ const getVendors = async (user, query) => {
     const idToExclude = new ObjectId(query.current)
     vendor._id = { $ne: idToExclude }
   }
-  vendor.user = user._id;
+  const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
+  const usersIdsFromSameCompany = usersFromSameCompany.map(x => x._id)
+  vendor.user ={$in: usersIdsFromSameCompany};
   const options = pick(query, ['page', 'limit']);
   options.populate = [{path:'lastModifiedBy', select:'name'}]
   const vendors = await Vendor.paginate(vendor, options);

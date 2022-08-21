@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
-const { Journal } = require('../models');
+const { Journal, User } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 
 const createJournal = async (user, journalBody) => {
@@ -13,6 +13,8 @@ const createJournal = async (user, journalBody) => {
 
 const getJournals = async (user, query) => {
   const journal = {};
+  const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
+  const usersIdsFromSameCompany = usersFromSameCompany.map(x => x._id)
   if (query.name) {
     journal.name = { $regex: `(?i)${query.name}` } 
   }
@@ -27,7 +29,7 @@ const getJournals = async (user, query) => {
     const idToExclude = new ObjectId(query.current)
     journal._id = { $ne: idToExclude }
   }
-  journal.user = user._id;
+  journal.user = {$in: usersIdsFromSameCompany};
   const options = getQueryOptions(query);
   const journals = await Journal.find(journal, null, options).populate('lastModifiedBy', 'name');
   return journals;

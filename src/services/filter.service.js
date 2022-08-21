@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
-const { Filter } = require('../models');
+const { Filter, User } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 const defaultFilter = require('../utils/defaultFilter');
 const stdFilterFr = require('../utils/stdFilterFr');
@@ -31,6 +31,8 @@ const createDefaultFilter = async userId => {
 
 const getFilters = async (user, query) => {
   const filter = {};
+  const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
+  const usersIdsFromSameCompany = usersFromSameCompany.map(x => x._id)
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
@@ -42,7 +44,7 @@ const getFilters = async (user, query) => {
     const idToExclude = new ObjectId(query.current)
     filter._id = { $ne: idToExclude }
   }
-  filter.user = user._id;
+  filter.user = {$in: usersIdsFromSameCompany}
   const options = getQueryOptions(query);
   const filters = await Filter.find(filter, null, options).populate('lastModifiedBy', 'name');
   return filters;
