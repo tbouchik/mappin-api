@@ -333,11 +333,12 @@ const getDocumentById = async (user, documentId) => {
     .populate('filter');
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
-  } else if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to read this document');
-  } else if (user.isClient && parseInt(document.client._id) !== parseInt(user._id)) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to read this document');
-  }
+  } else if (parseInt(document.user._id) !== parseInt(user._id)) {
+    const documentCreator = await User.findById(document.user._id)
+    if (parseInt(documentCreator.company) !== parseInt(user.company)) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this document information');
+    }
+  } 
   return document;
 };
 
@@ -346,11 +347,12 @@ const updateDocument = async (user, documentId, updateBody) => {
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
   } else {
-    if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
-      throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
-    } else if (user.isClient) {
-      throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to modify this document');
-    }
+    if (parseInt(document.user._id) !== parseInt(user._id)) {
+      const documentCreator = await User.findById(document.user._id)
+      if (parseInt(documentCreator.company) !== parseInt(user.company)) {
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this document information');
+      }
+    } 
     if (updateBody.filter && document.filter !== updateBody.filter) {
       // User chose to change filter
       updateBody.osmium = await shapeOsmiumFromFilterId(user, updateBody.filter); // Osmium must follow
@@ -387,11 +389,12 @@ const deleteDocument = async (user, documentId) => {
   if (!document) {
     throw new AppError(httpStatus.NOT_FOUND, 'Document not found');
   } else {
-    if (!user.isClient && parseInt(document.user._id) !== parseInt(user._id)) {
-      throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to delete this document');
-    } else if (user.isClient) {
-      throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to delete this document');
-    }
+    if (parseInt(document.user._id) !== parseInt(user._id)) {
+      const documentCreator = await User.findById(document.user._id)
+      if (parseInt(documentCreator.company) !== parseInt(user.company)) {
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this document information');
+      }
+    } 
     await document.remove();
     return document;
   }

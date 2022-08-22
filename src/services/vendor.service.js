@@ -59,8 +59,13 @@ const getVendorById = async (user, vendorId, skipAuth = false) => {
   const vendor = await Vendor.findById(vendorId);
   if (!vendor) {
     throw new AppError(httpStatus.NOT_FOUND, 'Vendor not found');
-  } else if (parseInt(vendor.user) !== parseInt(user._id) && !skipAuth) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this vendor information');
+  } else if (!skipAuth) {
+    if (parseInt(vendor.user) !== parseInt(user._id)) {
+      const vendorCreator = await User.findById(vendor.user)
+      if (parseInt(vendorCreator.company) !== parseInt(user.company)) {
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this vendor information');
+      }
+    }
   }
   return vendor;
 };

@@ -39,8 +39,13 @@ const getJournalById = async (user, journalId, skipAuth = false) => {
   const journal = await Journal.findById(journalId);
   if (!journal) {
     throw new AppError(httpStatus.NOT_FOUND, 'Journal not found');
-  } else if (parseInt(journal.user) !== parseInt(user._id) && !skipAuth) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this journal information');
+  } else if (!skipAuth) {
+    if (parseInt(journal.user) !== parseInt(user._id)) {
+      const journalCreator = await User.findById(journal.user)
+      if (parseInt(journalCreator.company) !== parseInt(user.company)) {
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this journal information');
+      }
+    }
   }
   return journal;
 };

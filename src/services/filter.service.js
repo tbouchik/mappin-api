@@ -31,7 +31,7 @@ const createDefaultFilter = async userId => {
 
 const getFilters = async (user, query) => {
   const filter = {};
-  const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
+  const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec();
   const usersIdsFromSameCompany = usersFromSameCompany.map(x => x._id)
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
@@ -41,10 +41,10 @@ const getFilters = async (user, query) => {
   }
   if(query.current) {
     let ObjectId = require('mongoose').Types.ObjectId;
-    const idToExclude = new ObjectId(query.current)
-    filter._id = { $ne: idToExclude }
+    const idToExclude = new ObjectId(query.current);
+    filter._id = { $ne: idToExclude };
   }
-  filter.user = {$in: usersIdsFromSameCompany}
+  filter.user = {$in: usersIdsFromSameCompany};
   const options = getQueryOptions(query);
   const filters = await Filter.find(filter, null, options).populate('lastModifiedBy', 'name');
   return filters;
@@ -54,8 +54,13 @@ const getFilterById = async (user, filterId, skipAuth = false) => {
   const filter = await Filter.findById(filterId);
   if (!filter) {
     throw new AppError(httpStatus.NOT_FOUND, 'Filter not found');
-  } else if (parseInt(filter.user) !== parseInt(user._id) && !skipAuth) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this filter information');
+  } else if (!skipAuth) {
+    if (parseInt(filter.user) !== parseInt(user._id)) {
+      const filterCreator = await User.findById(filter.user);
+      if (parseInt(filterCreator.company) !== parseInt(user.company)) {
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this filter information');
+      }
+    }
   }
   return filter;
 };
@@ -97,7 +102,10 @@ const getDefaultFilter = async (user) => {
   if (!filter) {
     throw new AppError(httpStatus.NOT_FOUND, 'Filter ID not found');
   } else if (parseInt(filter.user) !== parseInt(user._id)) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this filter information');
+    const filterCreator = await User.findById(filter.user)
+    if (parseInt(filterCreator.company) !== parseInt(user.company)) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this filter information');
+    }
   }
   return filter;
 };

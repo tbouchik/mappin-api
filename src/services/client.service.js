@@ -45,9 +45,9 @@ const getClients = async (user, query) => {
   const filter = pick(query, ['company']);
   const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
   const usersIdsFromSameCompany = usersFromSameCompany.map(x => x._id)
-  filter.user = {$in: usersIdsFromSameCompany};
+  filter.user = { $in: usersIdsFromSameCompany };
   if (query.name) {
-    filter.name = { $regex: `(?i)${query.name}` } 
+    filter.name = { $regex: `(?i)${query.name}` };
   }
   const defaultClientId = await getDefaultClientId(user) // TODO: Optimize second call to DB 
   if(query.current) {
@@ -78,7 +78,10 @@ const getClientById = async (user, clientId) => {
   if (!client) {
     throw new AppError(httpStatus.NOT_FOUND, 'Client not found');
   } else if (parseInt(client.user) !== parseInt(user._id)) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this client information');
+    const clientCreator = await User.findById(client.user)
+    if (parseInt(clientCreator.company) !== parseInt(user.company)) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this client information');
+    }
   }
   return client;
 };
@@ -113,7 +116,10 @@ const getDefaultClientId = async (user) => {
   if (!client) { 
     throw new AppError(httpStatus.NOT_FOUND, 'Client ID not found');
   } else if (parseInt(client.user) !== parseInt(user._id)) {
-    throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this client information');
+    const clientCreator = await User.findById(client.user)
+    if (parseInt(clientCreator.company) !== parseInt(user.company)) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'Insufficient rights to access this client information');
+    }
   }
   return client._id;
 };
