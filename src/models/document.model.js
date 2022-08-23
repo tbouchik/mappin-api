@@ -100,6 +100,13 @@ const documentSchema = mongoose.Schema(
       type: Number,
       default: '',
     },
+    dueDate: {
+      type: Date,
+    },
+    paymentTerms: {
+      type: String,
+      default: '',
+    },
     totalTtc: {
       type: Number,
       default: '',
@@ -174,6 +181,8 @@ documentSchema.methods.transform = function() {
     'bankOsmium',
     'semantics',
     'totalHt',
+    'dueDate',
+    'paymentTerms',
     'invoiceDate',
     'journal',
     'totalTtc',

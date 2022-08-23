@@ -34,6 +34,12 @@ const identifyRole = (template, templateKeyIndex) => {
         case 'INVOICE_REF':
           result = 'ref';
           break;
+        case 'DUE_DATE':
+          result = 'dueDate';
+          break;
+        case 'PAYMENT_TERMS':
+          result = 'paymentTerms';
+          break;
       }
   }
   if(keyType === 'DATE' && result === null) {

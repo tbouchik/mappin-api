@@ -160,6 +160,8 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
     invoiceDate: document.invoiceDate,
     vendor: document.vendor,
     totalHt: document.totalHt,
+    dueDate: document.dueDate,
+    paymentTerms: document.paymentTerms,
     ref: document.ref,
     totalTtc: document.totalTtc,
     vat: document.vat,
