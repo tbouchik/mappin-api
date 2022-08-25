@@ -4,6 +4,34 @@ const { Vendor, User } = require('../models');
 const { pick } = require('lodash');
 const { compareStringsSimilitude } = require('../utils/tinder')
 
+const getQueryFilter = (query) => {
+  let ObjectId = require('mongoose').Types.ObjectId; 
+  let filter = pick(query, ['name', 'code', 'confirmed', 'reference', 'current', 'generalAccount']); // filter by client if specified in query by accountant
+  filter.client = filter.client? ObjectId(filter.client): null
+  
+  if (query.name) {
+    filter.name = { $regex: `(?i)${query.name}` } 
+  }
+  if (query.code) {
+    filter.code = { $regex: `(?i)${query.code}` };
+  }
+  if (query.confirmed) {
+    filter.confirmed = query.confirmed;
+  }
+  if (query.reference) {
+    filter.reference = { $regex: `(?i)${query.reference}` };
+  }
+  if (query.generalAccount) {
+    filter.generalAccount = { $regex: `(?i)${query.generalAccount}` };
+  }
+  if(query.current) {
+    let ObjectId = require('mongoose').Types.ObjectId;
+    const idToExclude = new ObjectId(query.current)
+    filter._id = { $ne: idToExclude }
+  }
+  return pickBy(filter, (v,_) => { return typeof v === 'number' || typeof v === 'boolean' || !!v });
+};
+
 const createVendor = async (user, vendorBody) => {
   vendorBody.user = user._id;
   vendorBody.lastModifiedBy = user._id;
@@ -12,27 +40,13 @@ const createVendor = async (user, vendorBody) => {
 };
 
 const getVendors = async (user, query) => {
-  let vendor = {};
-  if (query.name) {
-    vendor.name = { $regex: `(?i)${query.name}` } 
-  }
-  if (query.code) {
-    vendor.code = { $regex: `(?i)${query.code}` };
-  }
-  if (query.confirmed) {
-    vendor.confirmed = query.confirmed;
-  }
-  if(query.current) {
-    let ObjectId = require('mongoose').Types.ObjectId;
-    const idToExclude = new ObjectId(query.current)
-    vendor._id = { $ne: idToExclude }
-  }
+  let filter = getQueryFilter(query);
   const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
   const usersIdsFromSameCompany = usersFromSameCompany.map(x => x._id)
-  vendor.user ={$in: usersIdsFromSameCompany};
+  filter.user ={$in: usersIdsFromSameCompany};
   const options = pick(query, ['page', 'limit']);
   options.populate = [{path:'lastModifiedBy', select:'name'}]
-  const vendors = await Vendor.paginate(vendor, options);
+  const vendors = await Vendor.paginate(filter, options);
   return vendors;
 };
 

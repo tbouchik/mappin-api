@@ -8,7 +8,7 @@ const vendorSchema = mongoose.Schema(
       required: true,
       trim: true,
     },
-    user: {
+    user: { // Intitulé
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'User',
       required: true,
@@ -17,7 +17,55 @@ const vendorSchema = mongoose.Schema(
       type: mongoose.SchemaTypes.ObjectId,
       ref: 'User',
     },
-    code: {
+    reference: { // unique Id dans le logiciel comptable (Sage) - Foreign Key
+      type: String,
+      required: false,
+      default:'',
+      trim: true,
+    },
+    code: { // Numéro de Compte
+      type: String,
+      required: false,
+      default:'',
+      trim: true,
+    },
+    address: { 
+      type: String,
+      required: false,
+      default:'',
+      trim: true,
+    },
+    refTiers: { 
+      type: String,
+      required: false,
+      default:'',
+      trim: true,
+    },
+    refTiersPayeur: { 
+      type: String,
+      required: false,
+      default:'',
+      trim: true,
+    },
+    currency: { 
+      type: String,
+      required: false,
+      default:'',
+      trim: true,
+    },
+    generalAccount: { 
+      type: String,
+      required: false,
+      default:'',
+      trim: true,
+    },
+    iban: { 
+      type: String,
+      required: false,
+      default:'',
+      trim: true,
+    },
+    bic: { 
       type: String,
       required: false,
       default:'',
