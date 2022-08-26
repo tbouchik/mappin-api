@@ -143,6 +143,7 @@ const exportBulkCSV = async (user, query) => {
   // FILTER
   let filter = getQueryFilter(query)
   filter.user = user._id;
+  
   let templateIds = await Document.aggregate([
     { $match: filter },
     {
@@ -250,7 +251,8 @@ const exportBankStatementsBulkCSV = async (user, query) => {
   if (query.name) {
     filter.name = { $regex: `(?i)${query.name}` } 
   }
-  let docIds = []
+  if (user.role === 'admin') {
+    let docIds = []
   let docs = await getDocuments(user, filter);
   docIds = docIds.concat(docs.map(x => x._id));
   let fixedKeys = ['Date Opération', 'Désignation', 'Compte', 'Débit', 'Crédit']; // TODO change logic once real requirements come in
@@ -280,7 +282,10 @@ const exportBankStatementsBulkCSV = async (user, query) => {
     currentDocument.content = docContent;
     csvData.push(currentDocument);
   })
-  return {aggregate:csvData, ids:docIds};
+    return {aggregate:csvData, ids:docIds};
+  } else {
+    return {aggregate:[], ids:[]};
+  }
 };
 
 const getTitleForBankStatementDocument = (document) => {

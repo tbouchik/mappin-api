@@ -13,10 +13,6 @@ const vendorSchema = mongoose.Schema(
       ref: 'User',
       required: true,
     },
-    lastModifiedBy: {
-      type: mongoose.SchemaTypes.ObjectId,
-      ref: 'User',
-    },
     reference: { // unique Id dans le logiciel comptable (Sage) - Foreign Key
       type: String,
       required: false,
@@ -41,7 +37,7 @@ const vendorSchema = mongoose.Schema(
       default:'',
       trim: true,
     },
-    refTiersPayeur: { 
+    refTiersPayer: { 
       type: String,
       required: false,
       default:'',
@@ -70,6 +66,10 @@ const vendorSchema = mongoose.Schema(
       required: false,
       default:'',
       trim: true,
+    },
+    lastModifiedBy: {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'User',
     },
     confirmed: {
       type: Boolean,

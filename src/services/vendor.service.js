@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const AppError = require('../utils/AppError');
 const { Vendor, User } = require('../models');
-const { pick } = require('lodash');
+const { pick, pickBy } = require('lodash');
 const { compareStringsSimilitude } = require('../utils/tinder')
 
 const getQueryFilter = (query) => {
