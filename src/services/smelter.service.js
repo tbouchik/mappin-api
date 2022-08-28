@@ -117,7 +117,9 @@ const aixtract = async (bucketKey, mimeType) => {
 
 const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) => {
   let newDocument = Object.assign({}, documentBody);
+  let skeletonHasChanged = false;
   const ggMetadataKeys = Object.keys(newDocument.ggMetadata);
+  const mappingKey = mergeClientTemplateIds(user._id, newDocument.filter);
   const treshold = 39;
   // Populate from Semantic fields (AWS) except for Vendor
   let populatedTemplateKeysCache = new Set()
@@ -133,8 +135,12 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
     }
   }
   // Populate Journal if defaultJournal exists
-  const defaultJournal = Journal.findOne({isDefault: true});
-  newDocument.journal = defaultJournal? defaultJournal._id :journalMapping;
+  const defaultJournal = await Journal.findOne({isDefault: true});
+  if (defaultJournal) {
+    newDocument.journal = defaultJournal._id;
+    skeleton.journalMappings.set(mappingKey, defaultJournal._id);
+    skeletonHasChanged = true;
+  }
   // Populate suggested vendor if exists
   if ('VENDOR_NAME' in newDocument.semantics){
     let newVendorName = newDocument.semantics['VENDOR_NAME']
@@ -143,11 +149,11 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
       let newVendorBody = {name: newVendorName, confirmed: false};
       vendor = await createVendor(user, newVendorBody);
     }
-    const mappingKey = mergeClientTemplateIds(user._id, newDocument.filter);
     skeleton.vendorMappings.set(mappingKey, vendor._id);
-    await updateSkeleton(skeleton._id, skeleton); 
     newDocument.vendor = vendor._id;
+    skeletonHasChanged = true;
   }
+  if(skeletonHasChanged) await updateSkeleton(skeleton._id, skeleton); 
   // Populate from KVP mappings (AWS + GCP)
   const nonRefTemplateKeys = template.keys.filter((x, idx) => x.type !== 'REF' && !populatedTemplateKeysCache.has(idx) ).map(x => [x.value].concat(x.tags)).flat();
   if (nonRefTemplateKeys.length) {
