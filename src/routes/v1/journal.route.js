@@ -7,6 +7,10 @@ const journalController = require('../../controllers/journal.controller');
 const router = express.Router();
 
 router
+  .route('/default')
+  .post(auth('manageDocuments'), validate(journalValidation.makeDefault), journalController.makeDefaultJournal)
+
+router
   .route('/')
   .post(auth('manageDocuments'), validate(journalValidation.createJournal), journalController.createJournal)
   .get(auth('manageDocuments'), validate(journalValidation.getJournals), journalController.getJournals);

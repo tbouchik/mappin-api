@@ -1,5 +1,5 @@
 // mbc for Memory B cells - this was coded in the coronaverse
-const { Skeleton } = require('../models');
+const { Skeleton, Journal } = require('../models');
 const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, getSignatureFromOssature, skeletonUpdateBbox, skeletonUpdateGgMapping, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
@@ -216,8 +216,11 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
   imputations = objectToMap(imputations);
   refMappings = objectToMap(refMappings);
   newDocument.refMappings = getReferencesImputations(newDocument.references, refMappings);
-  newDocument.journal = journalMapping;
   newDocument.vendor = vendorMapping;
+  if (!journalMapping) {
+    const defaultJournal = Journal.findOne({isDefault: true});
+    newDocument.journal = defaultJournal? defaultJournal._id :journalMapping;
+  }
   const docSkeleton = get(newDocument, 'metadata.page_1', {});
   for (let i = 0; i <template.keys.length; i++) {
     let key = template.keys[i];

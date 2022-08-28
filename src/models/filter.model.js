@@ -28,7 +28,6 @@ const filterSchema = mongoose.Schema(
     isActiveJournal: {
       type: Boolean
     },
-    journalTags: [],
     description: {
         type: String,
     },

@@ -6,6 +6,13 @@ const createJournal = {
     name: Joi.string().required(),
     code: Joi.string().required(),
     type: Joi.string().required(),
+    isDefault: Joi.boolean(),
+  }),
+};
+
+const makeDefault = {
+  body: Joi.object().keys({
+    id: Joi.string(),
   }),
 };
 
@@ -20,6 +27,7 @@ const getJournals = {
     type: Joi.string(),
     name: Joi.string(),
     code: Joi.string(),
+    isDefault: Joi.boolean(),
   }),
 };
 
@@ -39,6 +47,7 @@ const updateJournal = {
       type: Joi.string(),
       name: Joi.string(),
       code: Joi.string(),
+      isDefault: Joi.boolean(),
     })
     .min(1),
 };
@@ -55,4 +64,5 @@ module.exports = {
   getJournal,
   updateJournal,
   deleteJournal,
+  makeDefault,
 };

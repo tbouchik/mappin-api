@@ -7,6 +7,11 @@ const createJournal = catchAsync(async (req, res) => {
   res.status(httpStatus.CREATED).send(journal.transform());
 });
 
+const makeDefaultJournal = catchAsync(async (req, res) => {
+  await journalService.makeDefaultJournal(req.user, req.body);
+  res.json({ done: true });
+});
+
 const getJournals = catchAsync(async (req, res) => {
   const journals = await journalService.getJournals(req.user, req.query);
   const response = journals.map(journal => journal.transform());
@@ -40,4 +45,5 @@ module.exports = {
   updateJournal,
   deleteJournal,
   getDefaultJournalId,
+  makeDefaultJournal,
 };

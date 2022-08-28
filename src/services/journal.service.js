@@ -11,6 +11,15 @@ const createJournal = async (user, journalBody) => {
   return journal;
 };
 
+makeDefaultJournal = async (user, journalBody) => {
+  let journal = {};
+  await Journal.updateMany({}, {isDefault: false});
+  if (journalBody && journalBody.id) {
+    journal = await updateJournal(user,journalBody.id, {isDefault: true} )
+  }
+  return journal
+};
+
 const getJournals = async (user, query) => {
   const journal = {};
   const usersFromSameCompany = await User.find({company: user.company}).select({ "_id": 1}).exec()
@@ -70,4 +79,5 @@ module.exports = {
   getJournalById,
   updateJournal,
   deleteJournal,
+  makeDefaultJournal,
 };

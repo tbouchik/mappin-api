@@ -23,6 +23,9 @@ const journalSchema = mongoose.Schema(
       required: true,
       trim: true,
     },
+    isDefault: {
+      type: Boolean,
+    },
     type: {
       type: String,
       enum: ['achats', 'ventes', 'tresorerie', 'general', 'situation'],

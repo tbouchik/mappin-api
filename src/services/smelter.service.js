@@ -5,6 +5,7 @@ const location = process.env.GOOGLE_PROJECT_LOCATION;
 const { DocumentUnderstandingServiceClient } = require('@google-cloud/documentai').v1beta2;
 const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
+const { Journal } = require('../models');
 const { getSimilarVendor } = require('../services/vendor.service');
 const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { updateSkeleton } = require('../services/skeleton.service');
@@ -131,6 +132,9 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
       }
     }
   }
+  // Populate Journal if defaultJournal exists
+  const defaultJournal = Journal.findOne({isDefault: true});
+  newDocument.journal = defaultJournal? defaultJournal._id :journalMapping;
   // Populate suggested vendor if exists
   if ('VENDOR_NAME' in newDocument.semantics){
     let newVendorName = newDocument.semantics['VENDOR_NAME']
