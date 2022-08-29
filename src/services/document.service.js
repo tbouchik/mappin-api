@@ -200,7 +200,7 @@ const exportBulkCSV = async (user, query) => {
           imputableEntrySegment.push(doc.journal.name)
         }
         // populate vendor
-        imputableEntrySegment.push(doc.vendor.name)
+        imputableEntrySegment.push(removeBlanksFromString(doc.vendor.name))
         // populay vendor number
         imputableEntrySegment.push(doc.vendor.code)
         // populate libelle
@@ -221,7 +221,7 @@ const exportBulkCSV = async (user, query) => {
         }
         let referenceEntrySegment = nonImputableEntrySegment.concat(expenseSegment);
         // populate vendor
-        referenceEntrySegment.push(doc.vendor.name)
+        referenceEntrySegment.push(removeBlanksFromString(doc.vendor.name))
         // populay vendor number
         referenceEntrySegment.push(doc.vendor.code)
         // populate libelle
