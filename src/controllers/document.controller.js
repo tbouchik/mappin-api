@@ -64,10 +64,11 @@ const updateDocument = catchAsync(async (req, res) => {
   const refMapping = req.body.refMapping || null;
   const newJournal = req.body.newJournal || null;
   const newVendor = req.body.newVendor || null;
+  const newPayment = req.body.paymentTerms || null;
   const updatedRoles = pick(req.body, ['bankEntity'])
   let document = await documentService.updateDocument(req.user, req.params.documentId, req.body);
   let template = await getFilterById(req.user, document.filter, true);
-  const skeleton = await updateSkeletonFromDocUpdate(req.user, document, template, mbc, refMapping, newJournal, newVendor, updatedRoles);
+  const skeleton = await updateSkeletonFromDocUpdate(req.user, document, template, mbc, refMapping, newJournal, newVendor, newPayment, updatedRoles);
   let collateralQuery = {status: status.SMELTED, skeleton: skeleton._id, _id:{ $nin: [document._id] } };
   let collateralDocs = await documentService.getDocuments(req.user, collateralQuery);
   let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(x.transform(), skeleton, template, updatedRoles));

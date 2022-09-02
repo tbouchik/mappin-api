@@ -32,6 +32,7 @@ const skeletonSchema = mongoose.Schema(
     imputations: {},
     journalMappings: {},
     vendorMappings: {},
+    paymentMappings: {}
   },
   {
     timestamps: true,
