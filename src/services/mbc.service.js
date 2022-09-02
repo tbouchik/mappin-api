@@ -390,6 +390,7 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
           newImputationMappings[template.keys[idx].value] = updateBody.osmium[idx].Imputation;
         })
         skeleton.imputations.set(clientTempKey, mapToObject(newImputationMappings));
+        skeleton.markModified('imputations');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
       }
@@ -405,6 +406,7 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
           newRefMappings = refMapping
         }
         skeleton.refMappings.set(clientTempKey, mapToObject(newRefMappings));
+        skeleton.markModified('refMappings');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
       }
@@ -413,6 +415,7 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
         skeleton.journalMappings.set(clientTempKey, newJournal);
+        skeleton.markModified('journalMappings');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
       }
@@ -421,6 +424,7 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
         skeleton.vendorMappings.set(clientTempKey, newVendor);
+        skeleton.markModified('vendorMappings');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
       }
@@ -428,6 +432,7 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
   } else if (newPayment){
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
+        skeleton.markModified('paymentMappings');
         skeleton.paymentMappings.set(clientTempKey, newPayment);
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
