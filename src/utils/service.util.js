@@ -28,10 +28,10 @@ const getOptions = query => {
 };
 
 
-const mergeClientTemplateIds = (client, template) => {
-  let clientId = client._id ? client._id.toString() :client;
+const mergeCompanyTemplateIds = (company, template) => {
+  let companyId = company._id ? company._id.toString() :company;
   let templateId = template._id ? template._id.toString() : template;
-  return `${clientId}_${templateId}`;
+  return `${companyId}_${templateId}`;
 }
 
 const RegexType = Object.freeze({'EMAIL':1, 'DATE':2, 'OTHER':3})
@@ -162,7 +162,7 @@ module.exports = {
   getQueryOptions,
   RegexType,
   SignatureMatchRating,
-  mergeClientTemplateIds,
+  mergeCompanyTemplateIds,
   objectToMap,
   mapToObject,
   formatValue,

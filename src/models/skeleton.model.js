@@ -26,7 +26,7 @@ const skeletonSchema = mongoose.Schema(
       required: true,
     },
     ggMappings: {},
-    clientTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
+    companyTemplateMapping: {}, // HashTable<ClientID; List<TemplateID>>
     bboxMappings: {}, // HashTable<ClientTempID; HashTable<TemplateKeyValue; Bbox>>
     refMappings: {}, 
     imputations: {},

@@ -1,10 +1,10 @@
 // mbc for Memory B cells - this was coded in the coronaverse
 const { Skeleton } = require('../models');
 const { skeletonsMatch, getGeoClosestBoxScores, skeletonStoreClientTemplate, getSignatureFromOssature, skeletonUpdateBbox, skeletonUpdateGgMapping, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
-const { mergeClientTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
+const { mergeCompanyTemplateIds, formatValue, mapToObject, objectToMap } = require('../utils/service.util')
 const { getFilterById } = require('../services/filter.service');
 const { updateSkeleton, getSkeletonById } = require('../services/skeleton.service');
-const { skeletonHasClientTemplate } = require('../miner/skeletons');
+const { skeletonHasCompanyTemplate } = require('../miner/skeletons');
 const { identifySemanticField, identifyRole, templateKeyoneToOneCompare } = require('./../miner/template');
 const { ggMetadataHasSimilarKey, ggMetadataHasSimilarTag, compareStringsSimilitude } = require('../utils/tinder');
 const { isEmpty, get, pick, omit } = require('lodash');
@@ -60,15 +60,15 @@ const flattenMunkres = (munkresOutput, templateKeysLength) => {
 const getMostResemblantTemplate = async (user, documentFilter, skeletonReference) => {
   let result = { key:'', template:'', indices: [] };
   let candidates = [] 
-  let clientTemplateMap = skeletonReference.clientTemplateMapping;
+  let clientTemplateMap = skeletonReference.companyTemplateMapping;
   let bboxMap = skeletonReference.bboxMappings;
-  for (let [clientId, templateIdArrays] of clientTemplateMap) {
+  for (let [companyId, templateIdArrays] of clientTemplateMap) {
     for (let i=0; i<templateIdArrays.length; i++){
       let templateId = templateIdArrays[i]
-      if (skeletonHasClientTemplate(skeletonReference,clientId,templateId)) {
-        let clientTempKey = mergeClientTemplateIds(clientId, templateId);
+      if (skeletonHasCompanyTemplate(skeletonReference,companyId,templateId)) {
+        let companyTempKey = mergeCompanyTemplateIds(companyId, templateId);
         const refTemplate = await getFilterById(user, templateId, true);
-        candidates.push({ key: clientTempKey,
+        candidates.push({ key: companyTempKey,
                           templateId: templateId,
                           templateKeys: refTemplate.keys
                         })
@@ -158,8 +158,8 @@ const findGgMappingKeyFromMBC = (templateKeys, ggMetadata, mbc) => {
 }
 
 const createSkeleton = async (user, docBody, docId) => {
-  let clientTemplateMapping = new Map();
-  clientTemplateMapping.set(user.id,  [docBody.filter.toString()]);
+  let companyTemplateMapping = new Map();
+  companyTemplateMapping.set(user.company,  [docBody.filter.toString()]);
   let template = await getFilterById(user, docBody.filter, true);
   let templateKeyBBoxMappingArr = []
   for (let i=0; i < template.keys.length; i++) {
@@ -167,7 +167,7 @@ const createSkeleton = async (user, docBody, docId) => {
   }
   let templateKeyBBoxMapping = new Map(templateKeyBBoxMappingArr) // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map#relation_with_array_objects
   let bboxMappings = new Map();
-  bboxMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
+  bboxMappings.set(mergeCompanyTemplateIds(user.company, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   let templateKeyGgMappingArr = [];
   for (let i= 0; i < template.keys.length; i++) {
     let elementMapped = findGgMappingKey(template.keys[i], docBody);
@@ -175,22 +175,22 @@ const createSkeleton = async (user, docBody, docId) => {
   }
   let templateKeyGgMapping = new Map(templateKeyGgMappingArr);
   let ggMappings = new Map();
-  ggMappings.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyGgMapping));
+  ggMappings.set(mergeCompanyTemplateIds(user.company, docBody.filter) , Object.fromEntries(templateKeyGgMapping));
   let imputations = new Map ();
   let refMappings = new Map();
   let journalMappings = new Map();
   let vendorMappings = new Map();
   let paymentMappings = new Map();
-  journalMappings.set(mergeClientTemplateIds(user.id, docBody.filter), null)
-  refMappings.set(mergeClientTemplateIds(user.id, docBody.filter), {})
-  imputations.set(mergeClientTemplateIds(user.id, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
+  journalMappings.set(mergeCompanyTemplateIds(user.company, docBody.filter), null)
+  refMappings.set(mergeCompanyTemplateIds(user.company, docBody.filter), {})
+  imputations.set(mergeCompanyTemplateIds(user.company, docBody.filter) , Object.fromEntries(templateKeyBBoxMapping));
   const signature = getSignatureFromOssature(get(docBody, 'metadata.page_1', {}))
   const skeletonBody = {
     ossature: get(docBody, 'metadata.page_1', {}),
     document: docId,
     isBankSkeleton: docBody.isBankStatement,
     imputations,
-    clientTemplateMapping,
+    companyTemplateMapping,
     ggMappings,
     bboxMappings,
     journalMappings,
@@ -203,10 +203,10 @@ const createSkeleton = async (user, docBody, docId) => {
   return skeleton;
 };
 
-const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template, roles) => {
+const populateOsmiumFromExactPrior = (user, documentBody, skeletonReference, template, roles) => {
   let skeletonRef = prepareSkeletonMappingsForApi(skeletonReference)
   let newDocument = Object.assign({}, documentBody);
-  const mappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
+  const mappingKey = mergeCompanyTemplateIds(user.company, newDocument.filter);
   let bboxMappings = skeletonRef.bboxMappings.get(mappingKey);
   let ggMappings = skeletonRef.ggMappings.get(mappingKey);
   let imputations = skeletonRef.imputations.get(mappingKey);
@@ -286,7 +286,7 @@ const populateOsmiumFromExactPrior = (documentBody, skeletonReference, template,
 const populateInvoiceDataFromExactPrior = (documentBody, skeletonReference, template) => {
   let skeletonRef = prepareSkeletonMappingsForApi(skeletonReference)
   let newDocument = Object.assign({}, documentBody);
-  const mappingKey = mergeClientTemplateIds(newDocument.user, newDocument.filter);
+  const mappingKey = mergeCompanyTemplateIds(newDocument.user, newDocument.filter);
   let bboxMappings = skeletonRef.bboxMappings.get(mappingKey);
   let ggMappings = skeletonRef.ggMappings.get(mappingKey);
   let imputations = skeletonRef.imputations.get(mappingKey);
@@ -325,7 +325,7 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
   const mostResemblantTemplateData = await getMostResemblantTemplate(user, template, skeletonReference);
   const referenceBboxMappings = skeletonReference.bboxMappings.get(mostResemblantTemplateData.key);
   const referenceGgMappings = skeletonReference.ggMappings.get(mostResemblantTemplateData.key);
-  skeletonReference = skeletonStoreClientTemplate(skeletonReference,user.id, template.id, template.keys);
+  skeletonReference = skeletonStoreClientTemplate(skeletonReference,user.company, template.id, template.keys);
   for (let i= 0; i < template.keys.length; i++) {
     let currentRole = identifyRole(template, i);
     if ((currentRole) && (currentRole === 'bankEntity')) {
@@ -342,7 +342,7 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
           if (currentRole) {
             documentBody[currentRole] = formatValue(documentBody.ggMetadata[matchedGgKey].Text, template.keys[i].type, null, true);
           }
-          skeletonReference = skeletonUpdateGgMapping(skeletonReference, user.id, template.id, template.keys[i].value, matchedGgKey)
+          skeletonReference = skeletonUpdateGgMapping(skeletonReference, user.company, template.id, template.keys[i].value, matchedGgKey)
         } else {
           let referenceBbox = referenceBboxMappings[matchedReferenceTemplateKey.value];
           let bestBboxData = referenceBbox ? getGeoClosestBoxScores(documentBody.metadata.page_1, referenceBbox): null;
@@ -351,7 +351,7 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
             if (currentRole) {
               documentBody[currentRole] = formatValue(bestBboxData.bbox.Text, template.keys[i].type, null, true);
             }
-            skeletonReference = skeletonUpdateBbox(skeletonReference, user.id, template.id, template.keys[i].value, bestBboxData.bbox)
+            skeletonReference = skeletonUpdateBbox(skeletonReference, user.company, template.id, template.keys[i].value, bestBboxData.bbox)
           }
         }
       }
@@ -364,32 +364,32 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
 const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refMapping, newJournal, newVendor, newPayment, updatedRoles) => {
   const skeleton = await getSkeletonById(updateBody.skeleton);
   Object.assign(skeleton, updatedRoles);
-  const clientTempKey = mergeClientTemplateIds(user.id, updateBody.filter.id);
+  const companyTempKey = mergeCompanyTemplateIds(user.company, updateBody.filter.id);
   if (mbc && !isEmpty(mbc)){
     if (skeleton._id.equals(updateBody.skeleton)){
-      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
-       let newBboxMappings = skeleton.bboxMappings.get(clientTempKey);
+      if (skeletonHasCompanyTemplate(skeleton, user.company, updateBody.filter.id)) {
+       let newBboxMappings = skeleton.bboxMappings.get(companyTempKey);
        newBboxMappings = Object.assign(newBboxMappings, mbc);
-       skeleton.bboxMappings.set(clientTempKey, newBboxMappings);
-       let newGgMappings = skeleton.ggMappings.get(clientTempKey);
+       skeleton.bboxMappings.set(companyTempKey, newBboxMappings);
+       let newGgMappings = skeleton.ggMappings.get(companyTempKey);
        let ggMatchedResult = findGgMappingKeyFromMBC(template.keys, updateBody.ggMetadata, mbc);
        newGgMappings = Object.assign(newGgMappings, ggMatchedResult);
-       skeleton.ggMappings.set(clientTempKey, mapToObject(newGgMappings));
+       skeleton.ggMappings.set(companyTempKey, mapToObject(newGgMappings));
        let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
        return updatedSkeleton;
       }
     }
   } else if(updateBody.imput && updateBody.osmium !== undefined){
     if (skeleton._id.equals(updateBody.skeleton)){
-      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
-        let newImputationMappings = skeleton.imputations.get(clientTempKey);
+      if (skeletonHasCompanyTemplate(skeleton, user.company, updateBody.filter.id)) {
+        let newImputationMappings = skeleton.imputations.get(companyTempKey);
         let imputableTemplateKeysIndices = template.keys
                                             .map((x, i) => {if (x.isImputable) return i})
                                             .filter(x => x!== undefined)
         imputableTemplateKeysIndices.forEach(idx => {
           newImputationMappings[template.keys[idx].value] = updateBody.osmium[idx].Imputation;
         })
-        skeleton.imputations.set(clientTempKey, mapToObject(newImputationMappings));
+        skeleton.imputations.set(companyTempKey, mapToObject(newImputationMappings));
         skeleton.markModified('imputations');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
@@ -398,14 +398,14 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
     
   } else if(refMapping){
     if (skeleton._id.equals(updateBody.skeleton)){
-      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
-        let newRefMappings = skeleton.refMappings.get(clientTempKey);
+      if (skeletonHasCompanyTemplate(skeleton, user.company, updateBody.filter.id)) {
+        let newRefMappings = skeleton.refMappings.get(companyTempKey);
         if(newRefMappings) {
           newRefMappings = Object.assign(newRefMappings, refMapping);
         } else {
           newRefMappings = refMapping
         }
-        skeleton.refMappings.set(clientTempKey, mapToObject(newRefMappings));
+        skeleton.refMappings.set(companyTempKey, mapToObject(newRefMappings));
         skeleton.markModified('refMappings');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
@@ -413,8 +413,8 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
     }
   } else if (newJournal){
     if (skeleton._id.equals(updateBody.skeleton)){
-      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
-        skeleton.journalMappings.set(clientTempKey, newJournal);
+      if (skeletonHasCompanyTemplate(skeleton, user.company, updateBody.filter.id)) {
+        skeleton.journalMappings.set(companyTempKey, newJournal);
         skeleton.markModified('journalMappings');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
@@ -422,8 +422,8 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
     }
   } else if (newVendor){
     if (skeleton._id.equals(updateBody.skeleton)){
-      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
-        skeleton.vendorMappings.set(clientTempKey, newVendor);
+      if (skeletonHasCompanyTemplate(skeleton, user.company, updateBody.filter.id)) {
+        skeleton.vendorMappings.set(companyTempKey, newVendor);
         skeleton.markModified('vendorMappings');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
@@ -431,9 +431,9 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
     }
   } else if (newPayment){
     if (skeleton._id.equals(updateBody.skeleton)){
-      if (skeletonHasClientTemplate(skeleton, user.id, updateBody.filter.id)) {
+      if (skeletonHasCompanyTemplate(skeleton, user.company, updateBody.filter.id)) {
         skeleton.markModified('paymentMappings');
-        skeleton.paymentMappings.set(clientTempKey, newPayment);
+        skeleton.paymentMappings.set(companyTempKey, newPayment);
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
       }
@@ -447,8 +447,8 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
 updateSkeletonFromInvoiceUpdate = async (user, invoice, template, updateBody) => {
   const skeleton = await getSkeletonById(invoice.skeleton);
   Object.assign(skeleton, pick(updateBody, 'vendor'));
-  const clientTempKey = mergeClientTemplateIds(user.id, invoice.filter);
-  if (skeletonHasClientTemplate(skeleton, user.id, invoice.filter)) {
+  const clientTempKey = mergeCompanyTemplateIds(user.company, invoice.filter);
+  if (skeletonHasCompanyTemplate(skeleton, user.company, invoice.filter)) {
     let newGgMappings = skeleton.ggMappings.get(clientTempKey);
     let ggMatchedResult = findGgMappingKeys(template.keys, invoice.ggMetadata, updateBody);
     if (ggMatchedResult){

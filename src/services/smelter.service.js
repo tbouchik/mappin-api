@@ -7,10 +7,10 @@ const { getFilterById } = require('../services/filter.service');
 const { getClientById } = require('../services/client.service');
 const { Journal } = require('../models');
 const { getSimilarVendor } = require('../services/vendor.service');
-const { skeletonHasClientTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
+const { skeletonHasCompanyTemplate, prepareSkeletonMappingsForApi } = require('../miner/skeletons')
 const { updateSkeleton } = require('../services/skeleton.service');
 const { findSimilarSkeleton, createSkeleton, populateOsmiumFromExactPrior, populateOsmiumFromFuzzyPrior, populateInvoiceDataFromExactPrior, populateDefaultImputations } = require('../services/mbc.service');
-const { mapToObject, formatValue, mergeClientTemplateIds } = require('../utils/service.util');
+const { mapToObject, formatValue, mergeCompanyTemplateIds } = require('../utils/service.util');
 const { munkresMatch } = require('../utils/tinder');
 const {  get } = require('lodash');
 const { findTemplateKeyFromTag, identifyRole, identifySemanticField } = require('./../miner/template');
@@ -119,7 +119,7 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
   let newDocument = Object.assign({}, documentBody);
   let skeletonHasChanged = false;
   const ggMetadataKeys = Object.keys(newDocument.ggMetadata);
-  const mappingKey = mergeClientTemplateIds(user._id, newDocument.filter);
+  const mappingKey = mergeCompanyTemplateIds(user.company, newDocument.filter);
   const treshold = 39;
   // Populate from Semantic fields (AWS) except for Vendor
   let populatedTemplateKeysCache = new Set()
@@ -237,8 +237,8 @@ const populateInvoiceOsmium = async (user, documentBody, taskId) => {
     if (matchingSkeleton) {
       matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
       skeletonId = matchingSkeleton._id;
-      if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
-          documentBody = populateOsmiumFromExactPrior(documentBody, matchingSkeleton, filter, null);
+      if (skeletonHasCompanyTemplate(matchingSkeleton, user.company, filter.id)) {
+          documentBody = populateOsmiumFromExactPrior(user, documentBody, matchingSkeleton, filter, null);
         } else {
           documentBody = await populateOsmiumFromGgAI(user, documentBody, filter, matchingSkeleton);
           documentBody = await populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user);
@@ -269,7 +269,7 @@ const populateInvoiceData = async (user, documentBody, taskId) => {
     if (matchingSkeleton) {
       matchingSkeleton = prepareSkeletonMappingsForApi(matchingSkeleton);
       skeletonId = matchingSkeleton._id;
-      if (skeletonHasClientTemplate(matchingSkeleton, user.id, filter.id)) {
+      if (skeletonHasCompanyTemplate(matchingSkeleton, user.company, filter.id)) {
           documentBody = populateInvoiceDataFromExactPrior(documentBody, matchingSkeleton, filter);
         }
     } else {

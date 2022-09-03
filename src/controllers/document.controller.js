@@ -71,7 +71,7 @@ const updateDocument = catchAsync(async (req, res) => {
   const skeleton = await updateSkeletonFromDocUpdate(req.user, document, template, mbc, refMapping, newJournal, newVendor, newPayment, updatedRoles);
   let collateralQuery = {status: status.SMELTED, skeleton: skeleton._id, _id:{ $nin: [document._id] } };
   let collateralDocs = await documentService.getDocuments(req.user, collateralQuery);
-  let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(x.transform(), skeleton, template, updatedRoles));
+  let updatedCollateralDocs = collateralDocs.map(x => populateOsmiumFromExactPrior(req.user, x.transform(), skeleton, template, updatedRoles));
   collateralDocs.forEach((document, idx) => {
     Object.assign(document, updatedCollateralDocs[idx]);
     try{

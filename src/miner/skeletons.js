@@ -3,7 +3,7 @@ const moment = require('moment');
 const turf = require("@turf/turf");
 const { pick } = require('lodash');
 const { RegexType, SignatureMatchRating, objectToMap, mapToObject } = require('../utils/service.util');
-const { mergeClientTemplateIds } = require('../utils/service.util');
+const { mergeCompanyTemplateIds } = require('../utils/service.util');
 const munkres = require('munkres-js');
 
 const skeletonsMatch = (skeleton1, skeleton2) => {
@@ -166,8 +166,8 @@ const getGeoClosestBoxScores = (ossature, bbox) => {
 }
 
 /**
- * check skeleton has client/template (clientId, templateId)
- * add new client/template map (clientId, templateId, templateKeys)
+ * check skeleton has company/template (companyId, templateId)
+ * add new company/template map (companyId, templateId, templateKeys)
  */
 const constructMapppings = (templateKeys) => {
   let templateKeyBBoxMappingArr = []
@@ -178,40 +178,40 @@ const constructMapppings = (templateKeys) => {
   return Object.fromEntries(templateKeyBBoxMapping);
 }
 
-const skeletonHasClientTemplate = (skeleton, clientId, templateId) => {
-  const clientIdStr = typeof clientId === 'string' ? clientId : clientId.toString();
+const skeletonHasCompanyTemplate = (skeleton, companyId, templateId) => {
+  const companyIdStr = typeof companyId === 'string' ? companyId : companyId.toString();
   const templateIdStr = typeof templateId === 'string' ? templateId : templateId.toString();
   skeleton = prepareSkeletonMappingsForApi(skeleton);
-  if (skeleton.clientTemplateMapping.has(clientIdStr)) {
-    let templateIds = skeleton.clientTemplateMapping.get(clientIdStr);
+  if (skeleton.companyTemplateMapping.has(companyIdStr)) {
+    let templateIds = skeleton.companyTemplateMapping.get(companyIdStr);
     return templateIds.includes(templateIdStr);
   }
   return false;
 }
 
-const skeletonStoreClientTemplate = (skeleton, clientId, templateId, templateKeys) => {
+const skeletonStoreClientTemplate = (skeleton, companyId, templateId, templateKeys) => {
   skeleton = prepareSkeletonMappingsForApi(skeleton);
-  if (skeleton.clientTemplateMapping.has(clientId)) {
-    let templateIds = skeleton.clientTemplateMapping.get(clientId);
+  if (skeleton.companyTemplateMapping.has(companyId)) {
+    let templateIds = skeleton.companyTemplateMapping.get(companyId);
     if (!templateIds.includes(templateId)) {
       templateIds.push(templateId);
-      skeleton.clientTemplateMapping.set(clientId, templateIds);
+      skeleton.companyTemplateMapping.set(companyId, templateIds);
     }
   } else {
-    skeleton.clientTemplateMapping.set(clientId, [templateId])
+    skeleton.companyTemplateMapping.set(companyId, [templateId])
   }
   let bboxMapps = constructMapppings(templateKeys);
   let ggMaps = Object.assign({},  bboxMapps); // Necessary step: we have to create duplicate objects for each set of mappings. Otherwise all mappings would refer to same object in memory
   let imputMaps = Object.assign({},  bboxMapps);// Ditto
-  skeleton.bboxMappings.set(mergeClientTemplateIds(clientId, templateId), bboxMapps);
-  skeleton.ggMappings.set(mergeClientTemplateIds(clientId, templateId), ggMaps);
-  skeleton.imputations.set(mergeClientTemplateIds(clientId, templateId), imputMaps);
+  skeleton.bboxMappings.set(mergeCompanyTemplateIds(companyId, templateId), bboxMapps);
+  skeleton.ggMappings.set(mergeCompanyTemplateIds(companyId, templateId), ggMaps);
+  skeleton.imputations.set(mergeCompanyTemplateIds(companyId, templateId), imputMaps);
   return skeleton
 }
 
-const skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
+const skeletonUpdateBbox = (skeleton, companyId, templateId, keyName, bbox) => {
   skeleton = prepareSkeletonMappingsForApi(skeleton);
-  const clientTemKey = mergeClientTemplateIds(clientId, templateId);
+  const clientTemKey = mergeCompanyTemplateIds(companyId, templateId);
   if (skeleton.bboxMappings.has(clientTemKey)) {
     let newBboxmappings = skeleton.bboxMappings.get(clientTemKey);
     if (keyName in newBboxmappings) {
@@ -224,9 +224,9 @@ const skeletonUpdateBbox = (skeleton, clientId, templateId, keyName, bbox) => {
   return skeleton;
 }
 
-const skeletonUpdateGgMapping = (skeleton, clientId, templateId, keyName, ggKey) => {
+const skeletonUpdateGgMapping = (skeleton, companyId, templateId, keyName, ggKey) => {
   skeleton = prepareSkeletonMappingsForApi(skeleton);
-  const clientTemKey = mergeClientTemplateIds(clientId, templateId);
+  const clientTemKey = mergeCompanyTemplateIds(companyId, templateId);
   if (skeleton.ggMappings.has(clientTemKey)) {
     let newGgMappings = skeleton.ggMappings.get(clientTemKey);
     if (keyName in newGgMappings) {
@@ -239,9 +239,9 @@ const skeletonUpdateGgMapping = (skeleton, clientId, templateId, keyName, ggKey)
   return skeleton;
 }
 
-const skeletonUpdateImputationMapping = (skeleton, clientId, templateId, keyName, imput) => {
+const skeletonUpdateImputationMapping = (skeleton, companyId, templateId, keyName, imput) => {
   skeleton = prepareSkeletonMappingsForApi(skeleton);
-  const clientTemKey = mergeClientTemplateIds(clientId, templateId);
+  const clientTemKey = mergeCompanyTemplateIds(companyId, templateId);
   if (skeleton.imputations.has(clientTemKey)) {
     let newImputMappings = skeleton.imputations.get(clientTemKey);
     if (keyName in newImputMappings) {
@@ -253,7 +253,7 @@ const skeletonUpdateImputationMapping = (skeleton, clientId, templateId, keyName
 }
 
 const prepareSkeletonMappingsForApi = (skeleton) => {
-  skeleton.clientTemplateMapping =  objectToMap(skeleton.clientTemplateMapping);
+  skeleton.companyTemplateMapping =  objectToMap(skeleton.companyTemplateMapping);
   skeleton.bboxMappings = objectToMap(skeleton.bboxMappings);
   skeleton.ggMappings = objectToMap(skeleton.ggMappings);
   skeleton.imputations = objectToMap(skeleton.imputations);
@@ -265,7 +265,7 @@ const prepareSkeletonMappingsForApi = (skeleton) => {
 }
 
 const prepareSkeletonMappingsForDB = (skeleton) => {
-  skeleton.clientTemplateMapping =  mapToObject(skeleton.clientTemplateMapping);
+  skeleton.companyTemplateMapping =  mapToObject(skeleton.companyTemplateMapping);
   skeleton.bboxMappings = mapToObject(skeleton.bboxMappings);
   skeleton.ggMappings = mapToObject(skeleton.ggMappings);
   skeleton.imputations = mapToObject(skeleton.imputations);
@@ -312,7 +312,7 @@ const computeSignaturesTextSimilitude = (templatesDistanceMatrix, munkresCombina
 module.exports = {
     skeletonsMatch,
     getGeoClosestBoxScores,
-    skeletonHasClientTemplate,
+    skeletonHasCompanyTemplate,
     skeletonStoreClientTemplate,
     skeletonUpdateBbox,
     skeletonUpdateGgMapping,
