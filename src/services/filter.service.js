@@ -15,17 +15,17 @@ const createFilter = async (user, filterBody) => {
 };
 
 const createDefaultFilter = async userId => {
-  const filterBodyEng = {
-    user: userId,
-    keys: defaultFilter,
-    name: 'Standard Template (EN)',
-  };
   const filterBodyFr = {
     user: userId,
     keys: stdFilterFr,
-    name: 'Template Standard (FR)',
+    description : "Template standard pour factures",
+    isActiveDC : true,
+    isActiveJournal : true,
+    journalTags : [],
+    type : "invoice",
+    name : "Template Standard",
   };
-  const filter = await Filter.insertMany([filterBodyEng, filterBodyFr]);
+  const filter = await Filter.insertMany([filterBodyFr]);
   return filter;
 };
 
