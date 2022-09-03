@@ -200,12 +200,16 @@ const skeletonStoreClientTemplate = (skeleton, companyId, templateId, templateKe
   } else {
     skeleton.companyTemplateMapping.set(companyId, [templateId])
   }
+  skeleton.markModified('companyTemplateMapping');
   let bboxMapps = constructMapppings(templateKeys);
   let ggMaps = Object.assign({},  bboxMapps); // Necessary step: we have to create duplicate objects for each set of mappings. Otherwise all mappings would refer to same object in memory
   let imputMaps = Object.assign({},  bboxMapps);// Ditto
   skeleton.bboxMappings.set(mergeCompanyTemplateIds(companyId, templateId), bboxMapps);
+  skeleton.markModified('bboxMappings');
   skeleton.ggMappings.set(mergeCompanyTemplateIds(companyId, templateId), ggMaps);
+  skeleton.markModified('ggMappings');
   skeleton.imputations.set(mergeCompanyTemplateIds(companyId, templateId), imputMaps);
+  skeleton.markModified('imputations');
   return skeleton
 }
 
@@ -219,6 +223,7 @@ const skeletonUpdateBbox = (skeleton, companyId, templateId, keyName, bbox) => {
       let newBBoxEntry = new Map([[keyName, bbox]])
       newBboxmappings = Object.assign(newBboxmappings, mapToObject(newBBoxEntry))
       skeleton.bboxMappings.set(clientTemKey, newBboxmappings);
+      skeleton.markModified('bboxMappings');
     }
   }
   return skeleton;
@@ -234,6 +239,7 @@ const skeletonUpdateGgMapping = (skeleton, companyId, templateId, keyName, ggKey
       let newGgEntry = new Map([[keyName, ggKey]])
       newGgMappings = Object.assign(newGgMappings, mapToObject(newGgEntry))
       skeleton.ggMappings.set(clientTemKey, newGgMappings);
+      skeleton.markModified('ggMappings');
     }
   }
   return skeleton;
@@ -247,6 +253,7 @@ const skeletonUpdateImputationMapping = (skeleton, companyId, templateId, keyNam
     if (keyName in newImputMappings) {
       newImputMappings[keyName] = imput;
       skeleton.imputations.set(clientTemKey, newImputMappings);
+      skeleton.markModified('ggMappings');
     }
   }
   return skeleton;

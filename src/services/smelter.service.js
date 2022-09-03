@@ -139,6 +139,7 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
   if (defaultJournal) {
     newDocument.journal = defaultJournal._id;
     skeleton.journalMappings.set(mappingKey, defaultJournal._id);
+    skeleton.markModified('journalMappings');
     skeletonHasChanged = true;
   }
   // Populate suggested vendor if exists
@@ -150,10 +151,13 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
       vendor = await createVendor(user, newVendorBody);
     }
     skeleton.vendorMappings.set(mappingKey, vendor._id);
+    skeleton.markModified('vendorMappings');
     newDocument.vendor = vendor._id;
     skeletonHasChanged = true;
   }
-  if(skeletonHasChanged) await updateSkeleton(skeleton._id, skeleton); 
+  if(skeletonHasChanged) {
+    await updateSkeleton(skeleton._id, skeleton); 
+  }
   // Populate from KVP mappings (AWS + GCP)
   const nonRefTemplateKeys = template.keys.filter((x, idx) => x.type !== 'REF' && !populatedTemplateKeysCache.has(idx) ).map(x => [x.value].concat(x.tags)).flat();
   if (nonRefTemplateKeys.length) {

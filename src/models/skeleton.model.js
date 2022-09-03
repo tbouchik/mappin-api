@@ -1,4 +1,3 @@
-const { map } = require('lodash');
 const mongoose = require('mongoose');
 const { prepareSkeletonMappingsForApi, prepareSkeletonMappingsForDB } = require('../miner/skeletons')
 

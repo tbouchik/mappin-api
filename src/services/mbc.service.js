@@ -371,10 +371,12 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
        let newBboxMappings = skeleton.bboxMappings.get(companyTempKey);
        newBboxMappings = Object.assign(newBboxMappings, mbc);
        skeleton.bboxMappings.set(companyTempKey, newBboxMappings);
+       skeleton.markModified('bboxMappings');
        let newGgMappings = skeleton.ggMappings.get(companyTempKey);
        let ggMatchedResult = findGgMappingKeyFromMBC(template.keys, updateBody.ggMetadata, mbc);
        newGgMappings = Object.assign(newGgMappings, ggMatchedResult);
        skeleton.ggMappings.set(companyTempKey, mapToObject(newGgMappings));
+       skeleton.markModified('ggMappings');
        let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
        return updatedSkeleton;
       }
@@ -432,8 +434,8 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
   } else if (newPayment){
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasCompanyTemplate(skeleton, user.company, updateBody.filter.id)) {
-        skeleton.markModified('paymentMappings');
         skeleton.paymentMappings.set(companyTempKey, newPayment);
+        skeleton.markModified('paymentMappings');
         let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
         return updatedSkeleton;
       }
@@ -455,6 +457,7 @@ updateSkeletonFromInvoiceUpdate = async (user, invoice, template, updateBody) =>
       ggMatchedResult = omit(ggMatchedResult, ['vendor'])
       newGgMappings = Object.assign(newGgMappings, ggMatchedResult);
       skeleton.ggMappings.set(clientTempKey, mapToObject(newGgMappings));
+      skeleton.markModified('ggMappings')
     }
     let updatedSkeleton = await updateSkeleton(skeleton._id, skeleton);
     return updatedSkeleton;
