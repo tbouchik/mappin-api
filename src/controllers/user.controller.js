@@ -8,23 +8,23 @@ const createUser = catchAsync(async (req, res) => {
 });
 
 const getUsers = catchAsync(async (req, res) => {
-  const users = await userService.getUsers(req.query);
+  const users = await userService.getUsers(req.user, req.query);
   const response = users.map(user => user.transform());
   res.send(response);
 });
 
 const getUser = catchAsync(async (req, res) => {
-  const user = await userService.getUserById(req.params.userId);
+  const user = await userService.getUserById(req.user, req.params.userId);
   res.send(user.transform());
 });
 
 const updateUser = catchAsync(async (req, res) => {
-  const user = await userService.updateUser(req.params.userId, req.body);
+  const user = await userService.updateUser(req.user, req.params.userId, req.body);
   res.send(user.transform());
 });
 
 const deleteUser = catchAsync(async (req, res) => {
-  await userService.deleteUser(req.params.userId);
+  await userService.deleteUser(req.user, req.params.userId);
   res.status(httpStatus.NO_CONTENT).send();
 });
 

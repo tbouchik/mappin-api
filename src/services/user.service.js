@@ -40,19 +40,29 @@ const createUser = async userBody => {
   return user;
 };
 
-const getUsers = async query => {
-  const filter = pick(query, ['name', 'role', 'company']);
+const getUsers = async (user, query) => {
+  const filter = pick(query, ['name']);
+  if (user.role !== 'admin') {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
+  }
+  filter.company = user.company;
   const options = getQueryOptions(query);
   const users = await User.find(filter, null, options);
   return users;
 };
 
-const getUserById = async userId => {
-  const user = await User.findById(userId).populate('subscription', 'credits');
-  if (!user) {
+const getUserById = async (user, searchedUserId) => {
+  if (user.role !== 'admin') {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
+  }
+  const searchedUser = await User.findById(searchedUserId).populate('subscription', 'credits');
+  if (!searchedUser) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
-  return user;
+  if (searchedUser && searchedUser.company !== user.company) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
+  }
+  return searchedUser;
 };
 
 const getUserByEmail = async email => {
@@ -63,25 +73,37 @@ const getUserByEmail = async email => {
   return user;
 };
 
-const updateUser = async (userId, updateBody) => {
-  const user = await getUserById(userId);
-  if (updateBody.email) {
-    await checkDuplicateEmail(updateBody.email, userId);
+const updateUser = async (user, searchedUserId, updateBody) => {
+  if (user.role !== 'admin') {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }
-  Object.assign(user, updateBody);
-  await user.save();
-  return user;
+  const searchedUser = await getUserById(searchedUserId);
+  if (searchedUser &&( (searchedUser.company !== user.company)|| (searchedUser.role === 'admin'))) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
+  }
+  if (updateBody.email) {
+    await checkDuplicateEmail(updateBody.email, searchedUserId);
+  }
+  Object.assign(searchedUser, updateBody);
+  await searchedUser.save();
+  return searchedUser;
 };
 
-const updateUserCounter = async (userId, updateBody) => {
-  const user = await getUserById(userId);
-  if (updateBody.email) {
-    await checkDuplicateEmail(updateBody.email, userId);
+const updateUserCounter = async (user, searchedUserId, updateBody) => {
+  if (user.role !== 'admin') {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }
-  updateBody.counter = user.counter? updateBody.counter + user.counter : updateBody.counter
-  Object.assign(user, updateBody);
-  await user.save();
-  return user;
+  const searchedUser = await getUserById(searchedUserId);
+  if (searchedUser &&( (searchedUser.company !== user.company)|| (searchedUser.role === 'admin'))) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
+  }
+  if (updateBody.email) {
+    await checkDuplicateEmail(updateBody.email, searchedUserId);
+  }
+  updateBody.counter = searchedUser.counter? updateBody.counter + searchedUser.counter : updateBody.counter
+  Object.assign(searchedUser, updateBody);
+  await searchedUser.save();
+  return searchedUser;
 };
 
 const userCreditsRemaining = async (userId) => {
@@ -89,10 +111,16 @@ const userCreditsRemaining = async (userId) => {
   return user.subscription.credits - user.counter
 }
 
-const deleteUser = async userId => {
-  const user = await getUserById(userId);
-  await user.remove();
-  return user;
+const deleteUser = async (user, searchedUserId) => {
+  if (user.role !== 'admin') {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
+  }
+  const searchedUser = await getUserById(searchedUserId);
+  if (searchedUser &&((searchedUser.company !== user.company)|| (searchedUser.role === 'admin'))) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
+  }
+  await searchedUser.remove();
+  return searchedUser;
 };
 
 module.exports = {
