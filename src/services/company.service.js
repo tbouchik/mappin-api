@@ -1,7 +1,7 @@
 const httpStatus = require('http-status');
 const { pick } = require('lodash');
 const AppError = require('../utils/AppError');
-const { Company } = require('../models');
+const { Company, User } = require('../models');
 const { getQueryOptions } = require('../utils/service.util');
 
 const checkDuplicateCompanyName = async (name, excludeCompanyId) => {
@@ -10,6 +10,13 @@ const checkDuplicateCompanyName = async (name, excludeCompanyId) => {
     throw new AppError(httpStatus.BAD_REQUEST, 'Company name already taken');
   }
 };
+
+const companyCreditsRemaining = async (companyId) => {
+  const company = await getCompanyById(companyId);
+  const companyUsers = await User.find({company: companyId});
+  const companyCounter = companyUsers.reduce((x,y) => x + y.counter, 0);
+  return company.subscription.credits - companyCounter;
+}
 
 const createCompany = async companyBody => {
   await checkDuplicateCompanyName(companyBody.name);
@@ -25,7 +32,7 @@ const getCompanies = async query => {
 };
 
 const getCompanyById = async companyId => {
-  const company = await Company.findById(companyId);
+  const company = await Company.findById(companyId).populate('subscription');
   if (!company) {
     throw new AppError(httpStatus.NOT_FOUND, 'Company not found');
   }
@@ -62,5 +69,6 @@ module.exports = {
   getCompanyById,
   getCompanyByCompanyName,
   updateCompany,
+  companyCreditsRemaining,
   deleteCompany,
 };

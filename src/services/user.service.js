@@ -46,20 +46,21 @@ const getUsers = async (user, query) => {
     throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }
   filter.company = user.company;
+  filter._id = { $ne: user._id }
   const options = getQueryOptions(query);
   const users = await User.find(filter, null, options);
   return users;
 };
 
 const getUserById = async (user, searchedUserId) => {
-  if (user.role !== 'admin') {
+  if (user.role !== 'admin' && String(user.id) !== String(searchedUserId)) {
     throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }
   const searchedUser = await User.findById(searchedUserId).populate('subscription', 'credits');
   if (!searchedUser) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
   }
-  if (searchedUser && searchedUser.company !== user.company) {
+  if (searchedUser && String(searchedUser.company) !== String(user.company)) {
     throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }
   return searchedUser;
@@ -74,10 +75,10 @@ const getUserByEmail = async email => {
 };
 
 const updateUser = async (user, searchedUserId, updateBody) => {
-  if (user.role !== 'admin') {
+  if (user.role !== 'admin' && String(user.id) !== String(searchedUserId)) {
     throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }
-  const searchedUser = await getUserById(searchedUserId);
+  const searchedUser = await User.findById(searchedUserId).populate('subscription', 'credits');
   if (searchedUser &&( (searchedUser.company !== user.company)|| (searchedUser.role === 'admin'))) {
     throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }
@@ -89,17 +90,8 @@ const updateUser = async (user, searchedUserId, updateBody) => {
   return searchedUser;
 };
 
-const updateUserCounter = async (user, searchedUserId, updateBody) => {
-  if (user.role !== 'admin') {
-    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
-  }
-  const searchedUser = await getUserById(searchedUserId);
-  if (searchedUser &&( (searchedUser.company !== user.company)|| (searchedUser.role === 'admin'))) {
-    throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
-  }
-  if (updateBody.email) {
-    await checkDuplicateEmail(updateBody.email, searchedUserId);
-  }
+const updateUserCounter = async (searchedUserId, updateBody) => {
+  const searchedUser = await User.findById(searchedUserId).populate('subscription', 'credits');;
   updateBody.counter = searchedUser.counter? updateBody.counter + searchedUser.counter : updateBody.counter
   Object.assign(searchedUser, updateBody);
   await searchedUser.save();
@@ -107,7 +99,7 @@ const updateUserCounter = async (user, searchedUserId, updateBody) => {
 };
 
 const userCreditsRemaining = async (userId) => {
-  const user = await getUserById(userId);
+  const user = await User.findById(searchedUserId).populate('subscription', 'credits');
   return user.subscription.credits - user.counter
 }
 
@@ -115,7 +107,7 @@ const deleteUser = async (user, searchedUserId) => {
   if (user.role !== 'admin') {
     throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }
-  const searchedUser = await getUserById(searchedUserId);
+  const searchedUser = await User.findById(searchedUserId).populate('subscription', 'credits');
   if (searchedUser &&((searchedUser.company !== user.company)|| (searchedUser.role === 'admin'))) {
     throw new AppError(httpStatus.FORBIDDEN, 'Not Authorised');
   }

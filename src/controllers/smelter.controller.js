@@ -1,7 +1,8 @@
 const AWS = require('aws-sdk');
 const { createDocument, updateDocument } = require('../services/document.service');
 const { createSmeltError } = require('../services/smelterror.service');
-const { updateUserCounter, userCreditsRemaining } = require('../services/user.service');
+const { updateUserCounter } = require('../services/user.service');
+const { companyCreditsRemaining } = require('../services/company.service');
 const { aixtract, fetchMetada, populateInvoiceOsmium, fetchExpenseItems } = require('../services/smelter.service')
 const { omitBy } = require('lodash');
 const status = require('./../enums/status');
@@ -100,8 +101,8 @@ const addSmeltError = (user, documentId, message) => {
 
 const addFilesToQueue = async (user, files) => {
   try{
-    const trimedFiles = await trimUnauthorizedDocuments(user._id, files);
-    updateUserCounter(user._id, {counter: trimedFiles.length})
+    const trimedFiles = await trimUnauthorizedDocuments(user, files);
+    updateUserCounter(user, {counter: trimedFiles.length})
     let emptyDocsBatch = await createBatchMolds(user, trimedFiles);
     let filledDocsBatch = await injectOsmiumInBatchMolds(user, emptyDocsBatch);
     return filledDocsBatch;
@@ -173,7 +174,7 @@ const saveSmeltedResult = async (user, documentBody, taskId) => {
 }
 
 const trimUnauthorizedDocuments = async (user, files) => {
-  const creditsRemaining = await userCreditsRemaining(user._id);
+  const creditsRemaining = await companyCreditsRemaining(user.company);
     if (files.length > creditsRemaining){
       files = files.slice(0,creditsRemaining)
     }

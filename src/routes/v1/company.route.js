@@ -1,7 +1,12 @@
 const express = require('express');
 const companyController = require('../../controllers/company.controller');
+const auth = require('../../middlewares/auth');
 
 const router = express.Router();
+
+router
+  .route('/count')
+  .get(auth('manageDocuments'), companyController.getCompanyCount)
 
 router
   .route('/')

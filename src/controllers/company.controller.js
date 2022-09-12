@@ -13,6 +13,12 @@ const getCompanies = catchAsync(async (req, res) => {
   res.send(response);
 });
 
+const getCompanyCount = catchAsync(async (req, res) => {
+  const credits = await companyService.companyCreditsRemaining(req.user.company);
+  const response = {credits};
+  res.send(response);
+});
+
 const getCompany = catchAsync(async (req, res) => {
   const company = await companyService.getCompanyById(req.params.companyId);
   res.send(company.transform());
@@ -34,4 +40,5 @@ module.exports = {
   getCompany,
   updateCompany,
   deleteCompany,
+  getCompanyCount,
 };
