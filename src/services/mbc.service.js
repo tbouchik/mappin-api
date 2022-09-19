@@ -361,7 +361,7 @@ const populateOsmiumFromFuzzyPrior = async (documentBody, skeletonReference, tem
   return documentBody;
 }
 
-const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refMapping, newJournal, newVendor, newPayment, updatedRoles) => {
+const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refMappings, newJournal, newVendor, newPayment, updatedRoles) => {
   const skeleton = await getSkeletonById(updateBody.skeleton);
   Object.assign(skeleton, updatedRoles);
   const companyTempKey = mergeCompanyTemplateIds(user.company, updateBody.filter.id);
@@ -398,14 +398,14 @@ const updateSkeletonFromDocUpdate = async (user, updateBody, template, mbc, refM
       }
     }
     
-  } else if(refMapping){
+  } else if(refMappings){
     if (skeleton._id.equals(updateBody.skeleton)){
       if (skeletonHasCompanyTemplate(skeleton, user.company, updateBody.filter.id)) {
         let newRefMappings = skeleton.refMappings.get(companyTempKey);
         if(newRefMappings) {
-          newRefMappings = Object.assign(newRefMappings, refMapping);
+          newRefMappings = Object.assign(newRefMappings, refMappings);
         } else {
-          newRefMappings = refMapping
+          newRefMappings = refMappings
         }
         skeleton.refMappings.set(companyTempKey, mapToObject(newRefMappings));
         skeleton.markModified('refMappings');
