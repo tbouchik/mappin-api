@@ -244,8 +244,10 @@ const populateInvoiceOsmium = async (user, documentBody, taskId) => {
       if (skeletonHasCompanyTemplate(matchingSkeleton, user.company, filter.id)) {
           documentBody = populateOsmiumFromExactPrior(user, documentBody, matchingSkeleton, filter, null);
         } else {
-          documentBody = await populateOsmiumFromGgAI(user, documentBody, filter, matchingSkeleton);
-          documentBody = await populateOsmiumFromFuzzyPrior(documentBody, matchingSkeleton, filter, user);
+          let newSkeleton = await createSkeleton(user, documentBody, taskId);
+          newSkeleton = prepareSkeletonMappingsForApi(newSkeleton);
+          documentBody = await populateOsmiumFromGgAI(user, documentBody, filter, newSkeleton);
+          skeletonId = newSkeleton._id;
         }
       } else {
         let newSkeleton = await createSkeleton(user, documentBody, taskId);
