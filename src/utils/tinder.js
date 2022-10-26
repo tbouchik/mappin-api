@@ -15,11 +15,28 @@ const buildKeysDistanceMatrix = (newTemplateKeys, refTemplateKeys) => {
 
 const munkresMatch = (primaryKeys, candidateKeys, treshold) => {
     let result = new Map();
-    let matriks = buildKeysDistanceMatrix(primaryKeys, candidateKeys);
-    let indicesMatches = munkres(matriks)
-    let interestingMatches = indicesMatches.filter((pair) => matriks[pair[0]][pair[1]] <= treshold)
+    let matriks = [];
+    for (let i = 0; i < primaryKeys.length; i++) {
+      let newTemplateKey = primaryKeys[i];
+      let row = []
+      for (let j = 0; j < candidateKeys.length; j++) {
+        let refTemplateKey = candidateKeys[j];
+        let distance = 100 - fuzz.ratio(newTemplateKey, refTemplateKey)
+        if (distance < 10) {
+          result.set(newTemplateKey, {
+            match: refTemplateKey,
+            score: 100 - distance
+          });
+          return mapToObject(result);
+        } 
+        row.push(distance);
+      }
+      matriks.push(row);
+    }
+    let indicesMatches = munkres(matriks);
+    let interestingMatches = indicesMatches.filter((pair) => matriks[pair[0]][pair[1]] <= treshold);
     interestingMatches.forEach((match) => {
-        result.set(primaryKeys[match[0]], candidateKeys[match[1]])
+        result.set(primaryKeys[match[0]], {match: candidateKeys[match[1]], score:100 - matriks[match[0]][match[1]]})
     })
     return mapToObject(result);
 }
@@ -41,18 +58,10 @@ const ggMetadataHasSimilarKey = (ggMetadata, ggKey) => {
 
 const ggMetadataHasSimilarTag = (ggMetadata, tags) => {
   let result = null;
-  if (ggMetadata && !isEmpty(ggMetadata) && tags.length >0) {
-    tags.forEach((tag) => {
-      if (tag in ggMetadata) {
-        return tag
-      } else {
-        let ggMetadataKeys = Object.keys(ggMetadata)
-        let similitudeArray = ggMetadataKeys.map(x => {return {key:x, score:fuzz.ratio(tag, x)}})
-        .filter(x => x.score >= 65) // TODO make treshold parametrable
-        .sort((a,b) => a.score > b.score? -1 : (b.score > a.score ? 1 : 0))
-        result = similitudeArray.length > 0 ? similitudeArray[0].key : null
-      }
-    })
+  let matches = munkresMatch(Object.keys(ggMetadata), tags, 35)
+  let matchedTags = Object.keys(matches)
+  if (matchedTags.length > 0) {
+    result = matchedTags.reduce((a, b) => matches[a].score > matches[b].score ? a : b);
   }
   return result;
 }

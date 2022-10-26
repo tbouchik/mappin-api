@@ -23,10 +23,12 @@ const filterSchema = mongoose.Schema(
       enum: ['bankStatement', 'invoice'],
     },
     isActiveDC: {
-      type: Boolean
+      type: Boolean,
+      default: true,
     },
     isActiveJournal: {
-      type: Boolean
+      type: Boolean,
+      default: true,
     },
     description: {
         type: String,

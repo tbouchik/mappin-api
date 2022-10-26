@@ -22,20 +22,20 @@ const startSmelterEngine = async (payload) => {
     ]).then((metadata) => {
       return {
         awsMetadata: metadata[0],
-        gcpMetadata: metadata[1],
+        // gcpMetadata: metadata[1],
         awsInvoiceData: null
       };
     })
   } else {
     return Promise.allSettled([
       fetchMetada(filename, isBankStatement),
-      aixtract(filename, mimeType),
+      // aixtract(filename, mimeType),
       fetchExpenseItems(filename)
     ]).then((response) => {
       return {
         awsMetadata: response[0],
-        gcpMetadata: response[1],
-        awsInvoiceData: response[2]
+        // gcpMetadata: response[1],
+        awsInvoiceData: response[1]
       };
     })
   }
@@ -43,7 +43,7 @@ const startSmelterEngine = async (payload) => {
 
 const moldOsmiumInDocument = async (user, payload) => {
   let newDocumentBody = Object.assign({}, payload.documentBody);
-  let { awsMetadata, gcpMetadata, awsInvoiceData } = await startSmelterEngine(payload);
+  let { awsMetadata, awsInvoiceData } = await startSmelterEngine(payload);
   if (awsMetadata.status === 'fulfilled') {
     newDocumentBody.metadata = awsMetadata.value.words
     if (newDocumentBody.isBankStatement) {
@@ -54,13 +54,13 @@ const moldOsmiumInDocument = async (user, payload) => {
     addSmeltError(user, newDocumentBody.id, awsMetadata.reason)
     throw 'Metadata smelt failed';
   }
-  if (gcpMetadata.status === 'fulfilled') {
-    newDocumentBody.ggMetadata = omitBy(gcpMetadata.value, (v,k) => k[0]=='$')
-  } else {
-    newDocumentBody.ggMetadata = {}
-    addSmeltError(user, newDocumentBody.id, gcpMetadata.reason)
-    throw 'GGMetadata smelt failed';
-  }
+  // if (gcpMetadata.status === 'fulfilled') {
+  //   newDocumentBody.ggMetadata = omitBy(gcpMetadata.value, (v,k) => k[0]=='$')
+  // } else {
+  //   newDocumentBody.ggMetadata = {}
+  //   addSmeltError(user, newDocumentBody.id, gcpMetadata.reason)
+  //   throw 'GGMetadata smelt failed';
+  // }
   if(awsInvoiceData && awsInvoiceData.status === 'fulfilled') {
     // format expense Prices to numerical values only
     let formattedReferences = awsInvoiceData.value.expenses.map((x) => {

@@ -18,7 +18,7 @@ const skeletonsMatch = (skeleton1, skeleton2) => {
     const bottomSignature1 = getSkeletonBottomSignature(skeleton1);
     const bottomSignature2 = getSkeletonBottomSignature(skeleton2);
     const bottomSignaturesMatchRating = compareTwoSkeletonSignatures(bottomSignature1, bottomSignature2)
-    return bottomSignaturesMatchRating === SignatureMatchRating.EXCELLENT;
+    return bottomSignaturesMatchRating !== SignatureMatchRating.BAD;
   } 
   return false;
 }
@@ -43,7 +43,7 @@ const compareTwoSkeletonSignatures = (ske1, ske2) => {
   if (grade > 75) {
     return SignatureMatchRating.EXCELLENT
   }
-  else if (grade <= 75 && grade > 45) {
+  else if (grade <= 75 && grade > 50) {
     return SignatureMatchRating.SHAKY
   }
   return SignatureMatchRating.BAD
@@ -135,12 +135,12 @@ const getGeoIntersection = (bbox1, bbox2) => {
 }
 
 const getSkeletonTopSignature = (skeleton) => {
-  const lastItemIndex = Math.min(skeleton.length, 5)
+  const lastItemIndex = Math.min(skeleton.length, 15)
   return skeleton.slice(0,lastItemIndex+ 1)
 }
 
 const getSkeletonBottomSignature = (skeleton) => {
-  const startIndex = Math.max(0, skeleton.length - 5)
+  const startIndex = Math.max(0, skeleton.length - 15)
   return skeleton.slice(startIndex)
 }
 

@@ -21,7 +21,6 @@ const createDefaultFilter = async userId => {
     description : "Template standard pour factures",
     isActiveDC : true,
     isActiveJournal : true,
-    journalTags : [],
     type : "invoice",
     name : "Template Standard",
   };

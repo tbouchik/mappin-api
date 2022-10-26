@@ -162,16 +162,20 @@ const populateOsmiumFromGgAI = async (user, documentBody, template, skeleton) =>
   const nonRefTemplateKeys = template.keys.filter((x, idx) => x.type !== 'REF' && !populatedTemplateKeysCache.has(idx) ).map(x => [x.value].concat(x.tags)).flat();
   if (nonRefTemplateKeys.length) {
     const keysMatches = munkresMatch(nonRefTemplateKeys, ggMetadataKeys, treshold);
-    for (const [templateKeyOrTag, ggKey] of Object.entries(keysMatches)) {
-      let templateKey = findTemplateKeyFromTag(template, templateKeyOrTag);
-      osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey);
-      templateIndex = template.keys.findIndex(x => x.value === templateKey);
-      if(templateIndex){
-        let currentRole = identifyRole(template, templateIndex);
-        if (currentRole) {
-          newDocument[currentRole] = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, true) : newDocument.ggMetadata[ggKey].Text;
+    for (let templateIndex = 0; templateIndex < template.keys.length; templateIndex++) {
+      let templateKey = template.keys[templateIndex]
+      let osmiumIndex = newDocument.osmium.findIndex(x => x.Key === templateKey.value);
+      let matchedTags = templateKey.tags.filter(x => x in keysMatches)
+      if (matchedTags.length >0) {
+        let winnerMatch = matchedTags.reduce((a, b) => keysMatches[a].score > keysMatches[b].score ? a : b);
+        if (winnerMatch) {
+          let winnerGgKey = keysMatches[winnerMatch].match;
+          let currentRole = identifyRole(template, templateIndex);
+          if (currentRole) {
+            newDocument[currentRole] = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[winnerGgKey].Text, template.keys[templateIndex].type, null, true) : newDocument.ggMetadata[winnerGgKey].Text;
+          }
+          newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[winnerGgKey].Text, template.keys[templateIndex].type, null, false) : newDocument.ggMetadata[winnerGgKey].Text;
         }
-        newDocument.osmium[osmiumIndex].Value = templateIndex !== undefined ? formatValue(newDocument.ggMetadata[ggKey].Text, template.keys[templateIndex].type, null, false) : newDocument.ggMetadata[ggKey].Text;
       }
     }
   }
